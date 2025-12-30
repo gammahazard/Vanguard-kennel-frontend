@@ -130,6 +130,7 @@ export default function ClientLogin() {
 
             if (resFinish.ok) {
                 const data = await resFinish.json();
+                localStorage.setItem('vanguard_token', data.token);
                 localStorage.setItem('vanguard_user', data.name);
                 localStorage.setItem('vanguard_role', data.role);
                 localStorage.setItem('vanguard_email', email);

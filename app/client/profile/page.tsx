@@ -203,13 +203,12 @@ export default function ProfileView() {
                             color="error"
                             startIcon={<Logout />}
                             onClick={() => {
-                                // Keep the identity, clear the session
-                                const email = localStorage.getItem('vanguard_email');
-                                const faceId = localStorage.getItem('vanguard_faceid_enabled');
-                                localStorage.clear();
-                                if (email) localStorage.setItem('vanguard_email', email);
-                                if (faceId) localStorage.setItem('vanguard_faceid_enabled', faceId);
-                                router.push('/');
+                                // Surgical clear: Keep identity, remove session
+                                localStorage.removeItem('vanguard_token');
+                                localStorage.removeItem('vanguard_role');
+                                localStorage.removeItem('vanguard_user');
+                                // WE KEEP: vanguard_email and vanguard_faceid_enabled
+                                router.push('/client/login');
                             }}
                             fullWidth
                             sx={{ py: 1.5, borderRadius: 3, borderColor: 'rgba(239, 68, 68, 0.3)', color: '#ef4444' }}
