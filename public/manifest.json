@@ -1,0 +1,22 @@
+{
+    "name": "Vanguard Kennel Systems",
+    "short_name": "Vanguard",
+    "theme_color": "#0a0a0c",
+    "background_color": "#0a0a0c",
+    "display": "standalone",
+    "orientation": "portrait",
+    "scope": "/",
+    "start_url": "/client/login",
+    "icons": [
+        {
+            "src": "/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
