@@ -6,9 +6,9 @@ import {
     BottomNavigation, BottomNavigationAction, ThemeProvider, CssBaseline,
     Fab, Divider, Button, Dialog, DialogTitle, DialogContent,
     DialogActions, Stepper, Step, StepLabel, TextField,
-    MenuItem, CircularProgress, Snackbar, Alert, Avatar
+    MenuItem, CircularProgress, Snackbar, Alert, Avatar, IconButton
 } from "@mui/material";
-import { Home, Pets, CalendarMonth, Person, Add, LocationOn, AccessTime, CheckCircle, ArrowBack, ArrowForward } from "@mui/icons-material";
+import { Home, Pets, CalendarMonth, Person, Add, LocationOn, AccessTime, CheckCircle, ArrowBack, ArrowForward, Close, Dangerous } from "@mui/icons-material";
 import { theme } from "@/lib/theme";
 import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/lib/config";
@@ -26,6 +26,9 @@ export default function BookingsView() {
     // UI State
     const [showWizard, setShowWizard] = useState(false);
     const [activeStep, setActiveStep] = useState(0);
+    const [bookingToCancel, setBookingToCancel] = useState<any>(null);
+    const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+    const [cancelling, setCancelling] = useState(false);
     const [error, setError] = useState("");
     const [successMsg, setSuccessMsg] = useState("");
 
@@ -54,7 +57,6 @@ export default function BookingsView() {
         if (!email) return;
 
         try {
-            // Concurrent fetch
             const [bookingsRes, petsRes] = await Promise.all([
                 fetch(`${API_BASE_URL}/api/user/bookings?email=${encodeURIComponent(email)}`),
                 fetch(`${API_BASE_URL}/api/pets?email=${encodeURIComponent(email)}`)
@@ -87,7 +89,6 @@ export default function BookingsView() {
             if (formData.service_type === "Daycare") dailyRate = 35;
 
             let total = diffDays * dailyRate * (formData.dog_ids.length || 1);
-
             setFormData(prev => ({ ...prev, total_price: total }));
         }
     }, [formData.start_date, formData.end_date, formData.service_type, formData.dog_ids]);
@@ -115,12 +116,37 @@ export default function BookingsView() {
                 setFormData({ dog_ids: [], service_type: "Boarding", start_date: "", end_date: "", notes: "", total_price: 0 });
                 fetchData();
             } else {
-                setError("Failed to create reservation. Please try again.");
+                setError("Failed to create reservation.");
             }
         } catch (err) {
-            setError("Network error. Please check your connection.");
+            setError("Network error.");
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const handleCancelBooking = async () => {
+        if (!bookingToCancel) return;
+        setCancelling(true);
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/bookings/${bookingToCancel.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: "Cancelled" })
+            });
+
+            if (res.ok) {
+                setSuccessMsg("Reservation retracted.");
+                setShowCancelConfirm(false);
+                setBookingToCancel(null);
+                fetchData();
+            } else {
+                setError("Failed to cancel reservation.");
+            }
+        } catch (err) {
+            setError("Connection error.");
+        } finally {
+            setCancelling(false);
         }
     };
 
@@ -162,7 +188,15 @@ export default function BookingsView() {
                             ) : (
                                 <Stack spacing={2} sx={{ mt: 1 }}>
                                     {upcomingBookings.map(b => (
-                                        <BookingCard key={b.id} booking={b} pets={pets} />
+                                        <BookingCard
+                                            key={b.id}
+                                            booking={b}
+                                            pets={pets}
+                                            onCancel={() => {
+                                                setBookingToCancel(b);
+                                                setShowCancelConfirm(true);
+                                            }}
+                                        />
                                     ))}
                                 </Stack>
                             )}
@@ -179,7 +213,6 @@ export default function BookingsView() {
                                 </Stack>
                             </Box>
                         )}
-
                     </Stack>
                 </Container>
 
@@ -191,180 +224,89 @@ export default function BookingsView() {
                     <Add />
                 </Fab>
 
-                {/* --- BOOKING WIZARD --- */}
-                <Dialog
-                    open={showWizard}
-                    onClose={() => !submitting && setShowWizard(false)}
-                    fullWidth
-                    maxWidth="xs"
-                    PaperProps={{ sx: { bgcolor: '#1A1B1F', borderRadius: 3, backgroundImage: 'none' } }}
-                >
+                {/* Cancellation Dialog */}
+                <Dialog open={showCancelConfirm} onClose={() => !cancelling && setShowCancelConfirm(false)}>
+                    <DialogContent sx={{ pt: 4, textAlign: 'center', bgcolor: '#1A1B1F' }}>
+                        <Dangerous color="error" sx={{ fontSize: 54, mb: 2 }} />
+                        <Typography variant="h6" fontWeight="bold">Cancel Reservation?</Typography>
+                        <Typography variant="body2" color="text.secondary">Retract this request? This cannot be undone.</Typography>
+                        <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
+                            <Button fullWidth variant="outlined" onClick={() => setShowCancelConfirm(false)} disabled={cancelling}>Keep</Button>
+                            <Button fullWidth variant="contained" color="error" onClick={handleCancelBooking} disabled={cancelling}>
+                                {cancelling ? <CircularProgress size={20} /> : "Cancel"}
+                            </Button>
+                        </Stack>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Booking Wizard */}
+                <Dialog open={showWizard} onClose={() => !submitting && setShowWizard(false)} fullWidth maxWidth="xs" PaperProps={{ sx: { bgcolor: '#1A1B1F', borderRadius: 3 } }}>
                     <DialogTitle sx={{ textAlign: 'center', pt: 3 }}>
                         <Typography variant="h5" fontWeight="bold">New Reservation</Typography>
                         <Stepper activeStep={activeStep} sx={{ mt: 3 }}>
                             {steps.map((label) => (
-                                <Step key={label}>
-                                    <StepLabel StepIconProps={{ sx: { '&.Mui-active': { color: '#D4AF37' }, '&.Mui-completed': { color: '#D4AF37' } } }}>
-                                        <Typography variant="caption">{label}</Typography>
-                                    </StepLabel>
-                                </Step>
+                                <Step key={label}><StepLabel><Typography variant="caption">{label}</Typography></StepLabel></Step>
                             ))}
                         </Stepper>
                     </DialogTitle>
-
                     <DialogContent sx={{ minHeight: 300, px: 3 }}>
                         {activeStep === 0 && (
-                            <Box sx={{ py: 2 }}>
-                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>Who is visiting us?</Typography>
-                                {pets.length === 0 ? (
-                                    <Box textAlign="center" py={4}>
-                                        <Typography variant="body2" color="text.secondary">No VIPs found. Add your dog first!</Typography>
-                                        <Button size="small" sx={{ mt: 1 }} onClick={() => router.push('/client/pets')}>Go to My Pets</Button>
-                                    </Box>
-                                ) : (
-                                    <Stack spacing={1.5} sx={{ mt: 2 }}>
-                                        {pets.map(pet => {
-                                            const isSelected = formData.dog_ids.includes(pet.id);
-                                            return (
-                                                <Paper
-                                                    key={pet.id}
-                                                    onClick={() => {
-                                                        setFormData(f => ({
-                                                            ...f,
-                                                            dog_ids: isSelected
-                                                                ? f.dog_ids.filter(id => id !== pet.id)
-                                                                : [...f.dog_ids, pet.id]
-                                                        }));
-                                                    }}
-                                                    sx={{
-                                                        p: 2, borderRadius: 2, cursor: 'pointer',
-                                                        border: isSelected ? '2px solid #D4AF37' : '1px solid rgba(255,255,255,0.1)',
-                                                        bgcolor: isSelected ? 'rgba(212, 175, 55, 0.05)' : 'transparent',
-                                                        transition: 'all 0.2s ease'
-                                                    }}
-                                                >
-                                                    <Stack direction="row" spacing={2} alignItems="center">
-                                                        <Avatar src={pet.image_url} sx={{ bgcolor: 'primary.main', border: isSelected ? '2px solid #D4AF37' : 'none' }}>{pet.name[0]}</Avatar>
-                                                        <Box sx={{ flex: 1 }}>
-                                                            <Typography variant="body1" fontWeight="bold">{pet.name}</Typography>
-                                                            <Typography variant="caption" color="text.secondary">{pet.breed}</Typography>
-                                                        </Box>
-                                                        {isSelected && <CheckCircle sx={{ color: '#D4AF37' }} fontSize="small" />}
-                                                    </Stack>
-                                                </Paper>
-                                            );
-                                        })}
-                                    </Stack>
-                                )}
-                            </Box>
-                        )}
-
-                        {activeStep === 1 && (
-                            <Stack spacing={3} sx={{ py: 2 }}>
-                                <TextField
-                                    select label="Select Service" fullWidth variant="filled"
-                                    value={formData.service_type}
-                                    onChange={(e) => setFormData({ ...formData, service_type: e.target.value })}
-                                >
-                                    <MenuItem value="Boarding">Boarding (Stay)</MenuItem>
-                                    <MenuItem value="Daycare">Daycare (Full Day)</MenuItem>
-                                    <MenuItem value="Grooming">Professional Grooming</MenuItem>
-                                </TextField>
-
-                                <Stack direction="row" spacing={2}>
-                                    <TextField
-                                        label="Check-in Date" type="date" fullWidth variant="filled"
-                                        InputLabelProps={{ shrink: true }}
-                                        value={formData.start_date}
-                                        onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                                    />
-                                    <TextField
-                                        label="Check-out Date" type="date" fullWidth variant="filled"
-                                        InputLabelProps={{ shrink: true }}
-                                        value={formData.end_date}
-                                        onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                                    />
-                                </Stack>
-
-                                <TextField
-                                    label="Special Instructions" placeholder="e.g. Feeding times, medication..."
-                                    fullWidth multiline rows={2} variant="filled"
-                                    value={formData.notes}
-                                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                />
+                            <Stack spacing={1.5} sx={{ mt: 2 }}>
+                                {pets.map(pet => {
+                                    const isSelected = formData.dog_ids.includes(pet.id);
+                                    return (
+                                        <Paper key={pet.id} onClick={() => setFormData(f => ({ ...f, dog_ids: isSelected ? f.dog_ids.filter(id => id !== pet.id) : [...f.dog_ids, pet.id] }))} sx={{ p: 2, borderRadius: 2, border: isSelected ? '2px solid #D4AF37' : '1px solid rgba(255,255,255,0.1)', bgcolor: isSelected ? 'rgba(212, 175, 55, 0.05)' : 'transparent', cursor: 'pointer' }}>
+                                            <Stack direction="row" spacing={2} alignItems="center">
+                                                <Avatar src={pet.image_url}>{pet.name[0]}</Avatar>
+                                                <Box sx={{ flex: 1 }}>
+                                                    <Typography variant="body1" fontWeight="bold">{pet.name}</Typography>
+                                                    <Typography variant="caption" color="text.secondary">{pet.breed}</Typography>
+                                                </Box>
+                                                {isSelected && <CheckCircle sx={{ color: '#D4AF37' }} />}
+                                            </Stack>
+                                        </Paper>
+                                    );
+                                })}
                             </Stack>
                         )}
-
+                        {activeStep === 1 && (
+                            <Stack spacing={3} sx={{ py: 2 }}>
+                                <TextField select label="Service" fullWidth value={formData.service_type} onChange={e => setFormData({ ...formData, service_type: e.target.value })} variant="filled">
+                                    <MenuItem value="Boarding">Boarding</MenuItem>
+                                    <MenuItem value="Daycare">Daycare</MenuItem>
+                                    <MenuItem value="Grooming">Grooming</MenuItem>
+                                </TextField>
+                                <Stack direction="row" spacing={2}>
+                                    <TextField label="Check-in" type="date" fullWidth InputLabelProps={{ shrink: true }} value={formData.start_date} onChange={e => setFormData({ ...formData, start_date: e.target.value })} variant="filled" />
+                                    <TextField label="Check-out" type="date" fullWidth InputLabelProps={{ shrink: true }} value={formData.end_date} onChange={e => setFormData({ ...formData, end_date: e.target.value })} variant="filled" />
+                                </Stack>
+                            </Stack>
+                        )}
                         {activeStep === 2 && (
                             <Box sx={{ py: 2, textAlign: 'center' }}>
-                                <Paper sx={{ p: 3, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.02)', mb: 2 }}>
-                                    <CheckCircle color="primary" sx={{ fontSize: 40, mb: 1 }} />
-                                    <Typography variant="h6">Ready to book?</Typography>
-                                    <Divider sx={{ my: 2 }} />
-                                    <Stack spacing={1} textAlign="left">
-                                        <Typography variant="body2" color="text.secondary">
-                                            VIPs: <strong>{pets.filter(p => formData.dog_ids.includes(p.id)).map(p => p.name).join(", ")}</strong>
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary">Service: <strong>{formData.service_type}</strong></Typography>
-                                        <Typography variant="body2" color="text.secondary">Dates: <strong>{formData.start_date}</strong> to <strong>{formData.end_date}</strong></Typography>
-                                    </Stack>
-                                    <Typography variant="h5" sx={{ mt: 3, color: '#D4AF37', fontWeight: 'bold' }}>
-                                        Total: ${formData.total_price.toFixed(2)}
-                                    </Typography>
-                                </Paper>
-                                <Typography variant="caption" color="text.secondary">
-                                    Reservation will be marked as "Pending" until staff confirm availability.
-                                </Typography>
+                                <Typography variant="h6">Ready to book?</Typography>
+                                <Typography variant="body2" color="text.secondary">VIPs: {pets.filter(p => formData.dog_ids.includes(p.id)).map(p => p.name).join(", ")}</Typography>
+                                <Typography variant="h4" sx={{ mt: 2, color: '#D4AF37' }}>${formData.total_price.toFixed(2)}</Typography>
                             </Box>
                         )}
                     </DialogContent>
-
-                    <DialogActions sx={{ px: 3, pb: 4, pt: 0 }}>
-                        {activeStep > 0 && (
-                            <Button startIcon={<ArrowBack />} onClick={handleBack} disabled={submitting}>Back</Button>
-                        )}
+                    <DialogActions sx={{ px: 3, pb: 4 }}>
+                        {activeStep > 0 && <Button onClick={handleBack}>Back</Button>}
                         <Box sx={{ flex: 1 }} />
                         {activeStep < 2 ? (
-                            <Button
-                                variant="contained" endIcon={<ArrowForward />}
-                                disabled={formData.dog_ids.length === 0 || (activeStep === 1 && (!formData.start_date || !formData.end_date))}
-                                onClick={handleNext}
-                                sx={{ bgcolor: '#D4AF37', color: 'black', '&:hover': { bgcolor: '#b5952f' } }}
-                            >
-                                Next
-                            </Button>
+                            <Button variant="contained" disabled={formData.dog_ids.length === 0 || (activeStep === 1 && (!formData.start_date || !formData.end_date))} onClick={handleNext} sx={{ bgcolor: '#D4AF37', color: 'black' }}>Next</Button>
                         ) : (
-                            <Button
-                                variant="contained"
-                                disabled={submitting}
-                                onClick={handleCreateBooking}
-                                sx={{ bgcolor: '#D4AF37', color: 'black', px: 4, fontWeight: 'bold', '&:hover': { bgcolor: '#b5952f' } }}
-                            >
-                                {submitting ? <CircularProgress size={24} color="inherit" /> : "Confirm Reservation"}
-                            </Button>
+                            <Button variant="contained" onClick={handleCreateBooking} disabled={submitting} sx={{ bgcolor: '#D4AF37', color: 'black' }}>Confirm</Button>
                         )}
                     </DialogActions>
                 </Dialog>
 
-                <Snackbar open={!!error} autoHideDuration={4000} onClose={() => setError("")}>
-                    <Alert severity="error" variant="filled">{error}</Alert>
-                </Snackbar>
-                <Snackbar open={!!successMsg} autoHideDuration={4000} onClose={() => setSuccessMsg("")}>
-                    <Alert severity="success" variant="filled">{successMsg}</Alert>
-                </Snackbar>
+                <Snackbar open={!!error} autoHideDuration={4000} onClose={() => setError("")}><Alert severity="error">{error}</Alert></Snackbar>
+                <Snackbar open={!!successMsg} autoHideDuration={4000} onClose={() => setSuccessMsg("")}><Alert severity="success">{successMsg}</Alert></Snackbar>
 
-                {/* Bottom Nav */}
                 <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100 }} elevation={3}>
-                    <BottomNavigation
-                        showLabels
-                        value={navValue}
-                        onChange={(event, newValue) => handleNavChange(newValue)}
-                        sx={{ bgcolor: '#0B0C10', height: 70, '& .Mui-selected': { color: '#D4AF37 !important' } }}
-                    >
-                        <BottomNavigationAction label="Home" icon={<Home />} />
-                        <BottomNavigationAction label="Pets" icon={<Pets />} />
-                        <BottomNavigationAction label="Bookings" icon={<CalendarMonth />} />
-                        <BottomNavigationAction label="Profile" icon={<Person />} />
+                    <BottomNavigation showLabels value={navValue} onChange={(e, v) => handleNavChange(v)} sx={{ bgcolor: '#0B0C10', height: 70, '& .Mui-selected': { color: '#D4AF37 !important' } }}>
+                        <BottomNavigationAction label="Home" icon={<Home />} /><BottomNavigationAction label="Pets" icon={<Pets />} /><BottomNavigationAction label="Bookings" icon={<CalendarMonth />} /><BottomNavigationAction label="Profile" icon={<Person />} />
                     </BottomNavigation>
                 </Paper>
             </Box>
@@ -372,35 +314,22 @@ export default function BookingsView() {
     );
 }
 
-function BookingCard({ booking, pets }: any) {
+function BookingCard({ booking, pets, onCancel }: any) {
     const pet = pets.find((p: any) => p.id === booking.dog_id);
     return (
-        <Paper sx={{ p: 2, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
+        <Paper sx={{ p: 2, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', position: 'relative' }}>
+            {booking.status === 'Pending' && (
+                <IconButton size="small" onClick={onCancel} sx={{ position: 'absolute', top: 8, right: 8, color: 'text.secondary', '&:hover': { color: 'error.main' } }}><Close fontSize="small" /></IconButton>
+            )}
             <Stack direction="row" spacing={2} alignItems="center">
-                <Avatar src={pet?.image_url} sx={{ width: 50, height: 50, border: '2px solid rgba(212, 175, 55, 0.4)' }}>
-                    {pet?.name ? pet.name[0] : '?'}
-                </Avatar>
-                <Box sx={{ flex: 1 }}>
-                    <Typography variant="subtitle1" fontWeight="bold">{booking.service_type}</Typography>
-                    <Typography variant="body2" color="text.secondary">{pet?.name || 'Unknown'}</Typography>
-                </Box>
-                <Chip
-                    label={booking.status.toUpperCase()}
-                    size="small"
-                    variant="outlined"
-                    color={booking.status === 'Confirmed' ? 'success' : 'warning'}
-                    sx={{ fontWeight: 'bold', fontSize: '0.65rem' }}
-                />
+                <Avatar src={pet?.image_url}>{pet?.name ? pet.name[0] : '?'}</Avatar>
+                <Box sx={{ flex: 1 }}><Typography variant="subtitle1" fontWeight="bold">{booking.service_type}</Typography><Typography variant="body2" color="text.secondary">{pet?.name || 'Unknown'}</Typography></Box>
+                <Chip label={booking.status.toUpperCase()} size="small" variant="outlined" color={booking.status === 'Confirmed' ? 'success' : 'warning'} />
             </Stack>
             <Divider sx={{ my: 1.5, opacity: 0.1 }} />
             <Stack direction="row" spacing={2} sx={{ color: 'text.secondary' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <CalendarMonth fontSize="inherit" />
-                    <Typography variant="caption">{booking.start_date} - {booking.end_date}</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <Typography variant="caption" fontWeight="bold" color="primary">${booking.total_price.toFixed(2)}</Typography>
-                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><CalendarMonth fontSize="inherit" /><Typography variant="caption">{booking.start_date} - {booking.end_date}</Typography></Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><Typography variant="caption" fontWeight="bold" color="primary">${booking.total_price.toFixed(2)}</Typography></Box>
             </Stack>
         </Paper>
     );
@@ -413,10 +342,7 @@ function PastBookingCard({ booking, pets }: any) {
             <Stack direction="row" justifyContent="space-between" alignItems="center">
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <Avatar src={pet?.image_url} sx={{ width: 30, height: 30, fontSize: '0.8rem' }}>{pet?.name[0]}</Avatar>
-                    <Box>
-                        <Typography variant="body2" fontWeight="500">{booking.service_type}</Typography>
-                        <Typography variant="caption" color="text.secondary">{booking.start_date}</Typography>
-                    </Box>
+                    <Box><Typography variant="body2" fontWeight="500">{booking.service_type}</Typography><Typography variant="caption" color="text.secondary">{booking.start_date}</Typography></Box>
                 </Box>
                 <Typography variant="caption" fontWeight="bold">${booking.total_price.toFixed(2)}</Typography>
             </Stack>

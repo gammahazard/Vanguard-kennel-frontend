@@ -120,49 +120,21 @@ export default function ClientDashboard() {
                             <Typography variant="caption" sx={{ fontWeight: 600 }}>Guest is Active</Typography>
                         </Stack>
 
-                        {/* 2. LIVE FEED CARD */}
-                        <Paper sx={{
-                            position: 'relative',
-                            overflow: 'hidden',
-                            borderRadius: 4,
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            aspectRatio: '16/9',
-                            bgcolor: '#000'
-                        }}>
-                            <Box sx={{
-                                position: 'absolute',
-                                top: 16,
-                                left: 16,
-                                zIndex: 2,
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 1,
-                                bgcolor: 'rgba(239, 68, 68, 0.8)',
-                                px: 1.5,
-                                py: 0.5,
-                                borderRadius: 1,
-                                backdropFilter: 'blur(4px)'
+                        {/* 2. LIVE KENNEL CAMS (Horizontal Scroll) */}
+                        <Box>
+                            <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: '0.1em', pl: 1 }}>
+                                Live Kennel Transparency
+                            </Typography>
+                            <Stack direction="row" spacing={2} sx={{
+                                overflowX: 'auto', pb: 1, mx: -2, px: 2, mt: 1,
+                                '::-webkit-scrollbar': { display: 'none' }
                             }}>
-                                <Videocam sx={{ fontSize: 16, color: '#fff' }} />
-                                <Typography variant="caption" fontWeight="bold" color="white" sx={{ letterSpacing: '0.05em' }}>LIVE</Typography>
-                            </Box>
-
-                            {/* Placeholder Video Content */}
-                            <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.3 }}>
-                                <Pets sx={{ fontSize: 64 }} />
-                            </Box>
-
-                            <Box sx={{
-                                position: 'absolute',
-                                bottom: 0,
-                                left: 0,
-                                right: 0,
-                                p: 2,
-                                background: 'linear-gradient(to top, rgba(0,0,0,0.9), transparent)'
-                            }}>
-                                <Typography variant="body2" sx={{ fontWeight: 500 }}>Camera 04 - Executive Wing</Typography>
-                            </Box>
-                        </Paper>
+                                <CamCard name="Camera 01 - Executive Wing" />
+                                <CamCard name="Camera 02 - Main Play Area" />
+                                <CamCard name="Camera 03 - Outdoor Run" />
+                                <CamCard name="Camera 04 - Grooming Suite" />
+                            </Stack>
+                        </Box>
 
                         {/* 3. NEXT STAY QUICK VIEW */}
                         {nextStay && (
