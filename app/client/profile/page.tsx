@@ -5,9 +5,10 @@ import {
     Box, Typography, Container, Stack, Paper, Avatar,
     BottomNavigation, BottomNavigationAction, ThemeProvider, CssBaseline,
     List, ListItem, ListItemButton, ListItemIcon, ListItemText, ListItemSecondaryAction, Switch, Divider, Button, Alert, Snackbar,
-    Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions
+    Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions,
+    IconButton, TextField, CircularProgress
 } from "@mui/material";
-import { Home, Pets, CalendarMonth, Person, Face, Notifications, CreditCard, Security, ChevronRight, Logout, CheckCircle, Cancel, DeleteForever, Warning, Wallet } from "@mui/icons-material";
+import { Home, Pets, CalendarMonth, Person, Face, Notifications, CreditCard, Security, ChevronRight, Logout, CheckCircle, Cancel, DeleteForever, Warning, Wallet, Edit } from "@mui/icons-material";
 import { theme } from "@/lib/theme";
 import { useRouter } from "next/navigation";
 import Link from 'next/link';
@@ -26,6 +27,11 @@ export default function ProfileView() {
     const [auditLogs, setAuditLogs] = useState<any[]>([]);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [deleteConfirmation, setDeleteConfirmation] = useState("");
+
+    // Profile Edit State
+    const [showEditDialog, setShowEditDialog] = useState(false);
+    const [editData, setEditData] = useState({ name: "", email: "" });
+    const [isUpdating, setIsUpdating] = useState(false);
 
     const handleOpenAudit = () => {
         console.log("🔘 Security Audit Button Clicked");
@@ -206,6 +212,43 @@ export default function ProfileView() {
         }
     };
 
+    const handleUpdateProfile = async () => {
+        setIsUpdating(true);
+        const currentEmail = localStorage.getItem('vanguard_email');
+        if (!currentEmail) return;
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/user/profile`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    current_email: currentEmail,
+                    new_email: editData.email || null,
+                    new_name: editData.name || null
+                })
+            });
+
+            if (res.ok) {
+                if (editData.name) {
+                    setUserName(editData.name);
+                    localStorage.setItem('vanguard_user', editData.name);
+                }
+                if (editData.email) {
+                    localStorage.setItem('vanguard_email', editData.email);
+                }
+                setMessage({ text: "Profile updated successfully!", severity: "success", open: true });
+                setShowEditDialog(false);
+            } else {
+                throw new Error("Failed to update profile");
+            }
+        } catch (err) {
+            console.error(err);
+            setMessage({ text: "Update failed. Please try again.", severity: "error", open: true });
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
@@ -216,10 +259,26 @@ export default function ProfileView() {
 
                 <Container maxWidth="sm" sx={{ pt: 4 }}>
                     <Stack spacing={4}>
-                        <Stack alignItems="center" spacing={1}>
-                            <Avatar sx={{ width: 100, height: 100, bgcolor: 'primary.main', fontSize: '2.5rem', fontWeight: 'bold', mb: 1 }}>
-                                {userName.charAt(0).toUpperCase()}
-                            </Avatar>
+                        <Stack alignItems="center" spacing={1} sx={{ position: 'relative' }}>
+                            <Box sx={{ position: 'relative' }}>
+                                <Avatar sx={{ width: 100, height: 100, bgcolor: 'primary.main', fontSize: '2.5rem', fontWeight: 'bold', mb: 1 }}>
+                                    {userName.charAt(0).toUpperCase()}
+                                </Avatar>
+                                <IconButton
+                                    onClick={() => {
+                                        setEditData({ name: userName, email: localStorage.getItem('vanguard_email') || "" });
+                                        setShowEditDialog(true);
+                                    }}
+                                    sx={{
+                                        position: 'absolute', bottom: 8, right: 0,
+                                        bgcolor: 'background.paper', border: '1px solid rgba(255,255,255,0.1)',
+                                        p: 0.8, '&:hover': { bgcolor: '#333' }
+                                    }}
+                                    size="small"
+                                >
+                                    <Edit sx={{ fontSize: 16, color: 'primary.main' }} />
+                                </IconButton>
+                            </Box>
                             <Typography variant="h5" fontWeight="bold">{userName}</Typography>
                             <Typography variant="body2" color="text.secondary">Elite Member</Typography>
                         </Stack>
@@ -410,6 +469,43 @@ export default function ProfileView() {
                     </DialogContent>
                     <DialogActions sx={{ p: 2 }}>
                         <Button onClick={() => setShowAuditDialog(false)} color="primary">Close</Button>
+                    </DialogActions>
+                </Dialog>
+
+                <Dialog
+                    open={showEditDialog}
+                    onClose={() => setShowEditDialog(false)}
+                    PaperProps={{ sx: { borderRadius: 3, bgcolor: '#1A1B1F', minWidth: 320 } }}
+                >
+                    <DialogTitle sx={{ fontWeight: 'bold' }}>Edit Profile</DialogTitle>
+                    <DialogContent>
+                        <Stack spacing={3} sx={{ mt: 1 }}>
+                            <TextField
+                                label="Display Name"
+                                fullWidth
+                                variant="filled"
+                                value={editData.name}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditData({ ...editData, name: e.target.value })}
+                            />
+                            <TextField
+                                label="Email Address"
+                                fullWidth
+                                variant="filled"
+                                value={editData.email}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditData({ ...editData, email: e.target.value })}
+                            />
+                        </Stack>
+                    </DialogContent>
+                    <DialogActions sx={{ p: 3 }}>
+                        <Button onClick={() => setShowEditDialog(false)} color="inherit">Cancel</Button>
+                        <Button
+                            onClick={handleUpdateProfile}
+                            variant="contained"
+                            disabled={isUpdating}
+                            sx={{ borderRadius: 2, bgcolor: 'primary.main', color: 'black', fontWeight: 'bold' }}
+                        >
+                            {isUpdating ? <CircularProgress size={20} /> : "Save Changes"}
+                        </Button>
                     </DialogActions>
                 </Dialog>
 
