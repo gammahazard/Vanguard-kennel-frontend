@@ -30,6 +30,7 @@ export default function ClientLogin() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [faceIdAvailable, setFaceIdAvailable] = useState(false);
 
@@ -99,6 +100,9 @@ export default function ClientLogin() {
         }
 
         try {
+            console.log("🚀 Starting Face ID Login for:", email);
+            console.log("📍 Current Browser Domain:", window.location.hostname);
+
             const resStart = await fetch(`${API_BASE_URL}/api/auth/webauthn/login/start`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -110,10 +114,11 @@ export default function ClientLogin() {
                 throw new Error(errorText || "No Face ID found for this account.");
             }
             const options = await resStart.json();
-            console.log("📦 WebAuthn Challenge:", options);
+            console.log("📦 WebAuthn Challenge received:", options);
 
             // Standardize the options for the browser
             const authOptions = options.publicKey || options;
+            console.log("🛡️ Passing to WebAuthn Library:", authOptions);
 
             // CRITICAL: Remove extra fields that are NOT part of the WebAuthn spec
             // to avoid confusing the browser/library
@@ -142,6 +147,7 @@ export default function ClientLogin() {
             }
         } catch (err: any) {
             setError(err.message || "Face ID login failed");
+            setSnackbarOpen(true);
         }
     };
 
@@ -168,6 +174,18 @@ export default function ClientLogin() {
                     p: 3
                 }}
             >
+                {/* Visual Error Reporting for PWA */}
+                <Snackbar
+                    open={snackbarOpen}
+                    autoHideDuration={6000}
+                    onClose={() => setSnackbarOpen(false)}
+                    anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+                >
+                    <Alert onClose={() => setSnackbarOpen(false)} severity="error" sx={{ width: '100%' }} variant="filled">
+                        {error}
+                    </Alert>
+                </Snackbar>
+
                 {/* Background Glow */}
                 <Box sx={{
                     position: 'absolute',
