@@ -1,5 +1,11 @@
 ﻿# 🐕 Vanguard Kennel Systems | Premium Pet Care
 
+![Status](https://img.shields.io/badge/Status-Ultra--Premium-D4AF37?style=for-the-badge&logo=appveyor)
+![Security](https://img.shields.io/badge/Security-Biometric%20Verified-4ade80?style=for-the-badge&logo=faceid)
+![Frontend](https://img.shields.io/badge/Frontend-Next.js%2014-000000?style=for-the-badge&logo=next.js)
+![Backend](https://img.shields.io/badge/Backend-Rust%20🦀-orange?style=for-the-badge&logo=rust)
+![PWA](https://img.shields.io/badge/Platform-PWA%20Mobile-blue?style=for-the-badge&logo=pwa)
+
 Vanguard is a high-end kennel management platform designed for performance, security, and a premium user experience. Built with a decoupled architecture, it leverages a high-performance Rust backend and a modern Next.js frontend.
 
 ## 🏗️ System Architecture
