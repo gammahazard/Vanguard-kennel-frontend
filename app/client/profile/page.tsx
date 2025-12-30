@@ -7,7 +7,7 @@ import {
     List, ListItem, ListItemButton, ListItemIcon, ListItemText, ListItemSecondaryAction, Switch, Divider, Button, Alert, Snackbar,
     Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions
 } from "@mui/material";
-import { Home, Pets, CalendarMonth, Person, Face, Notifications, CreditCard, Security, ChevronRight, Logout } from "@mui/icons-material";
+import { Home, Pets, CalendarMonth, Person, Face, Notifications, CreditCard, Security, ChevronRight, Logout, CheckCircle, Cancel } from "@mui/icons-material";
 import { theme } from "@/lib/theme";
 import { useRouter } from "next/navigation";
 import Link from 'next/link';
@@ -22,6 +22,19 @@ export default function ProfileView() {
     const [showDeactivateDialog, setShowDeactivateDialog] = useState(false);
     const [isRegistering, setIsRegistering] = useState(false); // Guard against double-clicks
     const [message, setMessage] = useState({ text: "", severity: "info", open: false });
+    const [showAuditDialog, setShowAuditDialog] = useState(false);
+    const [auditLogs, setAuditLogs] = useState<any[]>([]);
+
+    const handleOpenAudit = () => {
+        const email = localStorage.getItem('vanguard_email');
+        if (email) {
+            fetch(`${API_BASE_URL}/api/user/security-logs?email=${encodeURIComponent(email)}`)
+                .then(res => res.json())
+                .then(data => setAuditLogs(data))
+                .catch(err => console.error("Failed to fetch logs", err));
+        }
+        setShowAuditDialog(true);
+    };
 
     useEffect(() => {
         const storedName = localStorage.getItem('vanguard_user');
@@ -197,7 +210,12 @@ export default function ProfileView() {
                                     <Divider sx={{ opacity: 0.05 }} />
                                     <SettingsItem icon={<Notifications />} title="Push Notifications" hasSwitch={true} defaultChecked />
                                     <Divider sx={{ opacity: 0.05 }} />
-                                    <SettingsItem icon={<Security />} title="Security Audit" subtitle="View recent login activity" />
+                                    <SettingsItem
+                                        icon={<Security />}
+                                        title="Security Audit"
+                                        subtitle="View recent login activity"
+                                        onClick={handleOpenAudit}
+                                    />
                                 </List>
                             </Paper>
                         </Stack>
@@ -255,6 +273,42 @@ export default function ProfileView() {
                     </DialogActions>
                 </Dialog>
 
+                <Dialog
+                    open={showAuditDialog}
+                    onClose={() => setShowAuditDialog(false)}
+                    PaperProps={{ sx: { borderRadius: 3, bgcolor: '#1A1B1F', minWidth: 350 } }}
+                >
+                    <DialogTitle sx={{ fontWeight: 'bold' }}>Security Audit Log</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText color="text.secondary" sx={{ mb: 2 }}>
+                            Recent login attempts and security events for your account.
+                        </DialogContentText>
+                        <List>
+                            {auditLogs.length === 0 ? (
+                                <Typography variant="body2" color="text.secondary" align="center">No logs found.</Typography>
+                            ) : (
+                                auditLogs.map((log) => (
+                                    <ListItem key={log.id} disablePadding sx={{ mb: 1 }}>
+                                        <ListItemIcon sx={{ minWidth: 36 }}>
+                                            {log.action.includes("FAILURE") ?
+                                                <Cancel color="error" fontSize="small" /> :
+                                                <CheckCircle color="success" fontSize="small" />
+                                            }
+                                        </ListItemIcon>
+                                        <ListItemText
+                                            primary={<Typography variant="body2" fontWeight="500">{log.action.replace(/_/g, " ")}</Typography>}
+                                            secondary={<Typography variant="caption" color="text.secondary">{new Date(log.timestamp + "Z").toLocaleString()}</Typography>}
+                                        />
+                                    </ListItem>
+                                ))
+                            )}
+                        </List>
+                    </DialogContent>
+                    <DialogActions sx={{ p: 2 }}>
+                        <Button onClick={() => setShowAuditDialog(false)} color="primary">Close</Button>
+                    </DialogActions>
+                </Dialog>
+
                 <Snackbar
                     open={message.open}
                     autoHideDuration={6000}
@@ -269,10 +323,10 @@ export default function ProfileView() {
     );
 }
 
-function SettingsItem({ icon, title, subtitle, hasSwitch, defaultChecked }: any) {
+function SettingsItem({ icon, title, subtitle, hasSwitch, defaultChecked, onClick }: any) {
     return (
         <ListItem disablePadding>
-            <ListItemButton>
+            <ListItemButton onClick={onClick}>
                 <ListItemIcon sx={{ color: 'text.secondary', minWidth: 40 }}>{icon}</ListItemIcon>
                 <ListItemText
                     primary={<Typography variant="body2" fontWeight="500">{title}</Typography>}
