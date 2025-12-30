@@ -16,7 +16,8 @@ import {
     ThemeProvider,
     CssBaseline,
     Grid,
-    Collapse
+    Collapse,
+    Badge
 } from "@mui/material";
 import {
     Home,
@@ -34,7 +35,8 @@ import {
     Apple,
     Celebration,
     Info,
-    ArrowForward
+    ArrowForward,
+    Chat
 } from "@mui/icons-material";
 import { theme } from "@/lib/theme";
 import { useRouter } from "next/navigation";
@@ -46,6 +48,7 @@ export default function ClientDashboard() {
     const [navValue, setNavValue] = useState(0);
     const [balance, setBalance] = useState(0);
     const [nextStay, setNextStay] = useState<any>(null);
+    const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -76,6 +79,13 @@ export default function ClientDashboard() {
 
                 if (upcoming.length > 0) setNextStay(upcoming[0]);
             }
+
+            // Fetch notifications for unread count
+            const notifRes = await fetch(`${API_BASE_URL}/api/notifications?email=${encodeURIComponent(email)}`);
+            if (notifRes.ok) {
+                const notifs = await notifRes.json();
+                setUnreadCount(notifs.filter((n: any) => !n.is_read).length);
+            }
         } catch (err) {
             console.error("Home fetch failed", err);
         } finally {
@@ -87,7 +97,8 @@ export default function ClientDashboard() {
         setNavValue(newValue);
         if (newValue === 1) router.push('/client/pets');
         if (newValue === 2) router.push('/client/bookings');
-        if (newValue === 3) router.push('/client/profile');
+        if (newValue === 3) router.push('/client/messenger');
+        if (newValue === 4) router.push('/client/profile');
     };
 
     return (
@@ -106,8 +117,14 @@ export default function ClientDashboard() {
                             <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 700 }}>Hello, {userName}</Typography>
                         </Box>
                     </Stack>
-                    <IconButton size="small" sx={{ border: '1px solid rgba(255,255,255,0.1)' }}>
-                        <Notifications sx={{ fontSize: 20 }} />
+                    <IconButton
+                        size="small"
+                        sx={{ border: '1px solid rgba(255,255,255,0.1)' }}
+                        onClick={() => router.push('/client/notifications')}
+                    >
+                        <Badge badgeContent={unreadCount} color="error" overlap="circular" sx={{ '& .MuiBadge-badge': { fontSize: '0.6rem', height: 16, minWidth: 16 } }}>
+                            <Notifications sx={{ fontSize: 20 }} />
+                        </Badge>
                     </IconButton>
                 </Paper>
 
@@ -242,6 +259,7 @@ export default function ClientDashboard() {
                         <BottomNavigationAction label="Home" icon={<Home />} />
                         <BottomNavigationAction label="Pets" icon={<Pets />} />
                         <BottomNavigationAction label="Bookings" icon={<CalendarMonth />} />
+                        <BottomNavigationAction label="Chat" icon={<Chat />} />
                         <BottomNavigationAction label="Profile" icon={<Person />} />
                     </BottomNavigation>
                 </Paper >

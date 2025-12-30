@@ -7,7 +7,7 @@ import {
     Fab, Dialog, DialogTitle, DialogContent, DialogContentText, TextField, DialogActions, Button, Grid,
     CircularProgress, Snackbar, Alert, IconButton
 } from "@mui/material";
-import { Home, Pets, CalendarMonth, Person, MoreVert, Add, MedicalServices, Scale, Notes, Close, DeleteForever, ModeEdit } from "@mui/icons-material";
+import { Home, Pets, CalendarMonth, Person, MoreVert, Add, MedicalServices, Scale, Notes, Close, DeleteForever, ModeEdit, Chat } from "@mui/icons-material";
 import { theme } from "@/lib/theme";
 import { API_BASE_URL } from "@/lib/config";
 import Link from "next/link";
@@ -49,7 +49,8 @@ export default function PetsView() {
         setNavValue(newValue);
         if (newValue === 0) router.push('/client/dashboard');
         if (newValue === 2) router.push('/client/bookings');
-        if (newValue === 3) router.push('/client/profile');
+        if (newValue === 3) router.push('/client/messenger');
+        if (newValue === 4) router.push('/client/profile');
     };
 
     const fetchPets = async () => {
@@ -345,6 +346,7 @@ export default function PetsView() {
                         <BottomNavigationAction label="Home" icon={<Home />} />
                         <BottomNavigationAction label="Pets" icon={<Pets />} />
                         <BottomNavigationAction label="Bookings" icon={<CalendarMonth />} />
+                        <BottomNavigationAction label="Chat" icon={<Chat />} />
                         <BottomNavigationAction label="Profile" icon={<Person />} />
                     </BottomNavigation>
                 </Paper>

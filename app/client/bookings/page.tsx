@@ -8,7 +8,7 @@ import {
     DialogActions, Stepper, Step, StepLabel, TextField,
     MenuItem, CircularProgress, Snackbar, Alert, Avatar, IconButton
 } from "@mui/material";
-import { Home, Pets, CalendarMonth, Person, Add, LocationOn, AccessTime, CheckCircle, ArrowBack, ArrowForward, Close, Dangerous } from "@mui/icons-material";
+import { Home, Pets, CalendarMonth, Person, Add, LocationOn, AccessTime, CheckCircle, ArrowBack, ArrowForward, Close, Dangerous, Chat } from "@mui/icons-material";
 import { theme } from "@/lib/theme";
 import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/lib/config";
@@ -48,7 +48,8 @@ export default function BookingsView() {
         setNavValue(newValue);
         if (newValue === 0) router.push('/client/dashboard');
         if (newValue === 1) router.push('/client/pets');
-        if (newValue === 3) router.push('/client/profile');
+        if (newValue === 3) router.push('/client/messenger');
+        if (newValue === 4) router.push('/client/profile');
     };
 
     const fetchData = async () => {
@@ -306,7 +307,11 @@ export default function BookingsView() {
 
                 <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100 }} elevation={3}>
                     <BottomNavigation showLabels value={navValue} onChange={(e, v) => handleNavChange(v)} sx={{ bgcolor: '#0B0C10', height: 70, '& .Mui-selected': { color: '#D4AF37 !important' } }}>
-                        <BottomNavigationAction label="Home" icon={<Home />} /><BottomNavigationAction label="Pets" icon={<Pets />} /><BottomNavigationAction label="Bookings" icon={<CalendarMonth />} /><BottomNavigationAction label="Profile" icon={<Person />} />
+                        <BottomNavigationAction label="Home" icon={<Home />} />
+                        <BottomNavigationAction label="Pets" icon={<Pets />} />
+                        <BottomNavigationAction label="Bookings" icon={<CalendarMonth />} />
+                        <BottomNavigationAction label="Chat" icon={<Chat />} />
+                        <BottomNavigationAction label="Profile" icon={<Person />} />
                     </BottomNavigation>
                 </Paper>
             </Box>

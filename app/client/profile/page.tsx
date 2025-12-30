@@ -8,7 +8,7 @@ import {
     Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions,
     IconButton, TextField, CircularProgress
 } from "@mui/material";
-import { Home, Pets, CalendarMonth, Person, Face, Notifications, CreditCard, Security, ChevronRight, Logout, CheckCircle, Cancel, DeleteForever, Warning, Wallet, Edit } from "@mui/icons-material";
+import { Home, Pets, CalendarMonth, Person, Face, Notifications, CreditCard, Security, ChevronRight, Logout, CheckCircle, Cancel, DeleteForever, Warning, Wallet, Edit, Chat } from "@mui/icons-material";
 import { theme } from "@/lib/theme";
 import { useRouter } from "next/navigation";
 import Link from 'next/link';
@@ -18,7 +18,7 @@ import { API_BASE_URL } from "@/lib/config";
 export default function ProfileView() {
     const router = useRouter();
     const [userName, setUserName] = useState("Guest");
-    const [navValue, setNavValue] = useState(3);
+    const [navValue, setNavValue] = useState(4);
     const [isFaceIdEnabled, setIsFaceIdEnabled] = useState(false);
     const [showDeactivateDialog, setShowDeactivateDialog] = useState(false);
     const [isRegistering, setIsRegistering] = useState(false); // Guard against double-clicks
@@ -30,8 +30,9 @@ export default function ProfileView() {
 
     // Profile Edit State
     const [showEditDialog, setShowEditDialog] = useState(false);
-    const [editData, setEditData] = useState({ name: "", email: "" });
+    const [editData, setEditData] = useState({ name: "", email: "", phone: "" });
     const [isUpdating, setIsUpdating] = useState(false);
+    const [profileData, setProfileData] = useState<any>(null);
 
     const handleOpenAudit = () => {
         console.log("🔘 Security Audit Button Clicked");
@@ -70,6 +71,12 @@ export default function ProfileView() {
                     }
                 })
                 .catch(err => console.error("❌ Error checking Face ID status:", err));
+
+            // NEW: Fetch full profile
+            fetch(`${API_BASE_URL}/api/user/profile?email=${encodeURIComponent(email)}`)
+                .then(res => res.json())
+                .then(data => setProfileData(data))
+                .catch(err => console.error("❌ Error fetching profile:", err));
         }
     }, []);
 
@@ -78,6 +85,7 @@ export default function ProfileView() {
         if (newValue === 0) router.push('/client/dashboard');
         if (newValue === 1) router.push('/client/pets');
         if (newValue === 2) router.push('/client/bookings');
+        if (newValue === 3) router.push('/client/messenger');
     };
 
     const handleFaceIdToggle = async () => {
@@ -224,7 +232,8 @@ export default function ProfileView() {
                 body: JSON.stringify({
                     current_email: currentEmail,
                     new_email: editData.email || null,
-                    new_name: editData.name || null
+                    new_name: editData.name || null,
+                    new_phone: editData.phone || null
                 })
             });
 
@@ -236,6 +245,14 @@ export default function ProfileView() {
                 if (editData.email) {
                     localStorage.setItem('vanguard_email', editData.email);
                 }
+
+                // Refresh profile data
+                const updatedRes = await fetch(`${API_BASE_URL}/api/user/profile?email=${encodeURIComponent(editData.email || currentEmail)}`);
+                if (updatedRes.ok) {
+                    const updatedData = await updatedRes.json();
+                    setProfileData(updatedData);
+                }
+
                 setMessage({ text: "Profile updated successfully!", severity: "success", open: true });
                 setShowEditDialog(false);
             } else {
@@ -266,7 +283,11 @@ export default function ProfileView() {
                                 </Avatar>
                                 <IconButton
                                     onClick={() => {
-                                        setEditData({ name: userName, email: localStorage.getItem('vanguard_email') || "" });
+                                        setEditData({
+                                            name: userName,
+                                            email: localStorage.getItem('vanguard_email') || "",
+                                            phone: profileData?.phone || ""
+                                        });
                                         setShowEditDialog(true);
                                     }}
                                     sx={{
@@ -280,7 +301,14 @@ export default function ProfileView() {
                                 </IconButton>
                             </Box>
                             <Typography variant="h5" fontWeight="bold">{userName}</Typography>
-                            <Typography variant="body2" color="text.secondary">Elite Member</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                {profileData?.role === 'owner' ? 'Founding Member' : 'Elite Member'}
+                            </Typography>
+                            {profileData?.created_at && (
+                                <Typography variant="caption" sx={{ opacity: 0.5 }}>
+                                    Member since {new Date(profileData.created_at).getFullYear()}
+                                </Typography>
+                            )}
                         </Stack>
 
                         <Stack spacing={2}>
@@ -361,6 +389,7 @@ export default function ProfileView() {
                         <BottomNavigationAction label="Home" icon={<Home />} />
                         <BottomNavigationAction label="Pets" icon={<Pets />} />
                         <BottomNavigationAction label="Bookings" icon={<CalendarMonth />} />
+                        <BottomNavigationAction label="Chat" icon={<Chat />} />
                         <BottomNavigationAction label="Profile" icon={<Person />} />
                     </BottomNavigation>
                 </Paper>
@@ -493,6 +522,13 @@ export default function ProfileView() {
                                 variant="filled"
                                 value={editData.email}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditData({ ...editData, email: e.target.value })}
+                            />
+                            <TextField
+                                label="Phone Number"
+                                fullWidth
+                                variant="filled"
+                                value={editData.phone}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditData({ ...editData, phone: e.target.value })}
                             />
                         </Stack>
                     </DialogContent>
