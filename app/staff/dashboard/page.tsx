@@ -111,7 +111,7 @@ export default function StaffDashboard() {
 
                     <Grid container spacing={4}>
                         {/* LEFT COLUMN: Main Feed */}
-                        <Grid item xs={12} md={8}>
+                        <Grid xs={12} md={8}>
                             {/* OWNER VIEW: SECURITY LOGS */}
                             {role === 'owner' && (
                                 <Paper sx={{ p: 3, mb: 4, bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212, 175, 55, 0.1)' }}>
@@ -166,7 +166,7 @@ export default function StaffDashboard() {
                         </Grid>
 
                         {/* RIGHT COLUMN: Quick Stats */}
-                        <Grid item xs={12} md={4}>
+                        <Grid xs={12} md={4}>
                             <Stack spacing={3}>
                                 <Paper sx={{ p: 3, bgcolor: 'rgba(5,6,8,0.8)', border: '1px solid rgba(255,255,255,0.1)' }}>
                                     <Typography variant="subtitle2" color="text.secondary">ACTIVE GUESTS</Typography>

@@ -134,7 +134,7 @@ export default function ClientSignup() {
                             {/* Form */}
                             <Stack spacing={3}>
                                 <Grid container spacing={2}>
-                                    <Grid item xs={12} sm={6}>
+                                    <Grid xs={12} sm={6}>
                                         <TextField
                                             fullWidth
                                             placeholder="Full Name"
@@ -143,7 +143,7 @@ export default function ClientSignup() {
                                             InputProps={{ startAdornment: <Person sx={{ color: 'text.secondary', mr: 1, fontSize: 20 }} /> }}
                                         />
                                     </Grid>
-                                    <Grid item xs={12} sm={6}>
+                                    <Grid xs={12} sm={6}>
                                         <TextField
                                             fullWidth
                                             placeholder="Phone"
