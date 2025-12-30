@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     Box, Typography, Container, Stack, Paper, Avatar,
     BottomNavigation, BottomNavigationAction, ThemeProvider, CssBaseline,
@@ -13,32 +13,26 @@ import Link from 'next/link';
 
 export default function ProfileView() {
     const router = useRouter();
-    const [navValue, setNavValue] = useState(3); // Index 3 is Profile
+    const [userName, setUserName] = useState("Guest");
 
-    const handleNavChange = (newValue: number) => {
-        setNavValue(newValue);
-        if (newValue === 0) router.push('/client/dashboard');
-        if (newValue === 1) router.push('/client/pets');
-        if (newValue === 2) router.push('/client/bookings');
-    };
+    useEffect(() => {
+        const storedName = localStorage.getItem('vanguard_user');
+        if (storedName) setUserName(storedName);
+    }, []);
 
-    return (
-        <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pb: 10 }}>
+    // ... (rest of render)
 
-                <Container maxWidth="sm" sx={{ pt: 4 }}>
-                    <Stack spacing={4}>
+    {/* Header Profile */ }
+    <Stack alignItems="center" spacing={1}>
+        <Avatar sx={{ width: 100, height: 100, bgcolor: 'primary.main', fontSize: '2.5rem', fontWeight: 'bold', mb: 1 }}>
+            {userName.charAt(0).toUpperCase()}
+        </Avatar>
+        <Typography variant="h5" fontWeight="bold">{userName}</Typography>
+        <Typography variant="body2" color="text.secondary">Member since 2023</Typography>
+        <Chip label="Gold Member" size="small" sx={{ bgcolor: 'rgba(212,175,55,0.2)', color: 'primary.main', fontWeight: 'bold' }} />
+    </Stack>
 
-                        {/* Header Profile */}
-                        <Stack alignItems="center" spacing={1}>
-                            <Avatar sx={{ width: 100, height: 100, bgcolor: 'primary.main', fontSize: '2.5rem', fontWeight: 'bold', mb: 1 }}>J</Avatar>
-                            <Typography variant="h5" fontWeight="bold">James Wilson</Typography>
-                            <Typography variant="body2" color="text.secondary">Member since 2023</Typography>
-                            <Chip label="Gold Member" size="small" sx={{ bgcolor: 'rgba(212,175,55,0.2)', color: 'primary.main', fontWeight: 'bold' }} />
-                        </Stack>
-
-                        {/* Settings Groups */}
+    {/* Settings Groups */ }
                         <Stack spacing={2}>
                             <Typography variant="overline" color="text.secondary" fontWeight="bold" letterSpacing={2} sx={{ ml: 1 }}>Preferences</Typography>
                             <Paper sx={{ borderRadius: 3, bgcolor: 'rgba(255,255,255,0.03)', overflow: 'hidden' }}>
@@ -73,25 +67,26 @@ export default function ProfileView() {
                             </Button>
                         </Link>
 
-                    </Stack>
-                </Container>
+                    </Stack >
+                </Container >
 
-                {/* Bottom Nav */}
-                <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100 }} elevation={3}>
-                    <BottomNavigation
-                        showLabels
-                        value={navValue}
-                        onChange={(event, newValue) => handleNavChange(newValue)}
-                        sx={{ bgcolor: '#0B0C10', height: 70, '& .Mui-selected': { color: '#D4AF37 !important' } }}
-                    >
-                        <BottomNavigationAction label="Home" icon={<Home />} />
-                        <BottomNavigationAction label="Pets" icon={<Pets />} />
-                        <BottomNavigationAction label="Bookings" icon={<CalendarMonth />} />
-                        <BottomNavigationAction label="Profile" icon={<Person />} />
-                    </BottomNavigation>
-                </Paper>
-            </Box>
-        </ThemeProvider>
+        {/* Bottom Nav */ }
+        < Paper sx = {{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100 }
+} elevation = { 3} >
+    <BottomNavigation
+        showLabels
+        value={navValue}
+        onChange={(event, newValue) => handleNavChange(newValue)}
+        sx={{ bgcolor: '#0B0C10', height: 70, '& .Mui-selected': { color: '#D4AF37 !important' } }}
+    >
+        <BottomNavigationAction label="Home" icon={<Home />} />
+        <BottomNavigationAction label="Pets" icon={<Pets />} />
+        <BottomNavigationAction label="Bookings" icon={<CalendarMonth />} />
+        <BottomNavigationAction label="Profile" icon={<Person />} />
+    </BottomNavigation>
+                </Paper >
+            </Box >
+        </ThemeProvider >
     );
 }
 

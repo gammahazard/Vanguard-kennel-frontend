@@ -42,7 +42,7 @@ export default function BookingsView() {
                                     <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
                                         <Box>
                                             <Typography variant="h6" fontWeight="bold">Holiday Boarding</Typography>
-                                            <Typography variant="body2" color="text.secondary">Winston & Luna</Typography>
+                                            <Typography variant="body2" color="text.secondary">My Pets</Typography>
                                         </Box>
                                         <Chip label="CONFIRMED" color="success" size="small" sx={{ fontWeight: 'bold' }} />
                                     </Stack>
@@ -72,8 +72,8 @@ export default function BookingsView() {
                         <Box>
                             <Typography variant="overline" color="text.secondary" fontWeight="bold" letterSpacing={2}>Past Activity</Typography>
                             <Stack spacing={2} sx={{ mt: 1 }}>
-                                <PastBookingCard title="Grooming - Full Service" date="Nov 15, 2024" pet="Winston" />
-                                <PastBookingCard title="Daycare - Full Day" date="Nov 10, 2024" pet="Luna" />
+                                <PastBookingCard title="Grooming - Full Service" date="Nov 15, 2024" pet="Pet 1" />
+                                <PastBookingCard title="Daycare - Full Day" date="Nov 10, 2024" pet="Pet 2" />
                             </Stack>
                         </Box>
 

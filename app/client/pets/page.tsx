@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import {
-    Box, Typography, Container, Stack, Paper, Avatar,
+    Box, Typography, Container, Stack, Paper, Avatar, Chip,
     BottomNavigation, BottomNavigationAction, ThemeProvider, CssBaseline
 } from "@mui/material";
 import { Home, Pets, CalendarMonth, Person, MoreVert } from "@mui/icons-material";
@@ -39,7 +39,9 @@ export default function PetsView() {
                             breed="Golden Retriever"
                             status="Checked In"
                             statusColor="#4ade80"
-                            img="/dog-1.jpg" // Placeholder logic
+                            weight="32"
+                            temperament="Friendly / High Energy"
+                            allergies="Chicken"
                         />
                         {/* Pet Card 2 */}
                         <PetCard
@@ -47,7 +49,8 @@ export default function PetsView() {
                             breed="French Bulldog"
                             status="At Home"
                             statusColor="text.secondary"
-                            img="/dog-2.jpg"
+                            weight="12"
+                            temperament="Calm / Stubborn"
                         />
                     </Stack>
                 </Container>
@@ -71,18 +74,28 @@ export default function PetsView() {
     );
 }
 
-function PetCard({ name, breed, status, statusColor, img }: any) {
+function PetCard({ name, breed, status, statusColor, img, weight, temperament, allergies }: any) {
     return (
-        <Paper sx={{ p: 2, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar sx={{ width: 60, height: 60, bgcolor: 'primary.main' }}>{name[0]}</Avatar>
-            <Box sx={{ flex: 1 }}>
-                <Typography variant="h6" fontWeight="bold">{name}</Typography>
-                <Typography variant="body2" color="text.secondary">{breed}</Typography>
-                <Typography variant="caption" sx={{ color: statusColor, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    • {status}
-                </Typography>
-            </Box>
-            <MoreVert sx={{ color: 'text.secondary' }} />
+        <Paper sx={{ p: 2, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <Stack direction="row" alignItems="center" gap={2} mb={2}>
+                <Avatar sx={{ width: 60, height: 60, bgcolor: 'primary.main', fontSize: '1.5rem', fontWeight: 'bold' }}>{name[0]}</Avatar>
+                <Box sx={{ flex: 1 }}>
+                    <Typography variant="h6" fontWeight="bold">{name}</Typography>
+                    <Typography variant="body2" color="text.secondary">{breed}</Typography>
+                    <Typography variant="caption" sx={{ color: statusColor, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        • {status}
+                    </Typography>
+                </Box>
+                <MoreVert sx={{ color: 'text.secondary' }} />
+            </Stack>
+
+            <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
+                <Chip size="small" label={`${weight} kg`} sx={{ bgcolor: 'rgba(255,255,255,0.05)', color: 'text.secondary' }} />
+                <Chip size="small" label={temperament} sx={{ bgcolor: 'rgba(255,255,255,0.05)', color: 'text.secondary' }} />
+                {allergies && (
+                    <Chip size="small" label={`⚠️ ${allergies}`} sx={{ bgcolor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', fontWeight: 'bold' }} />
+                )}
+            </Stack>
         </Paper>
     );
 }
