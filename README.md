@@ -78,7 +78,7 @@ sequenceDiagram
     participant HW as Secure Enclave
 
     U->>F: Toggle Face ID (Profile)
-    F->>B: GET /register/start (Challenge)
+    F->>B: POST /register/start (Challenge)
     B-->>F: Challenge + RP ID
     F->>HW: Browser Invoke (WebAuthn)
     HW-->>U: Prompt Face/Fingerprint
@@ -98,7 +98,7 @@ sequenceDiagram
     participant HW as Secure Enclave
 
     U->>F: Tap "Login with Face ID"
-    F->>B: GET /login/start (Challenge)
+    F->>B: POST /login/start (Challenge)
     B-->>F: Challenge + Allowed Credentials
     F->>HW: Browser Invoke (WebAuthn)
     HW-->>U: Prompt Face/Fingerprint

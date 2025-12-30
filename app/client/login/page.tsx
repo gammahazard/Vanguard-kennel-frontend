@@ -114,6 +114,13 @@ export default function ClientLogin() {
                 throw new Error(errorText || "No Face ID found for this account.");
             }
             const options = await resStart.json();
+            console.log("📦 Login Options Received:", JSON.stringify(options, null, 2));
+
+            // CRITICAL CHECK: Are there any allowed credentials?
+            if (!options.publicKey.allowCredentials || options.publicKey.allowCredentials.length === 0) {
+                console.error("❌ SERVER ERROR: Server sent NO allowed credentials! It does not know your Face ID.");
+                throw new Error("Server lost your Face ID key. Please re-register.");
+            }
             console.log("📦 WebAuthn Challenge received:", options);
 
             // Standardize the options for the browser
