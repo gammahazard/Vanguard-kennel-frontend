@@ -35,22 +35,22 @@ export default function PetsView() {
                     <Stack spacing={2}>
                         {/* Pet Card 1 */}
                         <PetCard
-                            name="Winston"
-                            breed="Golden Retriever"
+                            name="Pet 1"
+                            breed="Example Breed"
                             status="Checked In"
                             statusColor="#4ade80"
                             weight="32"
                             temperament="Friendly / High Energy"
-                            allergies="Chicken"
+                            allergies="None"
                         />
                         {/* Pet Card 2 */}
                         <PetCard
-                            name="Luna"
-                            breed="French Bulldog"
+                            name="Pet 2"
+                            breed="Example Breed"
                             status="At Home"
                             statusColor="text.secondary"
                             weight="12"
-                            temperament="Calm / Stubborn"
+                            temperament="Calm / Relaxed"
                         />
                     </Stack>
                 </Container>

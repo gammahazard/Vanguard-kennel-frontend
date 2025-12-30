@@ -82,7 +82,7 @@ export default function ClientDashboard() {
                         {/* 1. STATUS BADGE */}
                         <Stack direction="row" alignItems="center" spacing={1} sx={{ bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 2, p: 1, pl: 2, width: 'fit-content' }}>
                             <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#4ade80', boxShadow: '0 0 10px #4ade80' }} />
-                            <Typography variant="caption" sx={{ fontWeight: 600 }}>Winston is Active</Typography>
+                            <Typography variant="caption" sx={{ fontWeight: 600 }}>Guest is Active</Typography>
                         </Stack>
 
                         {/* 2. LIVE FEED CARD */}

@@ -57,10 +57,9 @@ export default function ClientSignup() {
                 localStorage.setItem('vanguard_role', data.role);
                 localStorage.setItem('vanguard_user', data.name);
                 router.push('/client/dashboard');
-            } else if (res.status === 409) {
-                setError("Account already exists.");
             } else {
-                setError("Registration failed.");
+                const errorText = await res.text();
+                setError(errorText || "Registration failed.");
             }
         } catch (err) {
             setError("Connection failed.");

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/lib/config";
@@ -16,10 +16,13 @@ import {
     IconButton,
     ThemeProvider,
     CssBaseline,
-    Divider
+    Divider,
+    Alert,
+    Snackbar
 } from "@mui/material";
 import { Visibility, VisibilityOff, Face, ArrowBack } from "@mui/icons-material";
 import { theme } from "@/lib/theme";
+import { startAuthentication } from '@simplewebauthn/browser';
 
 export default function ClientLogin() {
     const router = useRouter(); // Use App Router
@@ -28,6 +31,14 @@ export default function ClientLogin() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [faceIdAvailable, setFaceIdAvailable] = useState(false);
+
+    useEffect(() => {
+        const enabled = localStorage.getItem('vanguard_faceid_enabled');
+        if (enabled === 'true') {
+            setFaceIdAvailable(true);
+        }
+    }, []);
 
     const handleLogin = async () => {
         setLoading(true);
@@ -55,13 +66,53 @@ export default function ClientLogin() {
                     router.push('/client/dashboard');
                 }
             } else {
-                setError("Invalid email or password");
+                const errorText = await res.text();
+                setError(errorText || "Invalid email or password");
             }
-        } catch (err) {
-            console.error("Login Failed", err);
-            setError("Connection to server failed");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleFaceIdLogin = async () => {
+        if (!email) {
+            setError("Enter your email first to start Face ID login.");
+            return;
+        }
+
+        try {
+            const resStart = await fetch(`${API_BASE_URL}/api/auth/webauthn/login/start`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+
+            if (!resStart.ok) {
+                const errorText = await resStart.text();
+                throw new Error(errorText || "No Face ID found for this account.");
+            }
+            const options = await resStart.json();
+
+            const attResp = await startAuthentication(options.public_key);
+
+            const resFinish = await fetch(`${API_BASE_URL}/api/auth/webauthn/login/finish`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ challenge_id: options.challenge_id, response: attResp })
+            });
+
+            if (resFinish.ok) {
+                const data = await resFinish.json();
+                localStorage.setItem('vanguard_user', data.name);
+                localStorage.setItem('vanguard_role', data.role);
+                localStorage.setItem('vanguard_email', email);
+                router.push('/client/dashboard');
+            } else {
+                const errorText = await resFinish.text();
+                throw new Error(errorText || "Verification failed.");
+            }
+        } catch (err: any) {
+            setError(err.message || "Face ID login failed");
         }
     };
 
@@ -170,24 +221,29 @@ export default function ClientLogin() {
                             </Button>
                         </Stack>
 
-                        <Divider sx={{ width: '100%', opacity: 0.1 }}>OR</Divider>
+                        {faceIdAvailable && (
+                            <>
+                                <Divider sx={{ width: '100%', opacity: 0.1 }}>OR</Divider>
 
-                        <Button
-                            fullWidth
-                            variant="outlined"
-                            startIcon={<Face />}
-                            sx={{
-                                borderColor: 'rgba(255,255,255,0.1)',
-                                color: 'text.secondary',
-                                py: 1.5,
-                                '&:hover': {
-                                    borderColor: '#fff',
-                                    color: '#fff'
-                                }
-                            }}
-                        >
-                            Log in with Face ID
-                        </Button>
+                                <Button
+                                    fullWidth
+                                    variant="outlined"
+                                    startIcon={<Face />}
+                                    onClick={handleFaceIdLogin}
+                                    sx={{
+                                        borderColor: 'rgba(255,255,255,0.1)',
+                                        color: 'text.secondary',
+                                        py: 1.5,
+                                        '&:hover': {
+                                            borderColor: '#fff',
+                                            color: '#fff'
+                                        }
+                                    }}
+                                >
+                                    Log in with Face ID
+                                </Button>
+                            </>
+                        )}
 
                         <Stack direction="row" spacing={1}>
                             <Typography variant="caption" color="text.secondary">

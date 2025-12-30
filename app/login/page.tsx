@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -31,6 +31,14 @@ export default function UnifiedLogin() {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ text: "", open: false });
+    const [faceIdAvailable, setFaceIdAvailable] = useState(false);
+
+    useEffect(() => {
+        const enabled = localStorage.getItem('vanguard_faceid_enabled');
+        if (enabled === 'true') {
+            setFaceIdAvailable(true);
+        }
+    }, []);
 
     const handleLogin = async () => {
         setLoading(true);
@@ -53,7 +61,8 @@ export default function UnifiedLogin() {
                     router.push('/client/dashboard');
                 }
             } else {
-                setMessage({ text: "Authentication failed. Check credentials.", open: true });
+                const errorText = await res.text();
+                setMessage({ text: errorText || "Authentication failed. Check credentials.", open: true });
             }
         } catch (err) {
             setMessage({ text: "Connection error. Backend might be offline.", open: true });
@@ -201,25 +210,29 @@ export default function UnifiedLogin() {
                             </Button>
                         </Stack>
 
-                        <Divider sx={{ width: '100%', opacity: 0.1 }}>OR</Divider>
+                        {faceIdAvailable && (
+                            <>
+                                <Divider sx={{ width: '100%', opacity: 0.1 }}>OR</Divider>
 
-                        <Button
-                            fullWidth
-                            variant="outlined"
-                            startIcon={<Face />}
-                            onClick={handleFaceIdLogin}
-                            sx={{
-                                borderColor: 'rgba(255,255,255,0.1)',
-                                color: 'text.secondary',
-                                py: 1.5,
-                                '&:hover': {
-                                    borderColor: '#fff',
-                                    color: '#fff'
-                                }
-                            }}
-                        >
-                            Log in with Face ID
-                        </Button>
+                                <Button
+                                    fullWidth
+                                    variant="outlined"
+                                    startIcon={<Face />}
+                                    onClick={handleFaceIdLogin}
+                                    sx={{
+                                        borderColor: 'rgba(255,255,255,0.1)',
+                                        color: 'text.secondary',
+                                        py: 1.5,
+                                        '&:hover': {
+                                            borderColor: '#fff',
+                                            color: '#fff'
+                                        }
+                                    }}
+                                >
+                                    Log in with Face ID
+                                </Button>
+                            </>
+                        )}
 
                         <Stack direction="row" spacing={1}>
                             <Typography variant="caption" color="text.secondary">
