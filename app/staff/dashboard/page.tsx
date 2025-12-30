@@ -170,7 +170,7 @@ export default function StaffDashboard() {
                             <Stack spacing={3}>
                                 <Paper sx={{ p: 3, bgcolor: 'rgba(5,6,8,0.8)', border: '1px solid rgba(255,255,255,0.1)' }}>
                                     <Typography variant="subtitle2" color="text.secondary">ACTIVE GUESTS</Typography>
-                                    <Typography variant="h3" color="white">12</Typography>
+                                    <Typography variant="h3" color="white">{clients.length}</Typography>
                                 </Paper>
                                 {role === 'staff' && (
                                     <Paper sx={{ p: 3, bgcolor: 'rgba(5,6,8,0.8)', border: '1px solid rgba(255,255,255,0.1)' }}>
