@@ -36,10 +36,16 @@ export default function ClientSignup() {
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
     const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
     const handleRegister = async () => {
+        if (password !== confirmPassword) {
+            setError("Passwords do not match.");
+            return;
+        }
+
         setLoading(true);
         setError("");
 
@@ -167,8 +173,18 @@ export default function ClientSignup() {
                                     placeholder="Password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    error={!!error}
-                                    helperText={error}
+                                    error={!!error && !error.includes("Passwords")}
+                                    InputProps={{ startAdornment: <Lock sx={{ color: 'text.secondary', mr: 1, fontSize: 20 }} /> }}
+                                />
+
+                                <TextField
+                                    fullWidth
+                                    type="password"
+                                    placeholder="Confirm Password"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    error={!!error && error.includes("Passwords")}
+                                    helperText={error.includes("Passwords") ? error : ""}
                                     InputProps={{ startAdornment: <Lock sx={{ color: 'text.secondary', mr: 1, fontSize: 20 }} /> }}
                                 />
 
