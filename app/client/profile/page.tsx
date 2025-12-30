@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import {
     Box, Typography, Container, Stack, Paper, Avatar,
     BottomNavigation, BottomNavigationAction, ThemeProvider, CssBaseline,
-    List, ListItem, ListItemButton, ListItemIcon, ListItemText, ListItemSecondaryAction, Switch, Divider, Button, Alert, Snackbar
+    List, ListItem, ListItemButton, ListItemIcon, ListItemText, ListItemSecondaryAction, Switch, Divider, Button, Alert, Snackbar,
+    Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions
 } from "@mui/material";
 import { Home, Pets, CalendarMonth, Person, Face, Notifications, CreditCard, Security, ChevronRight, Logout } from "@mui/icons-material";
 import { theme } from "@/lib/theme";
@@ -18,6 +19,7 @@ export default function ProfileView() {
     const [userName, setUserName] = useState("Guest");
     const [navValue, setNavValue] = useState(3);
     const [isFaceIdEnabled, setIsFaceIdEnabled] = useState(false);
+    const [showDeactivateDialog, setShowDeactivateDialog] = useState(false);
     const [message, setMessage] = useState({ text: "", severity: "info", open: false });
 
     useEffect(() => {
@@ -55,9 +57,9 @@ export default function ProfileView() {
     };
 
     const handleFaceIdToggle = async () => {
-        // If already enabled, don't try to register again
+        // If already enabled, show "Are you sure?" dialog instead of just toggling
         if (isFaceIdEnabled) {
-            setMessage({ text: "Face ID is already active for this account.", severity: "info", open: true });
+            setShowDeactivateDialog(true);
             return;
         }
 
@@ -118,6 +120,29 @@ export default function ProfileView() {
         } catch (err: any) {
             console.error("🆘 Registration Error:", err);
             setMessage({ text: err.message || "Registration failed", severity: "error", open: true });
+        }
+    };
+
+    const handleConfirmDeactivate = async () => {
+        setShowDeactivateDialog(false);
+        try {
+            const email = localStorage.getItem('vanguard_email');
+            if (!email) return;
+
+            const res = await fetch(`${API_BASE_URL}/api/auth/webauthn/unregister?email=${encodeURIComponent(email)}`, {
+                method: 'DELETE'
+            });
+
+            if (res.ok) {
+                setIsFaceIdEnabled(false);
+                localStorage.setItem('vanguard_faceid_enabled', 'false');
+                setMessage({ text: "Face ID has been disabled.", severity: "info", open: true });
+            } else {
+                throw new Error("Failed to unregister on server");
+            }
+        } catch (err) {
+            console.error(err);
+            setMessage({ text: "Failed to disable Face ID. Please try again.", severity: "error", open: true });
         }
     };
 
@@ -196,6 +221,25 @@ export default function ProfileView() {
                         <BottomNavigationAction label="Profile" icon={<Person />} />
                     </BottomNavigation>
                 </Paper>
+
+                <Dialog
+                    open={showDeactivateDialog}
+                    onClose={() => setShowDeactivateDialog(false)}
+                    PaperProps={{ sx: { borderRadius: 3, bgcolor: '#1A1B1F' } }}
+                >
+                    <DialogTitle sx={{ fontWeight: 'bold' }}>Disable Face ID?</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText color="text.secondary">
+                            Are you sure you want to disable Face ID? You will need to use your password to log in next time.
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions sx={{ p: 2 }}>
+                        <Button onClick={() => setShowDeactivateDialog(false)} color="inherit">Cancel</Button>
+                        <Button onClick={handleConfirmDeactivate} variant="contained" color="error" sx={{ borderRadius: 2 }}>
+                            Disable Face ID
+                        </Button>
+                    </DialogActions>
+                </Dialog>
 
                 <Snackbar
                     open={message.open}

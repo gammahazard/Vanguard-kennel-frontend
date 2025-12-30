@@ -35,10 +35,32 @@ export default function ClientLogin() {
 
     useEffect(() => {
         const enabled = localStorage.getItem('vanguard_faceid_enabled');
-        if (enabled === 'true') {
-            setFaceIdAvailable(true);
-        }
+        const lastEmail = localStorage.getItem('vanguard_email');
+        if (enabled === 'true') setFaceIdAvailable(true);
+        if (lastEmail) setEmail(lastEmail);
     }, []);
+
+    // Dynamically check if Face ID is available for this email
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            if (email.includes('@') && email.includes('.')) {
+                fetch(`${API_BASE_URL}/api/auth/check?email=${encodeURIComponent(email)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.faceid_registered) {
+                            setFaceIdAvailable(true);
+                            localStorage.setItem('vanguard_faceid_enabled', 'true');
+                        } else {
+                            // Only hide if we aren't already "remembering" it from a previous session
+                            const stored = localStorage.getItem('vanguard_faceid_enabled');
+                            if (stored !== 'true') setFaceIdAvailable(false);
+                        }
+                    })
+                    .catch(err => console.error("Face ID check failed:", err));
+            }
+        }, 500); // Debounce
+        return () => clearTimeout(timeoutId);
+    }, [email]);
 
     const handleLogin = async () => {
         setLoading(true);
@@ -54,10 +76,11 @@ export default function ClientLogin() {
             if (res.ok) {
                 const data = await res.json();
                 console.log("Login Success:", data);
-                // Store token (Securely this should be HttpOnly cookie, but for demo localStorage is fine)
                 localStorage.setItem('vanguard_token', data.token);
                 localStorage.setItem('vanguard_role', data.role);
                 localStorage.setItem('vanguard_user', data.name);
+                localStorage.setItem('vanguard_email', email);
+                localStorage.setItem('vanguard_faceid_enabled', data.faceid_enabled ? 'true' : 'false');
 
                 // Route based on role
                 if (data.role === 'staff' || data.role === 'owner') {
