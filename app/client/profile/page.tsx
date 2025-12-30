@@ -521,6 +521,8 @@ export default function ProfileView() {
                                 fullWidth
                                 variant="filled"
                                 value={editData.email}
+                                disabled
+                                helperText="Contact support to change email"
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditData({ ...editData, email: e.target.value })}
                             />
                             <TextField
