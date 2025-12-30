@@ -26,6 +26,8 @@ export default function ProfileView() {
     const [auditLogs, setAuditLogs] = useState<any[]>([]);
 
     const handleOpenAudit = () => {
+        console.log("🔘 Security Audit Button Clicked");
+        setMessage({ text: "Fetching security logs...", severity: "info", open: true });
         const email = localStorage.getItem('vanguard_email');
         if (email) {
             fetch(`${API_BASE_URL}/api/user/security-logs?email=${encodeURIComponent(email)}`)
@@ -335,19 +337,19 @@ export default function ProfileView() {
 function SettingsItem({ icon, title, subtitle, hasSwitch, defaultChecked, onClick }: any) {
     return (
         <ListItem disablePadding>
-            <ListItemButton onClick={onClick}>
-                <ListItemIcon sx={{ color: 'text.secondary', minWidth: 40 }}>{icon}</ListItemIcon>
-                <ListItemText
-                    primary={<Typography variant="body2" fontWeight="500">{title}</Typography>}
-                    secondary={subtitle ? <Typography variant="caption" color="text.secondary">{subtitle}</Typography> : null}
-                />
-                <ListItemSecondaryAction>
-                    {hasSwitch ? (
-                        <Switch edge="end" color="primary" defaultChecked={defaultChecked} />
-                    ) : (
-                        <ChevronRight sx={{ color: 'text.secondary', fontSize: 20 }} />
-                    )}
-                </ListItemSecondaryAction>
+            <ListItemButton onClick={onClick} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <ListItemIcon sx={{ color: 'text.secondary', minWidth: 40 }}>{icon}</ListItemIcon>
+                    <ListItemText
+                        primary={<Typography variant="body2" fontWeight="500">{title}</Typography>}
+                        secondary={subtitle ? <Typography variant="caption" color="text.secondary">{subtitle}</Typography> : null}
+                    />
+                </Box>
+                {hasSwitch ? (
+                    <Switch edge="end" color="primary" defaultChecked={defaultChecked} />
+                ) : (
+                    <ChevronRight sx={{ color: 'text.secondary', fontSize: 20 }} />
+                )}
             </ListItemButton>
         </ListItem>
     );
