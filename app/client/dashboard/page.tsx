@@ -30,7 +30,8 @@ import {
     Bedtime,
     Wallet,
     CreditCard,
-    CurrencyBitcoin
+    CurrencyBitcoin,
+    Apple
 } from "@mui/icons-material";
 import { theme } from "@/lib/theme";
 import { useRouter } from "next/navigation";
@@ -191,6 +192,14 @@ export default function ClientDashboard() {
                                         sx={{ borderColor: '#0070BA', color: '#0070BA' }} // PayPal Blue
                                     >
                                         PayPal
+                                    </Button>
+                                    <Button
+                                        variant="contained"
+                                        fullWidth
+                                        startIcon={<Apple />}
+                                        sx={{ bgcolor: 'black', color: 'white', '&:hover': { bgcolor: '#333' } }}
+                                    >
+                                        Apple Pay
                                     </Button>
                                 </Stack>
 
