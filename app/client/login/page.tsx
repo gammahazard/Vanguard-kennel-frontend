@@ -138,7 +138,7 @@ export default function ClientLogin() {
     useEffect(() => {
         const timeoutId = setTimeout(() => {
             checkEmail(email);
-        }, 800);
+        }, 400);
         return () => clearTimeout(timeoutId);
     }, [email]);
 
