@@ -55,10 +55,58 @@ sequenceDiagram
 - **Premium UI**: Material UI components with a glassmorphism aesthetic.
 - **Rich Data Seeding**: Complete demo environment with 12+ VIP clients and audit logs.
 
+## 🛡️ Biometric Authentication (WebAuthn)
+
+Vanguard provides cutting-edge security via **WebAuthn (Face ID / Touch ID)**. This allows users to authenticate without passwords using their device's hardware security module.
+
+### How it works
+
+Vanguard implements the FIDO2/WebAuthn standard, ensuring that your biometric data **never leaves your device**. Only a cryptographically signed "challenge" is sent to our Rust backend.
+
+#### 1. Registration Flow
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend (PWA)
+    participant B as Backend (Rust)
+    participant HW as Secure Enclave
+
+    U->>F: Toggle Face ID (Profile)
+    F->>B: GET /register/start (Challenge)
+    B-->>F: Challenge + RP ID
+    F->>HW: Browser Invoke (WebAuthn)
+    HW-->>U: Prompt Face/Fingerprint
+    U-->>HW: Authenticate
+    HW-->>F: Signed Attestation
+    F->>B: POST /register/finish
+    B->>B: Verify & Store Credential
+    B-->>F: Success
+```
+
+#### 2. Authentication (Login) Flow
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend (PWA)
+    participant B as Backend (Rust)
+    participant HW as Secure Enclave
+
+    U->>F: Tap "Login with Face ID"
+    F->>B: GET /login/start (Challenge)
+    B-->>F: Challenge + Allowed Credentials
+    F->>HW: Browser Invoke (WebAuthn)
+    HW-->>U: Prompt Face/Fingerprint
+    U-->>HW: Authenticate
+    HW-->>F: Signed Assertion
+    F->>B: POST /login/finish
+    B->>B: Verify Signature
+    B-->>F: JWT Login Token
+```
+
 ## 🛠️ Tech Stack
 
-- **Frontend**: Next.js 14, Material UI, Emotion, PWA.
-- **Backend**: Rust, Axum, SQLx, Argon2.
+- **Frontend**: Next.js 14, Material UI, Emotion, PWA, `@simplewebauthn/browser`.
+- **Backend**: Rust, Axum, SQLx, Argon2, `webauthn-rs`.
 - **Database**: SQLite.
 - **Infrastructure**: Vercel (Frontend), Linode VPS (Backend).
 
