@@ -5,9 +5,9 @@ import {
     Box, Typography, Container, Stack, Paper, Avatar, Chip,
     BottomNavigation, BottomNavigationAction, ThemeProvider, CssBaseline,
     Fab, Dialog, DialogTitle, DialogContent, DialogContentText, TextField, DialogActions, Button, Grid,
-    CircularProgress, Snackbar, Alert
+    CircularProgress, Snackbar, Alert, IconButton
 } from "@mui/material";
-import { Home, Pets, CalendarMonth, Person, MoreVert, Add, MedicalServices, Scale, Notes, Close, DeleteForever } from "@mui/icons-material";
+import { Home, Pets, CalendarMonth, Person, MoreVert, Add, MedicalServices, Scale, Notes, Close, DeleteForever, ModeEdit } from "@mui/icons-material";
 import { theme } from "@/lib/theme";
 import { API_BASE_URL } from "@/lib/config";
 import Link from "next/link";
@@ -27,6 +27,9 @@ export default function PetsView() {
     const [petToDelete, setPetToDelete] = useState<any | null>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // Editing state
+    const [editingPet, setEditingPet] = useState<any | null>(null);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -79,10 +82,15 @@ export default function PetsView() {
         if (!email) return;
 
         try {
-            const res = await fetch(`${API_BASE_URL}/api/pets`, {
-                method: 'POST',
+            const isEditing = !!editingPet;
+            const url = isEditing ? `${API_BASE_URL}/api/pets/${editingPet.id}` : `${API_BASE_URL}/api/pets`;
+            const method = isEditing ? 'PUT' : 'POST';
+
+            const res = await fetch(url, {
+                method: method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    id: isEditing ? editingPet.id : undefined,
                     owner_email: email,
                     name: formData.name,
                     breed: formData.breed,
@@ -98,8 +106,9 @@ export default function PetsView() {
             });
 
             if (res.ok) {
-                setSuccessMsg("Pet added successfully!");
+                setSuccessMsg(isEditing ? "Pet updated successfully!" : "Pet added successfully!");
                 setShowAddModal(false);
+                setEditingPet(null);
                 setFormData({
                     name: "", breed: "", age: "", weight: "", temperament: "", allergies: "",
                     notes: "", vet_name: "", vet_phone: "", image_url: ""
@@ -113,6 +122,23 @@ export default function PetsView() {
             console.error(err);
             setSuccessMsg(`Failed to save pet (Network/Client): ${err}`);
         }
+    };
+
+    const startEdit = (pet: any) => {
+        setEditingPet(pet);
+        setFormData({
+            name: pet.name,
+            breed: pet.breed,
+            age: pet.age.toString(),
+            weight: pet.weight.toString(),
+            temperament: pet.temperament,
+            allergies: pet.allergies || "",
+            notes: pet.notes || "",
+            vet_name: pet.vet_name || "",
+            vet_phone: pet.vet_phone || "",
+            image_url: pet.image_url || ""
+        });
+        setShowAddModal(true);
     };
 
     const handleDeletePet = async () => {
@@ -177,6 +203,7 @@ export default function PetsView() {
                                 <PetCard
                                     key={pet.id}
                                     pet={pet}
+                                    onEdit={() => startEdit(pet)}
                                     onDelete={() => {
                                         setPetToDelete(pet);
                                         setShowDeleteConfirm(true);
@@ -198,9 +225,16 @@ export default function PetsView() {
                     <Add />
                 </Fab>
 
-                {/* Add Pet Modal */}
-                <Dialog open={showAddModal} onClose={() => setShowAddModal(false)} PaperProps={{ sx: { bgcolor: '#1A1B1F', borderRadius: 3 } }}>
-                    <DialogTitle>Add New VIP</DialogTitle>
+                {/* Add/Edit Pet Modal */}
+                <Dialog open={showAddModal} onClose={() => {
+                    setShowAddModal(false);
+                    setEditingPet(null);
+                    setFormData({
+                        name: "", breed: "", age: "", weight: "", temperament: "", allergies: "",
+                        notes: "", vet_name: "", vet_phone: "", image_url: ""
+                    });
+                }} PaperProps={{ sx: { bgcolor: '#1A1B1F', borderRadius: 3 } }}>
+                    <DialogTitle>{editingPet ? "Edit VIP Profile" : "Add New VIP"}</DialogTitle>
                     <DialogContent>
                         <DialogContentText color="text.secondary" sx={{ mb: 2 }}>
                             Create a digital profile for your pet.
@@ -319,16 +353,25 @@ export default function PetsView() {
     );
 }
 
-function PetCard({ pet, onDelete }: any) {
+function PetCard({ pet, onEdit, onDelete }: any) {
     return (
         <Paper sx={{ p: 2, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', position: 'relative' }}>
-            <Button
-                size="small"
-                sx={{ position: 'absolute', top: 8, right: 8, minWidth: 0, p: 0.5, color: 'text.secondary', '&:hover': { color: 'error.main' } }}
-                onClick={onDelete}
-            >
-                <Close fontSize="small" />
-            </Button>
+            <Stack direction="row" spacing={1} sx={{ position: 'absolute', top: 8, right: 8 }}>
+                <IconButton
+                    size="small"
+                    sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
+                    onClick={onEdit}
+                >
+                    <ModeEdit fontSize="small" />
+                </IconButton>
+                <IconButton
+                    size="small"
+                    sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}
+                    onClick={onDelete}
+                >
+                    <Close fontSize="small" />
+                </IconButton>
+            </Stack>
 
             <Stack direction="row" alignItems="center" gap={2} mb={2}>
                 <Avatar src={pet.image_url} sx={{ width: 60, height: 60, bgcolor: 'primary.main', fontSize: '1.5rem', fontWeight: 'bold' }}>{pet.name[0]}</Avatar>
