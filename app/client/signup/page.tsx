@@ -67,6 +67,7 @@ export default function ClientSignup() {
                 localStorage.setItem('vanguard_token', data.token);
                 localStorage.setItem('vanguard_role', data.role);
                 localStorage.setItem('vanguard_user', data.name);
+                localStorage.setItem('vanguard_email', email); // Save for login pre-fill
                 router.push('/client/dashboard');
             } else {
                 const errorText = await res.text();
