@@ -110,7 +110,9 @@ export default function ClientLogin() {
                 throw new Error(errorText || "No Face ID found for this account.");
             }
             const options = await resStart.json();
-            const attResp = await startAuthentication(options.publicKey || options.public_key);
+            // Flattened response support: use the whole object if publicKey is missing
+            const authOptions = options.publicKey || options.public_key || options;
+            const attResp = await startAuthentication(authOptions);
 
             const resFinish = await fetch(`${API_BASE_URL}/api/auth/webauthn/login/finish`, {
                 method: 'POST',
@@ -194,7 +196,7 @@ export default function ClientLogin() {
                                     color: '#000',
                                     fontWeight: 'bold',
                                     borderRadius: 3,
-                                    mb: -2,
+                                    mb: -1,
                                     '&:hover': { bgcolor: '#fff' }
                                 }}
                             >
