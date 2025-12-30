@@ -297,7 +297,16 @@ export default function ProfileView() {
                                         </ListItemIcon>
                                         <ListItemText
                                             primary={<Typography variant="body2" fontWeight="500">{log.action.replace(/_/g, " ")}</Typography>}
-                                            secondary={<Typography variant="caption" color="text.secondary">{new Date(log.timestamp + "Z").toLocaleString()}</Typography>}
+                                            secondary={
+                                                <Stack direction="row" spacing={1} alignItems="center">
+                                                    <Typography variant="caption" color="text.secondary">{new Date(log.timestamp + "Z").toLocaleString()}</Typography>
+                                                    {log.ip_address && (
+                                                        <Typography variant="caption" sx={{ bgcolor: 'rgba(255,255,255,0.05)', px: 0.5, borderRadius: 1, fontFamily: 'monospace' }}>
+                                                            {log.ip_address}
+                                                        </Typography>
+                                                    )}
+                                                </Stack>
+                                            }
                                         />
                                     </ListItem>
                                 ))
