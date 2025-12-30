@@ -160,7 +160,7 @@ export default function SplashGate() {
                                 Secure Gateway
                             </Typography>
 
-                            <Link href="/login" passHref style={{ width: '100%', textDecoration: 'none' }}>
+                            <Link href="/client/login" passHref style={{ width: '100%', textDecoration: 'none' }}>
                                 <Button
                                     variant="contained"
                                     fullWidth
