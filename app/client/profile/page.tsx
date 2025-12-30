@@ -193,18 +193,24 @@ export default function ProfileView() {
                             </Paper>
                         </Stack>
 
-                        <Link href="/" passHref style={{ textDecoration: 'none' }}>
-                            <Button
-                                variant="outlined"
-                                color="error"
-                                startIcon={<Logout />}
-                                onClick={() => localStorage.clear()}
-                                fullWidth
-                                sx={{ py: 1.5, borderRadius: 3, borderColor: 'rgba(239, 68, 68, 0.3)', color: '#ef4444' }}
-                            >
-                                Sign Out
-                            </Button>
-                        </Link>
+                        <Button
+                            variant="outlined"
+                            color="error"
+                            startIcon={<Logout />}
+                            onClick={() => {
+                                // Keep the identity, clear the session
+                                const email = localStorage.getItem('vanguard_email');
+                                const faceId = localStorage.getItem('vanguard_faceid_enabled');
+                                localStorage.clear();
+                                if (email) localStorage.setItem('vanguard_email', email);
+                                if (faceId) localStorage.setItem('vanguard_faceid_enabled', faceId);
+                                router.push('/');
+                            }}
+                            fullWidth
+                            sx={{ py: 1.5, borderRadius: 3, borderColor: 'rgba(239, 68, 68, 0.3)', color: '#ef4444' }}
+                        >
+                            Sign Out
+                        </Button>
                     </Stack>
                 </Container>
 
