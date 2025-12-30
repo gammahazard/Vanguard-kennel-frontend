@@ -13,6 +13,7 @@ import {
     Button,
     Stack,
     IconButton,
+    InputAdornment,
     ThemeProvider,
     CssBaseline,
     Paper,
@@ -26,7 +27,9 @@ import {
     Person,
     Phone,
     Email,
-    Lock
+    Lock,
+    Visibility,
+    VisibilityOff
 } from "@mui/icons-material";
 import { theme } from "@/lib/theme";
 
@@ -37,6 +40,8 @@ export default function ClientSignup() {
     const [phone, setPhone] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
@@ -169,23 +174,41 @@ export default function ClientSignup() {
 
                                 <TextField
                                     fullWidth
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     placeholder="Password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     error={!!error && !error.includes("Passwords")}
-                                    InputProps={{ startAdornment: <Lock sx={{ color: 'text.secondary', mr: 1, fontSize: 20 }} /> }}
+                                    InputProps={{
+                                        startAdornment: <Lock sx={{ color: 'text.secondary', mr: 1, fontSize: 20 }} />,
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                                                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        )
+                                    }}
                                 />
 
                                 <TextField
                                     fullWidth
-                                    type="password"
+                                    type={showConfirmPassword ? "text" : "password"}
                                     placeholder="Confirm Password"
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    error={!!error && error.includes("Passwords")}
-                                    helperText={error.includes("Passwords") ? error : ""}
-                                    InputProps={{ startAdornment: <Lock sx={{ color: 'text.secondary', mr: 1, fontSize: 20 }} /> }}
+                                    error={(confirmPassword !== "" && password !== confirmPassword) || (!!error && error.includes("Passwords"))}
+                                    helperText={confirmPassword !== "" && password !== confirmPassword ? "Passwords do not match" : (error.includes("Passwords") ? error : "")}
+                                    InputProps={{
+                                        startAdornment: <Lock sx={{ color: 'text.secondary', mr: 1, fontSize: 20 }} />,
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)} edge="end">
+                                                    {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        )
+                                    }}
                                 />
 
                                 <Box sx={{ p: 2, bgcolor: 'rgba(212, 175, 55, 0.05)', borderRadius: 2, display: 'flex', gap: 2 }}>
@@ -200,7 +223,7 @@ export default function ClientSignup() {
                                     variant="contained"
                                     size="large"
                                     onClick={handleRegister}
-                                    disabled={loading}
+                                    disabled={loading || !name || !email || !password || password !== confirmPassword}
                                     endIcon={<ArrowForward />}
                                 >
                                     {loading ? "Processing..." : "Submit Application"}
