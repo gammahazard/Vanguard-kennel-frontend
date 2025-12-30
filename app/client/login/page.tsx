@@ -40,27 +40,23 @@ export default function ClientLogin() {
         if (lastEmail) setEmail(lastEmail);
     }, []);
 
-    // Dynamically check if Face ID is available for this email
-    useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            if (email.includes('@') && email.includes('.')) {
-                fetch(`${API_BASE_URL}/api/auth/check?email=${encodeURIComponent(email)}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.faceid_registered) {
-                            setFaceIdAvailable(true);
-                            localStorage.setItem('vanguard_faceid_enabled', 'true');
-                        } else {
-                            // Only hide if we aren't already "remembering" it from a previous session
-                            const stored = localStorage.getItem('vanguard_faceid_enabled');
-                            if (stored !== 'true') setFaceIdAvailable(false);
-                        }
-                    })
-                    .catch(err => console.error("Face ID check failed:", err));
+    const checkEmail = async (currentEmail: string) => {
+        if (currentEmail.includes('@') && currentEmail.includes('.')) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/auth/check?email=${encodeURIComponent(currentEmail)}`);
+                const data = await res.json();
+                if (data.faceid_registered) {
+                    setFaceIdAvailable(true);
+                    localStorage.setItem('vanguard_faceid_enabled', 'true');
+                } else {
+                    const stored = localStorage.getItem('vanguard_faceid_enabled');
+                    if (stored !== 'true') setFaceIdAvailable(false);
+                }
+            } catch (err) {
+                console.error("Face ID check failed:", err);
             }
-        }, 500); // Debounce
-        return () => clearTimeout(timeoutId);
-    }, [email]);
+        }
+    };
 
     const handleLogin = async () => {
         setLoading(true);
@@ -82,9 +78,8 @@ export default function ClientLogin() {
                 localStorage.setItem('vanguard_email', email);
                 localStorage.setItem('vanguard_faceid_enabled', data.faceid_enabled ? 'true' : 'false');
 
-                // Route based on role
                 if (data.role === 'staff' || data.role === 'owner') {
-                    router.push('/staff/dashboard'); // Placeholder for now
+                    router.push('/staff/dashboard');
                 } else {
                     router.push('/client/dashboard');
                 }
@@ -115,7 +110,6 @@ export default function ClientLogin() {
                 throw new Error(errorText || "No Face ID found for this account.");
             }
             const options = await resStart.json();
-
             const attResp = await startAuthentication(options.publicKey || options.public_key);
 
             const resFinish = await fetch(`${API_BASE_URL}/api/auth/webauthn/login/finish`, {
@@ -129,6 +123,7 @@ export default function ClientLogin() {
                 localStorage.setItem('vanguard_user', data.name);
                 localStorage.setItem('vanguard_role', data.role);
                 localStorage.setItem('vanguard_email', email);
+                localStorage.setItem('vanguard_faceid_enabled', 'true');
                 router.push('/client/dashboard');
             } else {
                 const errorText = await resFinish.text();
@@ -138,6 +133,14 @@ export default function ClientLogin() {
             setError(err.message || "Face ID login failed");
         }
     };
+
+    // Dynamically check if Face ID is available for this email
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            checkEmail(email);
+        }, 800);
+        return () => clearTimeout(timeoutId);
+    }, [email]);
 
     return (
         <ThemeProvider theme={theme}>
@@ -197,18 +200,48 @@ export default function ClientLogin() {
                                 WELCOME BACK
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                                Access your pet's dashboard
+                                {faceIdAvailable ? "Use biometrics for a faster entry" : "Access your pet's dashboard"}
                             </Typography>
                         </Box>
 
                         <Stack spacing={3} width="100%">
+                            {/* FACE ID BUTTON - Move it to the TOP if available! */}
+                            {faceIdAvailable && (
+                                <Button
+                                    fullWidth
+                                    variant="contained"
+                                    size="large"
+                                    startIcon={<Face />}
+                                    onClick={handleFaceIdLogin}
+                                    sx={{
+                                        py: 2,
+                                        bgcolor: 'primary.main',
+                                        color: '#000',
+                                        fontWeight: 'bold',
+                                        '&:hover': { bgcolor: '#fff' }
+                                    }}
+                                >
+                                    Login with Face ID
+                                </Button>
+                            )}
+
+                            {faceIdAvailable && <Divider sx={{ opacity: 0.1 }}>OR USE PASSWORD</Divider>}
+
                             <TextField
                                 fullWidth
                                 placeholder="Email or Phone"
                                 variant="outlined"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
+                                onBlur={() => checkEmail(email)}
                                 error={!!error}
+                                InputProps={{
+                                    endAdornment: faceIdAvailable ? (
+                                        <InputAdornment position="end">
+                                            <Face color="primary" sx={{ opacity: 0.8 }} />
+                                        </InputAdornment>
+                                    ) : null
+                                }}
                             />
                             <TextField
                                 fullWidth
@@ -238,7 +271,13 @@ export default function ClientLogin() {
                                 size="large"
                                 onClick={handleLogin}
                                 disabled={loading}
-                                sx={{ py: 2, fontSize: '1rem' }}
+                                sx={{
+                                    py: 2,
+                                    fontSize: '1rem',
+                                    bgcolor: faceIdAvailable ? 'rgba(255,255,255,0.05)' : 'primary.main',
+                                    color: faceIdAvailable ? '#fff' : '#000',
+                                    border: faceIdAvailable ? '1px solid rgba(255,255,255,0.1)' : 'none'
+                                }}
                             >
                                 {loading ? "Verifying..." : "Login"}
                             </Button>
