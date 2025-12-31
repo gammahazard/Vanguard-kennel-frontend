@@ -95,6 +95,27 @@ export default function StaffDashboard() {
     const [loadingBookings, setLoadingBookings] = useState(false);
     const [loadingClients, setLoadingClients] = useState(false);
 
+    // Optimized sorting for Directory: Unread messages first, then pet owners, then alphabetical
+    const sortedDirectoryClients = useMemo(() => {
+        return [...clients].sort((a, b) => {
+            // 1. Unread messages first
+            const unreadA = a.unread_messages_count || 0;
+            const unreadB = b.unread_messages_count || 0;
+            if (unreadB !== unreadA) return unreadB - unreadA;
+
+            // 2. Pet owners first
+            const petsA = a.pets?.length || 0;
+            const petsB = b.pets?.length || 0;
+            if (petsA > 0 && petsB === 0) return -1;
+            if (petsA === 0 && petsB > 0) return 1;
+
+            // 3. Alphabetical
+            const nameA = a.name || a.email || "";
+            const nameB = b.name || b.email || "";
+            return nameA.localeCompare(nameB);
+        });
+    }, [clients]);
+
     // Optimized sorting for Comms: Unread first, then longest waiting
     const sortedCommsClients = useMemo(() => {
         return [...clients].sort((a, b) => {
@@ -162,7 +183,8 @@ export default function StaffDashboard() {
         setLoadingBookings(true);
         try {
             const token = localStorage.getItem('vanguard_token');
-            const resBookings = await fetch(`${API_BASE_URL}/api/user/bookings`, {
+            // Use staff endpoint to see ALL pending bookings
+            const resBookings = await fetch(`${API_BASE_URL}/api/staff/bookings`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (resBookings.ok) {
@@ -740,7 +762,7 @@ export default function StaffDashboard() {
                                             <Avatar sx={{ bgcolor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}><AssignmentIcon /></Avatar>
                                             <Box>
                                                 <Typography fontWeight="bold" color="white">{booking.dog_name || "Unknown Pet"}</Typography>
-                                                <Typography variant="caption" color="#94a3b8">Owner: {booking.owner_email}</Typography>
+                                                <Typography variant="caption" color="#94a3b8">Owner: {booking.owner_name || booking.user_email}</Typography>
                                                 <Typography variant="body2" sx={{ mt: 0.5, color: '#e2e8f0' }}>Service: {booking.service_type} | Date: {new Date(booking.start_date).toLocaleDateString()}</Typography>
                                             </Box>
                                         </Stack>
@@ -772,7 +794,7 @@ export default function StaffDashboard() {
                                 <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 3, bgcolor: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)' }}>
                                     <Typography color="#64748b">No clients or pets found.</Typography>
                                 </Paper>
-                            ) : [...clients].sort((a, b) => (b.unread_messages_count || 0) - (a.unread_messages_count || 0)).map((client, idx) => (
+                            ) : sortedDirectoryClients.map((client, idx) => (
                                 <Paper key={idx} sx={{
                                     p: 2,
                                     borderRadius: 3,
@@ -815,7 +837,7 @@ export default function StaffDashboard() {
                                                     {client.name || client.email}
                                                 </Typography>
                                                 <Typography variant="caption" color="#94a3b8" noWrap sx={{ display: 'block' }}>
-                                                    Pets: {client.pets?.map((p: any) => p.name).join(', ') || 'None registered'}
+                                                    Pets: {client.pets?.length > 0 ? client.pets.map((p: any) => p.name).join(', ') : 'No pets registered'}
                                                 </Typography>
                                             </Box>
                                         </Stack>
@@ -824,7 +846,14 @@ export default function StaffDashboard() {
                                             <Button
                                                 size="small"
                                                 variant="outlined"
-                                                onClick={() => { setSelectedClient(client); setShowPetModal(true); }}
+                                                onClick={() => {
+                                                    if (client.pets?.length > 0) {
+                                                        setSelectedClient(client);
+                                                        setShowPetModal(true);
+                                                    } else {
+                                                        setMessage({ text: "User has not added any pets", severity: "info", open: true });
+                                                    }
+                                                }}
                                                 sx={{ borderColor: 'rgba(255,255,255,0.1)', color: '#94a3b8', borderRadius: 2 }}
                                             >
                                                 View Pets

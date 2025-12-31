@@ -145,6 +145,11 @@ export default function MessengerView() {
                                         maxWidth: '80%'
                                     }}
                                 >
+                                    {!isMe && (
+                                        <Typography variant="caption" sx={{ ml: 1, mb: 0.5, display: 'block', color: 'primary.main', fontWeight: 'bold', fontSize: '0.7rem' }}>
+                                            {msg.sender_name || "Support Team"}
+                                        </Typography>
+                                    )}
                                     <Paper sx={{
                                         p: 1.5,
                                         px: 2,
