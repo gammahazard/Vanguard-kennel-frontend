@@ -24,7 +24,9 @@ import {
     InputLabel,
     Select,
     InputAdornment,
-    Switch
+    Switch,
+    Badge as MuiBadge,
+    Grid
 } from "@mui/material";
 import {
     Restaurant,
@@ -46,15 +48,21 @@ import {
     CheckCircle,
     Cancel,
     Message,
-    Assignment as AssignmentIcon
+    Assignment as AssignmentIcon,
+    Badge,
+    Send,
+    CrisisAlert,
+    Error as ErrorIcon,
+    History,
+    Chat as ChatIcon
 } from "@mui/icons-material";
 import { startRegistration } from '@simplewebauthn/browser';
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { API_BASE_URL } from "@/lib/config";
 
 interface GuestPet {
-    id: number;
+    id: string;
     name: string;
     breed: string;
     status: 'Active' | 'Check-in' | 'Check-out';
@@ -63,6 +71,7 @@ interface GuestPet {
     walked: boolean;
     meds: boolean | null;
     img: string;
+    owner_email: string;
 }
 
 const MOCK_FINANCIALS = {
@@ -77,18 +86,34 @@ const MOCK_FINANCIALS = {
 export default function StaffDashboard() {
     const [guests, setGuests] = useState<GuestPet[]>([]);
     const [loadingGuests, setLoadingGuests] = useState(true);
-    const [viewMode, setViewMode] = useState<'operations' | 'business' | 'requests' | 'directory'>('operations');
+    const [viewMode, setViewMode] = useState<'operations' | 'business' | 'requests' | 'directory' | 'comms'>('operations');
     const [isOwner, setIsOwner] = useState(false);
     const [isFaceIdEnabled, setIsFaceIdEnabled] = useState(false);
     const [showSettingsDialog, setShowSettingsDialog] = useState(false);
     const [isRegistering, setIsRegistering] = useState(false);
     const [message, setMessage] = useState({ text: "", severity: "info", open: false });
 
-    // New States for Staff 2.0
+    // New States for Staff 2.0 & Phase 10
     const [pendingBookings, setPendingBookings] = useState<any[]>([]);
     const [clients, setClients] = useState<any[]>([]);
     const [loadingBookings, setLoadingBookings] = useState(false);
     const [loadingClients, setLoadingClients] = useState(false);
+
+    // Detail & Modal States
+    const [selectedClient, setSelectedClient] = useState<any>(null);
+    const [showPetModal, setShowPetModal] = useState(false);
+    const [showCheckInModal, setShowCheckInModal] = useState(false);
+    const [showIncidentModal, setShowIncidentModal] = useState(false);
+    const [selectedPet, setSelectedPet] = useState<any>(null);
+    const [incidentText, setIncidentText] = useState("");
+    const [incidentSeverity, setIncidentSeverity] = useState("Warning");
+
+    // Messaging States
+    const [activeChat, setActiveChat] = useState<any>(null);
+    const [newMessage, setNewMessage] = useState("");
+    const [messages, setMessages] = useState<any[]>([]);
+    const [sendingMsg, setSendingMsg] = useState(false);
+    const scrollRef = useRef<HTMLDivElement>(null);
 
     // Initial Face ID Check
     useEffect(() => {
@@ -353,13 +378,97 @@ export default function StaffDashboard() {
         }
     };
 
-    const toggleAction = (id: number, action: 'fed' | 'walked' | 'meds') => {
+    const toggleAction = (id: string, action: 'fed' | 'walked' | 'meds') => {
         setGuests(guests.map(g => {
             if (g.id === id) {
                 return { ...g, [action]: !g[action] };
             }
             return g;
         }));
+    };
+
+    const fetchMessages = async (targetEmail: string) => {
+        try {
+            const token = localStorage.getItem('vanguard_token');
+            const res = await fetch(`${API_BASE_URL}/api/messages?target=${encodeURIComponent(targetEmail)}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setMessages(data);
+                // Mark as read after fetching if not already
+                markAsRead(targetEmail);
+            }
+        } catch (e) {
+            console.error("Chat sync failed", e);
+        }
+    };
+
+    const markAsRead = async (email: string) => {
+        try {
+            const token = localStorage.getItem('vanguard_token');
+            await fetch(`${API_BASE_URL}/api/messages/read`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ sender_email: email })
+            });
+            // Update counts in directory view
+            setClients(prev => prev.map(c => c.email === email ? { ...c, unread_messages_count: 0 } : c));
+        } catch (e) {
+            console.error("Read mark failed", e);
+        }
+    };
+
+    const handleSendMessage = async () => {
+        if (!newMessage.trim() || !activeChat) return;
+        setSendingMsg(true);
+        try {
+            const token = localStorage.getItem('vanguard_token');
+            const senderEmail = localStorage.getItem('vanguard_email');
+            const res = await fetch(`${API_BASE_URL}/api/messages`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({
+                    sender_email: senderEmail,
+                    receiver_email: activeChat.email,
+                    content: newMessage
+                })
+            });
+            if (res.ok) {
+                setNewMessage("");
+                fetchMessages(activeChat.email);
+            }
+        } catch (e) {
+            console.error("Send failed", e);
+        } finally {
+            setSendingMsg(false);
+        }
+    };
+
+    const handleLogIncident = async () => {
+        if (!incidentText.trim() || !selectedPet) return;
+        try {
+            const token = localStorage.getItem('vanguard_token');
+            const res = await fetch(`${API_BASE_URL}/api/incidents`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({
+                    id: Math.random().toString(36).substr(2, 9),
+                    booking_id: "ops_log",
+                    pet_id: selectedPet.id,
+                    content: incidentText,
+                    severity: incidentSeverity
+                })
+            });
+            if (res.ok) {
+                setMessage({ text: "Alert logged successfully!", severity: "success", open: true });
+                setShowIncidentModal(false);
+                setIncidentText("");
+                fetchGuests(); // Refresh to show new alerts
+            }
+        } catch (e) {
+            console.error("Incident log failed", e);
+        }
     };
 
     return (
@@ -422,6 +531,14 @@ export default function StaffDashboard() {
                                 sx={{ borderRadius: 2.5, px: 2, fontSize: '0.8rem', color: viewMode === 'directory' ? 'black' : 'text.secondary', bgcolor: viewMode === 'directory' ? 'white' : 'transparent', '&:hover': { bgcolor: viewMode === 'directory' ? 'white' : 'rgba(255,255,255,0.05)' } }}
                             >
                                 Clients
+                            </Button>
+                            <Button
+                                variant={viewMode === 'comms' ? 'contained' : 'text'}
+                                onClick={() => setViewMode('comms')}
+                                startIcon={<ChatIcon />}
+                                sx={{ borderRadius: 2.5, px: 2, fontSize: '0.8rem', color: viewMode === 'comms' ? 'black' : 'text.secondary', bgcolor: viewMode === 'comms' ? '#D4AF37' : 'transparent', '&:hover': { bgcolor: viewMode === 'comms' ? '#D4AF37' : 'rgba(255,255,255,0.05)' } }}
+                            >
+                                Comms
                             </Button>
                             {isOwner && (
                                 <Button
@@ -715,7 +832,11 @@ export default function StaffDashboard() {
                 {/* --- CLIENT DIRECTORY VIEW --- */}
                 {viewMode === 'directory' && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                        <Typography variant="h6" fontWeight="bold" sx={{ mb: 3, color: 'white' }}>Client & Pet Directory</Typography>
+                        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+                            <Typography variant="h6" fontWeight="bold" sx={{ color: 'white' }}>Client & Pet Directory</Typography>
+                            <Chip label={`${clients.length} Clients`} size="small" />
+                        </Stack>
+
                         <Stack spacing={2}>
                             {loadingClients ? (
                                 <Box sx={{ py: 4, textAlign: 'center' }}>
@@ -725,23 +846,323 @@ export default function StaffDashboard() {
                                 <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 3, bgcolor: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)' }}>
                                     <Typography color="#64748b">No clients or pets found.</Typography>
                                 </Paper>
-                            ) : clients.map((client, idx) => (
-                                <Paper key={idx} sx={{ p: 2, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                    <Stack direction="row" justifyContent="space-between" alignItems="center">
-                                        <Stack direction="row" spacing={2} alignItems="center">
-                                            <Avatar src={client.pets?.[0]?.photo_url} sx={{ bgcolor: 'rgba(212, 175, 55, 0.1)', color: '#D4AF37' }}>{client.email[0].toUpperCase()}</Avatar>
-                                            <Box>
-                                                <Typography fontWeight="bold" color="white">{client.email}</Typography>
-                                                <Typography variant="caption" color="#94a3b8">Pets: {client.pets?.map((p: any) => p.name).join(', ') || 'No pets registered'}</Typography>
+                            ) : [...clients].sort((a, b) => (b.unread_messages_count || 0) - (a.unread_messages_count || 0)).map((client, idx) => (
+                                <Paper key={idx} sx={{
+                                    p: 2,
+                                    borderRadius: 3,
+                                    bgcolor: (client.unread_messages_count > 0) ? 'rgba(212, 175, 55, 0.05)' : 'rgba(255,255,255,0.01)',
+                                    border: (client.unread_messages_count > 0) ? '1px solid rgba(212, 175, 55, 0.2)' : '1px solid rgba(255,255,255,0.05)',
+                                    transition: 'all 0.2s',
+                                    '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' }
+                                }}>
+                                    <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
+                                        <Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
+                                            <MuiBadge
+                                                badgeContent={client.unread_messages_count}
+                                                color="error"
+                                                overlap="circular"
+                                                invisible={!client.unread_messages_count}
+                                            >
+                                                <Avatar
+                                                    src={client.pets?.[0]?.photo_url}
+                                                    sx={{
+                                                        bgcolor: (client.unread_messages_count > 0) ? '#D4AF37' : 'rgba(212, 175, 55, 0.1)',
+                                                        color: (client.unread_messages_count > 0) ? 'black' : '#D4AF37',
+                                                        width: 48,
+                                                        height: 48
+                                                    }}
+                                                >
+                                                    {client.email[0].toUpperCase()}
+                                                </Avatar>
+                                            </MuiBadge>
+
+                                            <Box sx={{ minWidth: 0, flex: 1 }}>
+                                                <Typography
+                                                    fontWeight="bold"
+                                                    color="white"
+                                                    noWrap
+                                                    sx={{
+                                                        fontSize: '1rem',
+                                                        textOverflow: 'ellipsis'
+                                                    }}
+                                                >
+                                                    {client.email}
+                                                </Typography>
+                                                <Typography variant="caption" color="#94a3b8" noWrap sx={{ display: 'block' }}>
+                                                    Pets: {client.pets?.map((p: any) => p.name).join(', ') || 'None registered'}
+                                                </Typography>
                                             </Box>
                                         </Stack>
-                                        <Button size="small" variant="outlined" sx={{ borderColor: 'rgba(255,255,255,0.1)', color: '#94a3b8' }}>View Stats</Button>
+
+                                        <Stack direction="row" spacing={1}>
+                                            <Button
+                                                size="small"
+                                                variant="outlined"
+                                                onClick={() => { setSelectedClient(client); setShowPetModal(true); }}
+                                                sx={{ borderColor: 'rgba(255,255,255,0.1)', color: '#94a3b8', borderRadius: 2 }}
+                                            >
+                                                View Pets
+                                            </Button>
+                                            {(client.unread_messages_count > 0 || viewMode === 'directory') && (
+                                                <IconButton
+                                                    size="small"
+                                                    onClick={() => { setActiveChat(client); setViewMode('comms'); fetchMessages(client.email); }}
+                                                    sx={{
+                                                        bgcolor: (client.unread_messages_count > 0) ? '#D4AF37' : 'rgba(255,255,255,0.05)',
+                                                        color: (client.unread_messages_count > 0) ? 'black' : '#D4AF37',
+                                                        '&:hover': { bgcolor: '#F5D061' }
+                                                    }}
+                                                >
+                                                    <ChatIcon fontSize="small" />
+                                                </IconButton>
+                                            )}
+                                        </Stack>
                                     </Stack>
                                 </Paper>
                             ))}
                         </Stack>
                     </motion.div>
                 )}
+
+                {/* --- COMMS VIEW --- */}
+                {viewMode === 'comms' && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                        <Grid container spacing={0} sx={{ height: '70vh', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 4, overflow: 'hidden', bgcolor: 'rgba(255,255,255,0.01)' }}>
+                            {/* Conversations List */}
+                            <Grid size={{ xs: 12, md: 4 }} sx={{ borderRight: '1px solid rgba(255,255,255,0.05)', display: { xs: activeChat ? 'none' : 'block', md: 'block' } }}>
+                                <Box sx={{ p: 2, borderBottom: '1px solid rgba(255,255,255,0.05)', bgcolor: 'rgba(255,255,255,0.02)' }}>
+                                    <Typography variant="subtitle2" color="#94a3b8">Active Threads</Typography>
+                                </Box>
+                                <Box sx={{ overflowY: 'auto', height: 'calc(70vh - 51px)' }}>
+                                    {clients.map((client, idx) => (
+                                        <Box
+                                            key={idx}
+                                            onClick={() => { setActiveChat(client); fetchMessages(client.email); }}
+                                            sx={{
+                                                p: 2,
+                                                cursor: 'pointer',
+                                                borderBottom: '1px solid rgba(255,255,255,0.02)',
+                                                bgcolor: activeChat?.email === client.email ? 'rgba(212, 175, 55, 0.1)' : 'transparent',
+                                                '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' }
+                                            }}
+                                        >
+                                            <Stack direction="row" spacing={2} alignItems="center">
+                                                <MuiBadge badgeContent={client.unread_messages_count} color="error" invisible={!client.unread_messages_count}>
+                                                    <Avatar sx={{ width: 40, height: 40, bgcolor: 'rgba(255,255,255,0.05)' }}>{client.email[0].toUpperCase()}</Avatar>
+                                                </MuiBadge>
+                                                <Box sx={{ minWidth: 0 }}>
+                                                    <Typography variant="body2" fontWeight="bold" noWrap color="white">{client.email}</Typography>
+                                                    <Typography variant="caption" color="#64748b" noWrap display="block">
+                                                        {client.pets?.[0]?.name || 'Client'}
+                                                    </Typography>
+                                                </Box>
+                                            </Stack>
+                                        </Box>
+                                    ))}
+                                </Box>
+                            </Grid>
+
+                            {/* Chat Window */}
+                            <Grid size={{ xs: 12, md: 8 }} sx={{ height: '100%', display: { xs: activeChat ? 'flex' : 'none', md: 'flex' }, flexDirection: 'column' }}>
+                                {activeChat ? (
+                                    <>
+                                        <Box sx={{ p: 2, borderBottom: '1px solid rgba(255,255,255,0.05)', bgcolor: 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <Stack direction="row" spacing={1} alignItems="center">
+                                                <IconButton size="small" sx={{ display: { md: 'none' }, color: 'white' }} onClick={() => setActiveChat(null)}>
+                                                    <Cancel />
+                                                </IconButton>
+                                                <Typography variant="subtitle1" fontWeight="bold" color="#D4AF37">{activeChat.email}</Typography>
+                                            </Stack>
+                                            <Message sx={{ color: '#D4AF37', opacity: 0.5 }} />
+                                        </Box>
+
+                                        <Box sx={{ flex: 1, overflowY: 'auto', p: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                            {messages.map((msg, i) => {
+                                                const isStaff = msg.sender_email === localStorage.getItem('vanguard_email');
+                                                return (
+                                                    <Box key={i} sx={{ alignSelf: isStaff ? 'flex-end' : 'flex-start', maxWidth: '80%' }}>
+                                                        <Paper sx={{
+                                                            p: 2,
+                                                            borderRadius: 3,
+                                                            bgcolor: isStaff ? '#D4AF37' : 'rgba(255,255,255,0.05)',
+                                                            color: isStaff ? 'black' : 'white',
+                                                            boxShadow: isStaff ? '0 4px 20px rgba(212,175,55,0.2)' : 'none'
+                                                        }}>
+                                                            <Typography variant="body2">{msg.content}</Typography>
+                                                        </Paper>
+                                                        <Typography variant="caption" color="#64748b" sx={{ mt: 0.5, display: 'block', textAlign: isStaff ? 'right' : 'left' }}>
+                                                            {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        </Typography>
+                                                    </Box>
+                                                );
+                                            })}
+                                            <div ref={scrollRef} />
+                                        </Box>
+
+                                        <Box sx={{ p: 2, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                            <Stack direction="row" spacing={1}>
+                                                <TextField
+                                                    fullWidth
+                                                    size="small"
+                                                    placeholder="Type a secure response..."
+                                                    value={newMessage}
+                                                    onChange={(e) => setNewMessage(e.target.value)}
+                                                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                                                    sx={{
+                                                        '& .MuiOutlinedInput-root': { color: 'white', bgcolor: 'rgba(255,255,255,0.02)', borderRadius: 3 }
+                                                    }}
+                                                />
+                                                <IconButton
+                                                    onClick={handleSendMessage}
+                                                    disabled={sendingMsg || !newMessage.trim()}
+                                                    sx={{ bgcolor: '#D4AF37', color: 'black', '&:hover': { bgcolor: '#F5D061' }, '&.Mui-disabled': { bgcolor: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.1)' } }}
+                                                >
+                                                    {sendingMsg ? <CircularProgress size={20} color="inherit" /> : <Send fontSize="small" />}
+                                                </IconButton>
+                                            </Stack>
+                                        </Box>
+                                    </>
+                                ) : (
+                                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: 0.3 }}>
+                                        <Message sx={{ fontSize: 64, mb: 2 }} />
+                                        <Typography>Secure Comms Channel</Typography>
+                                        <Typography variant="caption">Select a thread to begin</Typography>
+                                    </Box>
+                                )}
+                            </Grid>
+                        </Grid>
+                    </motion.div>
+                )}
+
+                {/* --- PET DETAIL MODAL --- */}
+                <Dialog open={showPetModal} onClose={() => setShowPetModal(false)} fullWidth maxWidth="sm">
+                    <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: '#1a1a1a', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                        <Typography variant="h6" color="#D4AF37" fontWeight="bold">VIP Profile & Records</Typography>
+                        <Chip label="Secure View" size="small" variant="outlined" sx={{ borderColor: '#D4AF37', color: '#D4AF37' }} />
+                    </DialogTitle>
+                    <DialogContent sx={{ bgcolor: '#1a1a1a', pt: 3 }}>
+                        {selectedClient?.pets?.map((pet: any, i: number) => (
+                            <Box key={i} sx={{ mb: 4 }}>
+                                <Stack direction="row" spacing={3} alignItems="center" sx={{ mb: 3 }}>
+                                    <Avatar src={pet.photo_url} sx={{ width: 80, height: 80, border: '2px solid #D4AF37' }} />
+                                    <Box>
+                                        <Typography variant="h5" color="white" fontWeight="bold">{pet.name}</Typography>
+                                        <Typography color="#D4AF37">{pet.breed}</Typography>
+                                        <Typography variant="caption" color="#64748b">ID: {pet.id}</Typography>
+                                    </Box>
+                                </Stack>
+
+                                <Grid container spacing={2}>
+                                    <Grid size={{ xs: 6 }}>
+                                        <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 2 }}>
+                                            <Typography variant="caption" color="#64748b" display="block">Age</Typography>
+                                            <Typography color="white">{pet.age} Years</Typography>
+                                        </Paper>
+                                    </Grid>
+                                    <Grid size={{ xs: 6 }}>
+                                        <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 2 }}>
+                                            <Typography variant="caption" color="#64748b" display="block">Weight</Typography>
+                                            <Typography color="white">{pet.weight} lbs</Typography>
+                                        </Paper>
+                                    </Grid>
+                                    <Grid size={{ xs: 12 }}>
+                                        <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 2 }}>
+                                            <Typography variant="caption" color="#64748b" display="block">Temperament</Typography>
+                                            <Typography color="white">{pet.temperament}</Typography>
+                                        </Paper>
+                                    </Grid>
+                                    <Grid size={{ xs: 12 }}>
+                                        <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 2 }}>
+                                            <Typography variant="caption" color="#64748b" display="block">Medical Notes & Allergies</Typography>
+                                            <Typography color="white">{pet.allergies || 'No known allergies'}</Typography>
+                                        </Paper>
+                                    </Grid>
+                                    <Grid size={{ xs: 12 }}>
+                                        <Button
+                                            fullWidth
+                                            variant="contained"
+                                            color="error"
+                                            startIcon={<CrisisAlert />}
+                                            onClick={() => { setSelectedPet(pet); setShowPetModal(false); setShowIncidentModal(true); }}
+                                            sx={{ mt: 1, borderRadius: 2, bgcolor: '#ef4444' }}
+                                        >
+                                            Log Incident
+                                        </Button>
+                                    </Grid>
+                                </Grid>
+                                {i < (selectedClient.pets.length - 1) && <Divider sx={{ my: 4, borderColor: 'rgba(255,255,255,0.05)' }} />}
+                            </Box>
+                        ))}
+                    </DialogContent>
+                    <DialogActions sx={{ p: 3, bgcolor: '#1a1a1a', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                        <Button onClick={() => setShowPetModal(false)} sx={{ color: '#64748b' }}>Close</Button>
+                    </DialogActions>
+                </Dialog>
+
+                {/* --- INCIDENT LOG DIALOG --- */}
+                <Dialog open={showIncidentModal} onClose={() => setShowIncidentModal(false)} fullWidth maxWidth="xs">
+                    <DialogTitle sx={{ bgcolor: '#ef4444', color: 'white' }}>Log Care Alert: {selectedPet?.name}</DialogTitle>
+                    <DialogContent sx={{ mt: 2 }}>
+                        <Stack spacing={3} sx={{ mt: 1 }}>
+                            <Typography variant="body2" color="text.secondary">
+                                This will add a persistent alert to this VIP's operational card until resolved.
+                            </Typography>
+                            <FormControl fullWidth>
+                                <InputLabel>Severity</InputLabel>
+                                <Select
+                                    value={incidentSeverity}
+                                    onChange={(e) => setIncidentSeverity(e.target.value)}
+                                    label="Severity"
+                                >
+                                    <MenuItem value="Warning">Yellow Alert (Observation)</MenuItem>
+                                    <MenuItem value="Critical">Red Alert (Emergency/Strict)</MenuItem>
+                                </Select>
+                            </FormControl>
+                            <TextField
+                                label="Details"
+                                multiline
+                                rows={3}
+                                fullWidth
+                                value={incidentText}
+                                onChange={(e) => setIncidentText(e.target.value)}
+                                placeholder="e.g. Buddy showed minor limping on front left paw..."
+                            />
+                        </Stack>
+                    </DialogContent>
+                    <DialogActions sx={{ p: 3 }}>
+                        <Button onClick={() => setShowIncidentModal(false)}>Cancel</Button>
+                        <Button variant="contained" color="error" onClick={handleLogIncident} disabled={!incidentText.trim()}>Log Alert</Button>
+                    </DialogActions>
+                </Dialog>
+
+                {/* --- CHECK-IN STATUS DIALOG --- */}
+                <Dialog open={showCheckInModal} onClose={() => setShowCheckInModal(false)} fullWidth maxWidth="sm">
+                    <DialogTitle>Arrivals Terminal: {new Date().toLocaleDateString()}</DialogTitle>
+                    <DialogContent>
+                        <Typography variant="caption" color="text.secondary" gutterBottom display="block">
+                            Listing confirmed bookings for today only.
+                        </Typography>
+                        <Stack spacing={2} sx={{ mt: 2 }}>
+                            {pendingBookings.filter(b => b.status === 'confirmed' && new Date(b.start_date).toDateString() === new Date().toDateString()).length === 0 ? (
+                                <Alert severity="info">No arrivals scheduled for today.</Alert>
+                            ) : pendingBookings.filter(b => b.status === 'confirmed' && new Date(b.start_date).toDateString() === new Date().toDateString()).map((arrival, i) => (
+                                <Paper key={i} sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid rgba(0,0,0,0.05)' }}>
+                                    <Stack direction="row" spacing={2} alignItems="center">
+                                        <Avatar sx={{ bgcolor: '#3b82f6' }}>{arrival.user_email[0].toUpperCase()}</Avatar>
+                                        <Box>
+                                            <Typography variant="body2" fontWeight="bold">{arrival.dog_id}</Typography>
+                                            <Typography variant="caption" color="text.secondary">{arrival.service_type}</Typography>
+                                        </Box>
+                                    </Stack>
+                                    <Button variant="contained" size="small" sx={{ bgcolor: '#22c55e', '&:hover': { bgcolor: '#16a34a' } }}>Check In</Button>
+                                </Paper>
+                            ))}
+                        </Stack>
+                    </DialogContent>
+                    <DialogActions sx={{ p: 2 }}>
+                        <Button onClick={() => setShowCheckInModal(false)}>Close</Button>
+                    </DialogActions>
+                </Dialog>
 
             </Container>
 
