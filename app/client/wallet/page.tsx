@@ -1,182 +1,258 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
-    Box, Typography, Container, Stack, Paper, IconButton,
-    Button, Chip, BottomNavigation, BottomNavigationAction,
-    ThemeProvider, CssBaseline, Divider, CircularProgress, Avatar
+    Box, Typography, Container, Stack, Paper, Button,
+    IconButton, Divider, Avatar, List, ListItem,
+    ListItemText, ListItemAvatar, CircularProgress,
+    Dialog, AppBar, Toolbar, ThemeProvider, CssBaseline
 } from "@mui/material";
 import {
-    Home, Pets, CalendarMonth, Person, ArrowBack,
-    Wallet, CreditCard, Apple, CurrencyBitcoin, Info
+    Wallet, Add, ArrowBack, Apple, CreditCard,
+    CheckCircle, Security, AccountBalanceWallet
 } from "@mui/icons-material";
+import { motion, AnimatePresence } from "framer-motion";
 import { theme } from "@/lib/theme";
 import { useRouter } from "next/navigation";
-import { API_BASE_URL } from "@/lib/config";
 
 export default function WalletView() {
     const router = useRouter();
-    const [balance, setBalance] = useState(0);
-    const [confirmedBookings, setConfirmedBookings] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [navValue, setNavValue] = useState(0); // For consistency, though this is a detail page
+    const [balance, setBalance] = useState(125.50);
+    const [showApplePay, setShowApplePay] = useState(false);
+    const [step, setStep] = useState(0); // 0: init, 1: authenticating, 2: success
 
-    useEffect(() => {
-        fetchWalletData();
-    }, []);
-
-    const fetchWalletData = async () => {
-        const email = localStorage.getItem('vanguard_email');
-        if (!email) return;
-
-        try {
-            const res = await fetch(`${API_BASE_URL}/api/user/bookings?email=${encodeURIComponent(email)}`);
-            if (res.ok) {
-                const bookings = await res.json();
-                const confirmed = bookings.filter((b: any) => b.status === "Confirmed");
-                const total = confirmed.reduce((sum: number, b: any) => sum + b.total_price, 0);
-
-                setConfirmedBookings(confirmed);
-                setBalance(total);
-            }
-        } catch (err) {
-            console.error("Wallet fetch failed", err);
-        } finally {
-            setLoading(false);
-        }
+    const handleApplePay = () => {
+        setShowApplePay(true);
+        setStep(1);
+        setTimeout(() => setStep(2), 2500); // Simulate biometric auth
     };
 
-    const handleNavChange = (v: number) => {
-        if (v === 0) router.push('/client/dashboard');
-        if (v === 1) router.push('/client/pets');
-        if (v === 2) router.push('/client/bookings');
-        if (v === 3) router.push('/client/profile');
+    const handleClose = () => {
+        if (step === 2) {
+            setBalance(prev => prev + 50.00);
+        }
+        setShowApplePay(false);
+        setStep(0);
     };
 
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
             <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pb: 10 }}>
-
-                {/* --- HEADER --- */}
-                <Paper elevation={0} sx={{ p: 2, bgcolor: 'rgba(5, 6, 8, 0.9)', position: 'sticky', top: 0, zIndex: 10, backdropFilter: 'blur(10px)' }}>
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                        <IconButton onClick={() => router.back()} sx={{ color: 'white' }}>
+                {/* Header */}
+                <AppBar position="static" elevation={0} sx={{ bgcolor: 'rgba(5, 6, 8, 0.9)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <Toolbar>
+                        <IconButton onClick={() => router.back()} sx={{ color: 'white', mr: 2 }}>
                             <ArrowBack />
                         </IconButton>
-                        <Typography variant="h6" fontWeight="bold">Wallet & Billing</Typography>
-                    </Stack>
-                </Paper>
+                        <Typography variant="h6" fontWeight="bold">Vanguard Wallet</Typography>
+                    </Toolbar>
+                </AppBar>
 
                 <Container maxWidth="sm" sx={{ pt: 4 }}>
                     <Stack spacing={4}>
+                        {/* Balance Card */}
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                            <Paper sx={{
+                                p: 3,
+                                borderRadius: 4,
+                                background: 'linear-gradient(135deg, #D4AF37 0%, #B89626 100%)',
+                                color: 'black',
+                                position: 'relative',
+                                overflow: 'hidden',
+                                boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
+                            }}>
+                                <Box sx={{ position: 'absolute', top: -20, right: -20, opacity: 0.1 }}>
+                                    <Wallet sx={{ fontSize: 150 }} />
+                                </Box>
+                                <Typography variant="overline" sx={{ fontWeight: 'bold', letterSpacing: 1.5, opacity: 0.8 }}>Current Balance</Typography>
+                                <Typography variant="h3" fontWeight="900" sx={{ my: 1 }}>${balance.toFixed(2)}</Typography>
+                                <Stack direction="row" spacing={1} alignItems="center">
+                                    <Security sx={{ fontSize: 16 }} />
+                                    <Typography variant="caption" sx={{ fontWeight: 'bold' }}>Secured by Vanguard Shield</Typography>
+                                </Stack>
+                            </Paper>
+                        </motion.div>
 
-                        {/* --- TOTAL BALANCE --- */}
-                        <Box sx={{ textAlign: 'center' }}>
-                            <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 2, fontWeight: 'bold' }}>Current Balance Due</Typography>
-                            <Typography variant="h2" sx={{ fontWeight: 800, color: balance > 0 ? '#fff' : '#4ade80', mt: 1 }}>
-                                ${balance.toFixed(2)}
-                            </Typography>
-                            {balance === 0 && (
-                                <Chip label="Account in good standing" color="success" sx={{ mt: 2, fontWeight: 'bold' }} />
-                            )}
-                        </Box>
-
-                        {/* --- PAYMENT METHODS --- */}
+                        {/* Top Up Options */}
                         <Box>
-                            <Typography variant="overline" color="text.secondary" fontWeight="700" sx={{ mb: 2, display: 'block', pl: 1 }}>Select Payment Method</Typography>
-                            <Stack spacing={1.5}>
+                            <Typography variant="overline" color="text.secondary" fontWeight="bold" letterSpacing={2} sx={{ ml: 1 }}>Top Up Funds</Typography>
+                            <Stack spacing={2} sx={{ mt: 1 }}>
                                 <Button
                                     variant="contained"
                                     fullWidth
-                                    startIcon={<CreditCard />}
-                                    sx={{ py: 1.8, bgcolor: '#635BFF', borderRadius: 3, fontWeight: 'bold' }}
+                                    onClick={handleApplePay}
+                                    sx={{
+                                        bgcolor: 'white',
+                                        color: 'black',
+                                        py: 1.5,
+                                        borderRadius: 3,
+                                        '&:hover': { bgcolor: '#f0f0f0' },
+                                        display: 'flex',
+                                        gap: 1.5,
+                                        textTransform: 'none'
+                                    }}
                                 >
-                                    Pay with Card (Stripe)
+                                    <Apple sx={{ fontSize: 24 }} />
+                                    <Typography variant="button" fontWeight="bold" sx={{ fontSize: '1rem' }}>Pay with Apple Pay</Typography>
                                 </Button>
-                                <Stack direction="row" spacing={1.5}>
-                                    <Button
-                                        variant="outlined"
-                                        fullWidth
-                                        sx={{ py: 1.5, borderRadius: 3, color: '#0070BA', borderColor: '#0070BA', fontWeight: 'bold' }}
-                                    >
-                                        PayPal
-                                    </Button>
-                                    <Button
-                                        variant="contained"
-                                        fullWidth
-                                        startIcon={<Apple />}
-                                        sx={{ py: 1.5, borderRadius: 3, bgcolor: 'black', color: 'white', fontWeight: 'bold' }}
-                                    >
-                                        Apple Pay
-                                    </Button>
-                                </Stack>
+
+                                <Button
+                                    variant="outlined"
+                                    fullWidth
+                                    sx={{
+                                        py: 1.5,
+                                        borderRadius: 3,
+                                        borderColor: 'rgba(255,255,255,0.1)',
+                                        display: 'flex',
+                                        gap: 1.5,
+                                        textTransform: 'none',
+                                        color: 'white'
+                                    }}
+                                >
+                                    <CreditCard />
+                                    <Typography variant="button">Add Credit or Debit Card</Typography>
+                                </Button>
                             </Stack>
                         </Box>
 
-                        {/* --- CRYPTO OPTION --- */}
-                        <Paper sx={{ p: 2, borderRadius: 3, bgcolor: 'rgba(247, 147, 26, 0.05)', border: '1px solid rgba(247, 147, 26, 0.2)' }}>
-                            <Stack direction="row" spacing={2} alignItems="center">
-                                <Box sx={{ p: 1, bgcolor: '#F7931A', borderRadius: 2, display: 'flex' }}>
-                                    <CurrencyBitcoin sx={{ color: 'black' }} />
-                                </Box>
-                                <Box sx={{ flex: 1 }}>
-                                    <Typography variant="subtitle2" fontWeight="bold" color="#F7931A">Cryptocurrency</Typography>
-                                    <Typography variant="caption" color="text.secondary">We accept USDC, USDT, BTC, and ETH</Typography>
-                                </Box>
-                                <Button size="small" variant="text" sx={{ color: '#F7931A', fontWeight: 'bold' }}>Pay Now</Button>
-                            </Stack>
-                        </Paper>
-
-                        {/* --- INVOICE BREAKDOWN --- */}
+                        {/* History */}
                         <Box>
-                            <Typography variant="overline" color="text.secondary" fontWeight="700" sx={{ mb: 2, display: 'block', pl: 1 }}>Active Charges</Typography>
-                            {loading ? (
-                                <CircularProgress size={20} />
-                            ) : confirmedBookings.length === 0 ? (
-                                <Typography variant="body2" color="text.secondary" sx={{ pl: 1 }}>No outstanding invoices found.</Typography>
-                            ) : (
-                                <Stack spacing={1.5}>
-                                    {confirmedBookings.map((b: any) => (
-                                        <Paper key={b.id} sx={{ p: 2, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                            <Stack direction="row" justifyContent="space-between" alignItems="center">
-                                                <Box>
-                                                    <Typography variant="body1" fontWeight="bold">{b.service_type}</Typography>
-                                                    <Typography variant="caption" color="text.secondary">{b.start_date} - {b.end_date}</Typography>
-                                                </Box>
-                                                <Typography variant="body1" fontWeight="bold" color="primary">${b.total_price.toFixed(2)}</Typography>
-                                            </Stack>
-                                        </Paper>
-                                    ))}
-                                </Stack>
-                            )}
+                            <Typography variant="overline" color="text.secondary" fontWeight="bold" letterSpacing={2} sx={{ ml: 1 }}>Recent Activity</Typography>
+                            <Paper sx={{ mt: 1, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <List disablePadding>
+                                    <TransactionItem
+                                        title="Boarding Payment"
+                                        date="Today"
+                                        amount={-75.00}
+                                        icon={<AccountBalanceWallet sx={{ color: '#ef4444' }} />}
+                                    />
+                                    <Divider sx={{ opacity: 0.05 }} />
+                                    <TransactionItem
+                                        title="Top Up (Apple Pay)"
+                                        date="Yesterday"
+                                        amount={50.00}
+                                        icon={<Apple sx={{ color: '#D4AF37' }} />}
+                                    />
+                                    <Divider sx={{ opacity: 0.05 }} />
+                                    <TransactionItem
+                                        title="Grooming Tip"
+                                        date="Oct 12"
+                                        amount={-15.00}
+                                        icon={<AccountBalanceWallet sx={{ color: '#ef4444' }} />}
+                                    />
+                                </List>
+                            </Paper>
                         </Box>
-
-                        <Stack direction="row" spacing={1} sx={{ bgcolor: 'rgba(255,255,255,0.02)', p: 1.5, borderRadius: 2 }}>
-                            <Info fontSize="small" color="disabled" />
-                            <Typography variant="caption" color="text.secondary">
-                                Prices are inclusive of all luxury amenities and 24/7 care. Terms of service apply.
-                            </Typography>
-                        </Stack>
-
                     </Stack>
                 </Container>
 
-                {/* --- BOTTOM NAVIGATION --- */}
-                <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100, borderTop: '1px solid rgba(255,255,255,0.05)' }} elevation={3} >
-                    <BottomNavigation
-                        showLabels
-                        value={-1} // None selected on detail page
-                        onChange={(e, v) => handleNavChange(v)}
-                        sx={{ bgcolor: '#0B0C10', height: 70, '& .MuiBottomNavigationAction-label': { fontSize: '0.7rem', mt: 0.5 } }}
+                {/* Apple Pay Sheet Simulation */}
+                <Dialog
+                    fullScreen
+                    open={showApplePay}
+                    onClose={handleClose}
+                    PaperProps={{
+                        sx: { bgcolor: 'transparent', boxShadow: 'none' }
+                    }}
+                >
+                    <Box
+                        sx={{
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'flex-end',
+                            bgcolor: 'rgba(0,0,0,0.8)'
+                        }}
                     >
-                        <BottomNavigationAction label="Home" icon={<Home />} />
-                        <BottomNavigationAction label="Pets" icon={<Pets />} />
-                        <BottomNavigationAction label="Bookings" icon={<CalendarMonth />} />
-                        <BottomNavigationAction label="Profile" icon={<Person />} />
-                    </BottomNavigation>
-                </Paper>
+                        <AnimatePresence>
+                            {showApplePay && (
+                                <Box
+                                    component={motion.div}
+                                    initial={{ y: "100%" }}
+                                    animate={{ y: 0 }}
+                                    exit={{ y: "100%" }}
+                                    transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                                    sx={{
+                                        background: '#1c1c1e',
+                                        borderTopLeftRadius: 24,
+                                        borderTopRightRadius: 24,
+                                        padding: '24px',
+                                        paddingBottom: '48px'
+                                    }}
+                                >
+                                    <Stack spacing={3} alignItems="center">
+                                        <Apple sx={{ fontSize: 40, color: 'white' }} />
+
+                                        {step === 1 ? (
+                                            <>
+                                                <Typography variant="h6" fontWeight="bold">Confirm with Face ID</Typography>
+                                                <Typography variant="body2" color="text.secondary">Amount: $50.00</Typography>
+                                                <Box sx={{
+                                                    width: 120,
+                                                    height: 120,
+                                                    borderRadius: '50%',
+                                                    border: '4px solid #D4AF37',
+                                                    display: 'flex',
+                                                    alignSelf: 'center',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    position: 'relative'
+                                                }}>
+                                                    <motion.div
+                                                        animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
+                                                        transition={{ repeat: Infinity, duration: 2 }}
+                                                    >
+                                                        <Security sx={{ fontSize: 60, color: '#D4AF37' }} />
+                                                    </motion.div>
+                                                </Box>
+                                                <Typography variant="caption" color="text.secondary">Processing Secure Handshake...</Typography>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <motion.div
+                                                    initial={{ scale: 0 }}
+                                                    animate={{ scale: 1 }}
+                                                    transition={{ type: "spring" }}
+                                                >
+                                                    <CheckCircle sx={{ fontSize: 80, color: '#34c759' }} />
+                                                </motion.div>
+                                                <Typography variant="h6" fontWeight="bold">Payment Complete</Typography>
+                                                <Button
+                                                    fullWidth
+                                                    variant="contained"
+                                                    onClick={handleClose}
+                                                    sx={{ bgcolor: 'white', color: 'black', borderRadius: 2, fontWeight: 'bold' }}
+                                                >
+                                                    Done
+                                                </Button>
+                                            </>
+                                        )}
+                                    </Stack>
+                                </Box>
+                            )}
+                        </AnimatePresence>
+                    </Box>
+                </Dialog>
             </Box>
         </ThemeProvider>
+    );
+}
+
+function TransactionItem({ title, date, amount, icon }: any) {
+    const isPositive = amount > 0;
+    return (
+        <ListItem sx={{ py: 1.5 }}>
+            <ListItemAvatar>
+                <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>{icon}</Avatar>
+            </ListItemAvatar>
+            <ListItemText
+                primary={<Typography variant="body2" fontWeight="bold">{title}</Typography>}
+                secondary={<Typography variant="caption" color="text.secondary">{date}</Typography>}
+            />
+            <Typography variant="body2" fontWeight="bold" color={isPositive ? 'primary.main' : '#ef4444'}>
+                {isPositive ? '+' : ''}{amount.toFixed(2)}
+            </Typography>
+        </ListItem>
     );
 }
