@@ -126,7 +126,7 @@ export default function WalletView() {
                                 <Button
                                     variant="outlined"
                                     fullWidth
-                                    onClick={() => setFeedback({ text: "Stripe Checkout Redirecting...", severity: "info", open: true })}
+                                    onClick={() => setFeedback({ text: "[DEMO] Stripe Checkout simulated. No real transaction.", severity: "info", open: true })}
                                     sx={{
                                         py: 2,
                                         borderRadius: 4,
@@ -226,6 +226,7 @@ export default function WalletView() {
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                             Send only {selectedCoin?.full} to this address.
                         </Typography>
+                        <Chip label="DEMO - No Real Funds" size="small" sx={{ mb: 2, bgcolor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', fontWeight: 'bold' }} />
 
                         <Paper variant="outlined" sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.2)', borderRadius: 2, mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: '0.9rem' }}>{selectedCoin?.address}</Typography>
@@ -281,6 +282,7 @@ export default function WalletView() {
                                 >
                                     <Stack spacing={3} alignItems="center">
                                         <Apple sx={{ fontSize: 40, color: 'white' }} />
+                                        <Chip label="DEMO MODE" size="small" sx={{ bgcolor: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', fontWeight: 'bold', fontSize: '0.65rem' }} />
 
                                         {step === 1 ? (
                                             <>
