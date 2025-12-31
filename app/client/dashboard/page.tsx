@@ -59,6 +59,8 @@ export default function ClientDashboard() {
     const [dontShowAgain, setDontShowAgain] = useState(false);
     const [currentEmail, setCurrentEmail] = useState<string | null>(null);
 
+    const [latestReport, setLatestReport] = useState<any>(null);
+
     useEffect(() => {
         const storedName = typeof window !== 'undefined' ? localStorage.getItem('vanguard_user') : null;
         if (storedName) setUserName(storedName);
@@ -75,7 +77,6 @@ export default function ClientDashboard() {
         setCurrentEmail(email);
 
         if (!faceidEnabled && !hideUpsell) {
-            // Delay slightly for better UX
             setTimeout(() => setShowUpsell(true), 1500);
         }
 
@@ -84,21 +85,33 @@ export default function ClientDashboard() {
             if (res.ok) {
                 const bookings = await res.json();
 
-                // Calculate Balance: Sum of Confirmed bookings
+                // Calculate Balance
                 const total = bookings
                     .filter((b: any) => b.status === "Confirmed")
                     .reduce((sum: number, b: any) => sum + b.total_price, 0);
                 setBalance(total);
 
-                // Find next stay: nearest future date
+                // Find next/current stay
                 const upcoming = bookings
                     .filter((b: any) => b.status !== "Completed" && b.status !== "Cancelled")
                     .sort((a: any, b: any) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
 
-                if (upcoming.length > 0) setNextStay(upcoming[0]);
+                if (upcoming.length > 0) {
+                    setNextStay(upcoming[0]);
+
+                    // Fetch latest report for this booking
+                    // In a real app we'd iterate active bookings, here we grab the first relevant one
+                    const reportRes = await fetch(`${API_BASE_URL}/api/reports/${upcoming[0].id}`);
+                    if (reportRes.ok) {
+                        const reports = await reportRes.json();
+                        if (reports.length > 0) {
+                            setLatestReport(reports[0]);
+                        }
+                    }
+                }
             }
 
-            // Fetch notifications for unread count
+            // Fetch notifications
             const notifRes = await fetch(`${API_BASE_URL}/api/notifications?email=${encodeURIComponent(email)}`);
             if (notifRes.ok) {
                 const notifs = await notifRes.json();
@@ -147,8 +160,55 @@ export default function ClientDashboard() {
                 </Paper>
 
                 {/* --- MAIN CONTENT --- */}
-                < Container maxWidth="sm" sx={{ pt: 3, position: 'relative', zIndex: 1 }}>
+                <Container maxWidth="sm" sx={{ pt: 3, position: 'relative', zIndex: 1 }}>
                     <Stack spacing={3}>
+
+                        {/* 0. LATEST REPORT CARD (New Feature) */}
+                        {latestReport && (
+                            <Box>
+                                <Typography variant="overline" color="primary" sx={{ fontWeight: 700, letterSpacing: '0.1em', pl: 1, display: 'block', mb: 1 }}>
+                                    Latest Update 📸
+                                </Typography>
+                                <Paper sx={{
+                                    p: 0,
+                                    borderRadius: 4,
+                                    bgcolor: 'background.paper',
+                                    border: '1px solid rgba(212, 175, 55, 0.3)',
+                                    overflow: 'hidden'
+                                }}>
+                                    {latestReport.image_url && (
+                                        <Box sx={{ position: 'relative', height: 200, bgcolor: 'black' }}>
+                                            <Box
+                                                component="img"
+                                                src={`${API_BASE_URL}${latestReport.image_url}`}
+                                                alt="Pet Update"
+                                                sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            />
+                                            <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '60%', background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)' }} />
+                                            <Chip
+                                                label={latestReport.mood}
+                                                color="primary"
+                                                size="small"
+                                                sx={{ position: 'absolute', bottom: 16, left: 16, fontWeight: 'bold' }}
+                                            />
+                                            <Typography variant="caption" sx={{ position: 'absolute', bottom: 16, right: 16, color: 'rgba(255,255,255,0.8)' }}>
+                                                {new Date(latestReport.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                    <Box sx={{ p: 2 }}>
+                                        <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+                                            <Chip label={latestReport.activity} size="small" variant="outlined" sx={{ borderColor: 'rgba(255,255,255,0.2)' }} />
+                                        </Stack>
+                                        {latestReport.notes && (
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                                                &quot;{latestReport.notes}&quot;
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                </Paper>
+                            </Box>
+                        )}
 
                         {/* 1. STATUS BADGE */}
                         <Stack direction="row" alignItems="center" spacing={1} sx={{ bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 2, p: 1, pl: 2, width: 'fit-content' }}>

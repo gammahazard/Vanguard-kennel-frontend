@@ -66,140 +66,136 @@ export default function StaffDashboard() {
                 </Stack>
 
                 {/* KPI Cards */}
-                <Grid container spacing={3} sx={{ mb: 4 }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 3, mb: 4 }}>
                     {[
                         { label: "Guests In House", value: "14", color: "primary.main" },
                         { label: "Check-Ins Today", value: "3", color: "text.primary" },
                         { label: "Departures", value: "5", color: "text.secondary" },
                         { label: "Pending Walks", value: "8", color: "#ef4444" },
                     ].map((kpi, i) => (
-                        <Grid item xs={6} md={3} key={i}>
-                            <Paper sx={{ p: 3, borderRadius: 3, bgcolor: 'background.paper', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                <Typography variant="h3" fontWeight="bold" sx={{ color: kpi.color }}>
-                                    {kpi.value}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary" fontWeight="medium">
-                                    {kpi.label}
-                                </Typography>
-                            </Paper>
-                        </Grid>
+                        <Paper key={i} sx={{ p: 3, borderRadius: 3, bgcolor: 'background.paper', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <Typography variant="h3" fontWeight="bold" sx={{ color: kpi.color }}>
+                                {kpi.value}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" fontWeight="medium">
+                                {kpi.label}
+                            </Typography>
+                        </Paper>
                     ))}
-                </Grid>
+                </Box>
 
                 {/* Guest Grid */}
-                <Grid container spacing={3}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' }, gap: 3 }}>
                     {guests.map((guest) => (
-                        <Grid item xs={12} sm={6} md={4} lg={3} key={guest.id}>
-                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                                <Paper sx={{
-                                    overflow: 'hidden',
-                                    borderRadius: 3,
-                                    bgcolor: 'background.paper',
-                                    border: '1px solid rgba(255,255,255,0.05)',
-                                    transition: 'transform 0.2s',
-                                    '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.5)' }
-                                }}>
-                                    {/* Card Header & Image */}
-                                    <Box sx={{ position: 'relative', height: 160 }}>
-                                        <Box
-                                            component="img"
-                                            src={guest.img}
-                                            alt={guest.name}
-                                            sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                        />
-                                        <Box sx={{
+                        <motion.div key={guest.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                            <Paper sx={{
+                                overflow: 'hidden',
+                                borderRadius: 3,
+                                bgcolor: 'background.paper',
+                                border: '1px solid rgba(255,255,255,0.05)',
+                                transition: 'transform 0.2s',
+                                '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.5)' }
+                            }}>
+                                {/* Card Header & Image */}
+                                <Box sx={{ position: 'relative', height: 160 }}>
+                                    <Box
+                                        component="img"
+                                        src={guest.img}
+                                        alt={guest.name}
+                                        sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    />
+                                    <Box sx={{
+                                        position: 'absolute',
+                                        inset: 0,
+                                        background: 'linear-gradient(to top, rgba(15, 23, 42, 0.9) 0%, transparent 60%)'
+                                    }} />
+
+                                    <Box sx={{ position: 'absolute', bottom: 16, left: 16 }}>
+                                        <Typography variant="h5" fontWeight="bold" color="white">{guest.name}</Typography>
+                                        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)' }}>{guest.breed}</Typography>
+                                    </Box>
+
+                                    {/* Status Chip */}
+                                    <Chip
+                                        label={guest.status}
+                                        size="small"
+                                        sx={{
                                             position: 'absolute',
-                                            inset: 0,
-                                            background: 'linear-gradient(to top, rgba(15, 23, 42, 0.9) 0%, transparent 60%)'
-                                        }} />
+                                            top: 12,
+                                            right: 12,
+                                            bgcolor: guest.status === 'Active' ? '#22c55e' : '#f59e0b',
+                                            color: 'white',
+                                            fontWeight: 'bold',
+                                            backdropFilter: 'blur(4px)'
+                                        }}
+                                    />
+                                </Box>
 
-                                        <Box sx={{ position: 'absolute', bottom: 16, left: 16 }}>
-                                            <Typography variant="h5" fontWeight="bold" color="white">{guest.name}</Typography>
-                                            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)' }}>{guest.breed}</Typography>
-                                        </Box>
-
-                                        {/* Status Chip */}
-                                        <Chip
-                                            label={guest.status}
-                                            size="small"
-                                            sx={{
-                                                position: 'absolute',
-                                                top: 12,
-                                                right: 12,
-                                                bgcolor: guest.status === 'Active' ? '#22c55e' : '#f59e0b',
-                                                color: 'white',
-                                                fontWeight: 'bold',
-                                                backdropFilter: 'blur(4px)'
-                                            }}
-                                        />
-                                    </Box>
-
-                                    {/* Actions Body */}
-                                    <Box sx={{ p: 2 }}>
-                                        {/* Alerts */}
-                                        {guest.alerts.length > 0 && (
-                                            <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-                                                {guest.alerts.map(alert => (
-                                                    <Chip
-                                                        key={alert}
-                                                        label={alert}
-                                                        size="small"
-                                                        icon={<Warning sx={{ fontSize: '14px !important' }} />}
-                                                        sx={{ bgcolor: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)', border: '1px solid' }}
-                                                    />
-                                                ))}
-                                            </Stack>
-                                        )}
-
-                                        {/* Action Toggles */}
-                                        <Stack direction="row" justifyContent="space-between" spacing={1} sx={{ bgcolor: 'rgba(0,0,0,0.2)', p: 1, borderRadius: 2 }}>
-                                            <Tooltip title="Breakfast/Dinner">
-                                                <IconButton
-                                                    onClick={() => toggleAction(guest.id, 'fed')}
-                                                    sx={{
-                                                        color: guest.fed ? '#22c55e' : 'text.disabled',
-                                                        bgcolor: guest.fed ? 'rgba(34, 197, 94, 0.1)' : 'transparent'
-                                                    }}
-                                                >
-                                                    <Restaurant fontSize="small" />
-                                                </IconButton>
-                                            </Tooltip>
-
-                                            <Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
-
-                                            <Tooltip title="Daily Walk">
-                                                <IconButton
-                                                    onClick={() => toggleAction(guest.id, 'walked')}
-                                                    sx={{
-                                                        color: guest.walked ? '#3b82f6' : 'text.disabled',
-                                                        bgcolor: guest.walked ? 'rgba(59, 130, 246, 0.1)' : 'transparent'
-                                                    }}
-                                                >
-                                                    <DirectionsWalk fontSize="small" />
-                                                </IconButton>
-                                            </Tooltip>
-
-                                            <Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
-
-                                            <Tooltip title="Medication">
-                                                <IconButton
-                                                    onClick={() => guest.meds !== null && toggleAction(guest.id, 'meds')}
-                                                    disabled={guest.meds === null}
-                                                    sx={{
-                                                        color: guest.meds ? '#a855f7' : (guest.meds === null ? 'rgba(255,255,255,0.05)' : 'text.disabled'),
-                                                        bgcolor: guest.meds ? 'rgba(168, 85, 247, 0.1)' : 'transparent'
-                                                    }}
-                                                >
-                                                    <Medication fontSize="small" />
-                                                </IconButton>
-                                            </Tooltip>
+                                {/* Actions Body */}
+                                <Box sx={{ p: 2 }}>
+                                    {/* Alerts */}
+                                    {guest.alerts.length > 0 && (
+                                        <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+                                            {guest.alerts.map(alert => (
+                                                <Chip
+                                                    key={alert}
+                                                    label={alert}
+                                                    size="small"
+                                                    icon={<Warning sx={{ fontSize: '14px !important' }} />}
+                                                    sx={{ bgcolor: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)', border: '1px solid' }}
+                                                />
+                                            ))}
                                         </Stack>
-                                    </Box>
-                                </Paper>
-                            </motion.div>
-                        </Grid>
+                                    )}
+
+                                    {/* Action Toggles */}
+                                    <Stack direction="row" justifyContent="space-between" spacing={1} sx={{ bgcolor: 'rgba(0,0,0,0.2)', p: 1, borderRadius: 2 }}>
+                                        <Tooltip title="Breakfast/Dinner">
+                                            <IconButton
+                                                onClick={() => toggleAction(guest.id, 'fed')}
+                                                sx={{
+                                                    color: guest.fed ? '#22c55e' : 'text.disabled',
+                                                    bgcolor: guest.fed ? 'rgba(34, 197, 94, 0.1)' : 'transparent'
+                                                }}
+                                            >
+                                                <Restaurant fontSize="small" />
+                                            </IconButton>
+                                        </Tooltip>
+
+                                        <Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+
+                                        <Tooltip title="Daily Walk">
+                                            <IconButton
+                                                onClick={() => toggleAction(guest.id, 'walked')}
+                                                sx={{
+                                                    color: guest.walked ? '#3b82f6' : 'text.disabled',
+                                                    bgcolor: guest.walked ? 'rgba(59, 130, 246, 0.1)' : 'transparent'
+                                                }}
+                                            >
+                                                <DirectionsWalk fontSize="small" />
+                                            </IconButton>
+                                        </Tooltip>
+
+                                        <Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+
+                                        <Tooltip title="Medication">
+                                            <IconButton
+                                                onClick={() => guest.meds !== null && toggleAction(guest.id, 'meds')}
+                                                disabled={guest.meds === null}
+                                                sx={{
+                                                    color: guest.meds ? '#a855f7' : (guest.meds === null ? 'rgba(255,255,255,0.05)' : 'text.disabled'),
+                                                    bgcolor: guest.meds ? 'rgba(168, 85, 247, 0.1)' : 'transparent'
+                                                }}
+                                            >
+                                                <Medication fontSize="small" />
+                                            </IconButton>
+                                        </Tooltip>
+                                    </Stack>
+                                </Box>
+                            </Paper>
+                        </motion.div>
                     ))}
-                </Grid>
+                </Box>
             </Container>
         </Box>
     );
