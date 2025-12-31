@@ -40,7 +40,7 @@ export default function ProfileView() {
     const [profileData, setProfileData] = useState<any>(null);
 
     const fetchAuditLogs = (page: number) => {
-        const email = localStorage.getItem('vanguard_email');
+        const email = typeof window !== 'undefined' ? localStorage.getItem('vanguard_email') : null;
         if (!email) return;
 
         // hitting backend::get_user_audit_handler (paginated now)
@@ -66,8 +66,8 @@ export default function ProfileView() {
     };
 
     useEffect(() => {
-        const storedName = localStorage.getItem('vanguard_user');
-        const email = localStorage.getItem('vanguard_email');
+        const storedName = typeof window !== 'undefined' ? localStorage.getItem('vanguard_user') : null;
+        const email = typeof window !== 'undefined' ? localStorage.getItem('vanguard_email') : null;
         if (storedName) setUserName(storedName);
 
         // Fetch actual status from backend to force-sync the slider
@@ -125,7 +125,7 @@ export default function ProfileView() {
 
         setIsRegistering(true);
         try {
-            const email = localStorage.getItem('vanguard_email');
+            const email = typeof window !== 'undefined' ? localStorage.getItem('vanguard_email') : null;
             if (!email) {
                 setMessage({ text: "Please log in again to register Face ID.", severity: "error", open: true });
                 return;
@@ -331,7 +331,7 @@ export default function ProfileView() {
                                     <Typography variant="overline" sx={{ color: '#D4AF37', fontWeight: 900, letterSpacing: 2 }}>VANGUARD VIP KEY</Typography>
                                     <Typography variant="h5" fontWeight="bold" sx={{ mt: 1 }}>{userName.toUpperCase()}</Typography>
                                     <Typography variant="body2" sx={{ opacity: 0.6, fontFamily: 'monospace' }}>
-                                        ID: {localStorage.getItem('vanguard_email')?.substring(0, 10).toUpperCase()}
+                                        ID: {typeof window !== 'undefined' ? localStorage.getItem('vanguard_email')?.substring(0, 10).toUpperCase() : '---'}
                                     </Typography>
                                 </Box>
                                 <Avatar
@@ -360,7 +360,7 @@ export default function ProfileView() {
                                     onClick={() => {
                                         setEditData({
                                             name: userName,
-                                            email: localStorage.getItem('vanguard_email') || "",
+                                            email: (typeof window !== 'undefined' ? localStorage.getItem('vanguard_email') : "") || "",
                                             phone: profileData?.phone || ""
                                         });
                                         setShowEditDialog(true);

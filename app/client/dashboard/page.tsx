@@ -58,18 +58,18 @@ export default function ClientDashboard() {
     const [showUpsell, setShowUpsell] = useState(false);
 
     useEffect(() => {
-        const storedName = localStorage.getItem('vanguard_user');
+        const storedName = typeof window !== 'undefined' ? localStorage.getItem('vanguard_user') : null;
         if (storedName) setUserName(storedName);
         fetchDashboardData();
     }, []);
 
     const fetchDashboardData = async () => {
-        const email = localStorage.getItem('vanguard_email');
+        const email = typeof window !== 'undefined' ? localStorage.getItem('vanguard_email') : null;
         if (!email) return;
 
         // FACE ID UPSELL LOGIC
-        const faceidEnabled = localStorage.getItem('vanguard_faceid_enabled') === 'true';
-        const upsellSeen = localStorage.getItem('vanguard_upsell_seen') === 'true';
+        const faceidEnabled = (typeof window !== 'undefined' ? localStorage.getItem('vanguard_faceid_enabled') : null) === 'true';
+        const upsellSeen = (typeof window !== 'undefined' ? localStorage.getItem('vanguard_upsell_seen') : null) === 'true';
 
         if (!faceidEnabled && !upsellSeen) {
             // Delay slightly for better UX

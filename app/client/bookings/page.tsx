@@ -57,7 +57,7 @@ export default function BookingsView() {
 
     const fetchData = async () => {
         setLoading(true);
-        const email = localStorage.getItem('vanguard_email');
+        const email = typeof window !== 'undefined' ? localStorage.getItem('vanguard_email') : null;
         if (!email) return;
 
         try {
@@ -103,7 +103,7 @@ export default function BookingsView() {
     const handleBack = () => setActiveStep((prev) => prev - 1);
 
     const handleCreateBooking = async () => {
-        const email = localStorage.getItem('vanguard_email');
+        const email = typeof window !== 'undefined' ? localStorage.getItem('vanguard_email') : null;
         setSubmitting(true);
         try {
             const res = await fetch(`${API_BASE_URL}/api/bookings`, {

@@ -35,8 +35,8 @@ export default function ClientLogin() {
     const [faceIdAvailable, setFaceIdAvailable] = useState(false);
 
     useEffect(() => {
-        const enabled = localStorage.getItem('vanguard_faceid_enabled');
-        const lastEmail = localStorage.getItem('vanguard_email');
+        const enabled = typeof window !== 'undefined' ? localStorage.getItem('vanguard_faceid_enabled') : null;
+        const lastEmail = typeof window !== 'undefined' ? localStorage.getItem('vanguard_email') : null;
         if (enabled === 'true') setFaceIdAvailable(true);
         if (lastEmail) setEmail(lastEmail);
     }, []);

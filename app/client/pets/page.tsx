@@ -58,7 +58,7 @@ export default function PetsView() {
 
     const fetchPets = async () => {
         setLoading(true);
-        const email = localStorage.getItem('vanguard_email');
+        const email = typeof window !== 'undefined' ? localStorage.getItem('vanguard_email') : null;
         if (!email) return;
 
         try {
@@ -81,7 +81,7 @@ export default function PetsView() {
 
     const handleAddPet = async () => {
         setSubmitting(true);
-        const email = localStorage.getItem('vanguard_email');
+        const email = typeof window !== 'undefined' ? localStorage.getItem('vanguard_email') : null;
         try {
             const res = await fetch(`${API_BASE_URL}/api/pets`, {
                 method: 'POST',
