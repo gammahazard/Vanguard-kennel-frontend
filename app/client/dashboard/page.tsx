@@ -56,6 +56,8 @@ export default function ClientDashboard() {
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(true);
     const [showUpsell, setShowUpsell] = useState(false);
+    const [dontShowAgain, setDontShowAgain] = useState(false);
+    const [currentEmail, setCurrentEmail] = useState<string | null>(null);
 
     useEffect(() => {
         const storedName = typeof window !== 'undefined' ? localStorage.getItem('vanguard_user') : null;
@@ -67,11 +69,12 @@ export default function ClientDashboard() {
         const email = typeof window !== 'undefined' ? localStorage.getItem('vanguard_email') : null;
         if (!email) return;
 
-        // FACE ID UPSELL LOGIC
-        const faceidEnabled = (typeof window !== 'undefined' ? localStorage.getItem('vanguard_faceid_enabled') : null) === 'true';
-        const upsellSeen = (typeof window !== 'undefined' ? localStorage.getItem('vanguard_upsell_seen') : null) === 'true';
+        // FACE ID UPSELL LOGIC (Account-Specific)
+        const faceidEnabled = localStorage.getItem('vanguard_faceid_enabled') === 'true';
+        const hideUpsell = localStorage.getItem(`vanguard_hide_upsell_${email}`) === 'true';
+        setCurrentEmail(email);
 
-        if (!faceidEnabled && !upsellSeen) {
+        if (!faceidEnabled && !hideUpsell) {
             // Delay slightly for better UX
             setTimeout(() => setShowUpsell(true), 1500);
         }
@@ -286,7 +289,9 @@ export default function ClientDashboard() {
                 open={showUpsell}
                 onClose={() => {
                     setShowUpsell(false);
-                    localStorage.setItem('vanguard_upsell_seen', 'true');
+                    if (dontShowAgain && currentEmail) {
+                        localStorage.setItem(`vanguard_hide_upsell_${currentEmail}`, 'true');
+                    }
                 }}
                 PaperProps={{
                     sx: {
@@ -303,7 +308,9 @@ export default function ClientDashboard() {
                         size="small"
                         onClick={() => {
                             setShowUpsell(false);
-                            localStorage.setItem('vanguard_upsell_seen', 'true');
+                            if (dontShowAgain && currentEmail) {
+                                localStorage.setItem(`vanguard_hide_upsell_${currentEmail}`, 'true');
+                            }
                         }}
                         sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary' }}
                     >
@@ -328,7 +335,7 @@ export default function ClientDashboard() {
                     <Typography variant="h6" fontWeight="bold" gutterBottom>
                         Faster, Safer Access
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                         Would you like to enable Face ID or Touch ID for your next login? It&apos;s more secure and faster than passwords.
                     </Typography>
 
@@ -338,7 +345,7 @@ export default function ClientDashboard() {
                             variant="contained"
                             onClick={() => {
                                 setShowUpsell(false);
-                                localStorage.setItem('vanguard_upsell_seen', 'true');
+                                if (currentEmail) localStorage.setItem(`vanguard_hide_upsell_${currentEmail}`, 'true');
                                 router.push('/client/profile');
                             }}
                             sx={{ borderRadius: 3, py: 1.5, fontWeight: 'bold' }}
@@ -350,7 +357,9 @@ export default function ClientDashboard() {
                             variant="text"
                             onClick={() => {
                                 setShowUpsell(false);
-                                localStorage.setItem('vanguard_upsell_seen', 'true');
+                                if (dontShowAgain && currentEmail) {
+                                    localStorage.setItem(`vanguard_hide_upsell_${currentEmail}`, 'true');
+                                }
                             }}
                             sx={{ color: 'text.secondary', fontSize: '0.8rem' }}
                         >
@@ -358,7 +367,20 @@ export default function ClientDashboard() {
                         </Button>
                     </Stack>
 
-                    <Typography variant="caption" sx={{ mt: 2, display: 'block', opacity: 0.5 }}>
+                    <Stack direction="row" alignItems="center" justifyContent="center" sx={{ mt: 2 }}>
+                        <input
+                            type="checkbox"
+                            id="dontShowAgain"
+                            checked={dontShowAgain}
+                            onChange={(e) => setDontShowAgain(e.target.checked)}
+                            style={{ marginRight: 8, accentColor: '#D4AF37' }}
+                        />
+                        <label htmlFor="dontShowAgain" style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>
+                            Don&apos;t show this again
+                        </label>
+                    </Stack>
+
+                    <Typography variant="caption" sx={{ mt: 1.5, display: 'block', opacity: 0.5 }}>
                         Tip: You can always find this in your Profile settings.
                     </Typography>
                 </Box>
