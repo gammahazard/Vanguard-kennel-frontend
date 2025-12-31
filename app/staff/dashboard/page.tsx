@@ -245,7 +245,7 @@ export default function OwnerDashboard() {
                             <Paper sx={{ p: 3, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 4, border: '1px solid rgba(255,255,255,0.05)' }}>
                                 <Typography variant="h6" sx={{ mb: 3 }}>Revenue Trend</Typography>
                                 <Box sx={{ height: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 1 }}>
-                                    {stats.monthly_revenue.length > 0 ? stats.monthly_revenue.map((m, i) => (
+                                    {stats.monthly_revenue && stats.monthly_revenue.length > 0 ? stats.monthly_revenue.map((m, i) => (
                                         <Stack key={i} alignItems="center" spacing={1} sx={{ flex: 1 }}>
                                             <Box
                                                 sx={{
@@ -257,10 +257,10 @@ export default function OwnerDashboard() {
                                                     transition: 'all 0.5s'
                                                 }}
                                             />
-                                            <Typography variant="caption" color="text.secondary">{m.month.split('-')[1]}</Typography>
+                                            <Typography variant="caption" color="text.secondary">{m.month?.split('-')[1] || m.month}</Typography>
                                         </Stack>
                                     )) : (
-                                        <Typography color="text.secondary">No revenue data yet.</Typography>
+                                        <Typography color="text.secondary">No revenue data available yet.</Typography>
                                     )}
                                 </Box>
                             </Paper>
@@ -269,10 +269,10 @@ export default function OwnerDashboard() {
                             <Paper sx={{ p: 3, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 4, border: '1px solid rgba(255,255,255,0.05)' }}>
                                 <Typography variant="h6" sx={{ mb: 2 }}>Booking Status</Typography>
                                 <Stack spacing={2}>
-                                    <StatusRow label="Confirmed" count={stats.booking_counts.confirmed} total={100} color="#4ade80" icon={<CheckCircle sx={{ fontSize: 16 }} />} />
-                                    <StatusRow label="Pending" count={stats.booking_counts.pending} total={100} color="#facc15" icon={<Schedule sx={{ fontSize: 16 }} />} />
-                                    <StatusRow label="Completed" count={stats.booking_counts.completed} total={100} color="#60a5fa" icon={<EventAvailable sx={{ fontSize: 16 }} />} />
-                                    <StatusRow label="Cancelled" count={stats.booking_counts.cancelled} total={100} color="#f87171" icon={<EventBusy sx={{ fontSize: 16 }} />} />
+                                    <StatusRow label="Confirmed" count={stats.booking_counts?.confirmed || 0} total={100} color="#4ade80" icon={<CheckCircle sx={{ fontSize: 16 }} />} />
+                                    <StatusRow label="Pending" count={stats.booking_counts?.pending || 0} total={100} color="#facc15" icon={<Schedule sx={{ fontSize: 16 }} />} />
+                                    <StatusRow label="Completed" count={stats.booking_counts?.completed || 0} total={100} color="#60a5fa" icon={<EventAvailable sx={{ fontSize: 16 }} />} />
+                                    <StatusRow label="Cancelled" count={stats.booking_counts?.cancelled || 0} total={100} color="#f87171" icon={<EventBusy sx={{ fontSize: 16 }} />} />
                                 </Stack>
                             </Paper>
                         </Stack>
