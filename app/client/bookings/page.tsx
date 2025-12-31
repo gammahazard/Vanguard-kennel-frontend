@@ -115,8 +115,6 @@ export default function BookingsView() {
                 })
             });
 
-            const data = await res.json();
-
             if (res.ok) {
                 setSuccessMsg("Reservation confirmed! 🍾");
                 setShowWizard(false);
@@ -124,6 +122,8 @@ export default function BookingsView() {
                 setFormData({ dog_ids: [], service_type: "Boarding", start_date: "", end_date: "", notes: "", total_price: 0 });
                 fetchData();
             } else {
+                // Only try to parse JSON on error responses
+                const data = await res.json().catch(() => ({}));
                 setError(data.error || `Error ${res.status}: Failed to create reservation.`);
             }
         } catch (err: any) {
