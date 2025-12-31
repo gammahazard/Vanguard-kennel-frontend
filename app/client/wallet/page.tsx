@@ -223,6 +223,26 @@ export default function WalletView() {
                             </Stack>
                         </Paper>
 
+                        {/* Cancellation Policy */}
+                        <Paper sx={{
+                            p: 2.5,
+                            borderRadius: 4,
+                            bgcolor: 'rgba(239, 68, 68, 0.05)',
+                            border: '1px solid rgba(239, 68, 68, 0.15)',
+                        }}>
+                            <Stack direction="row" spacing={2} alignItems="flex-start">
+                                <InfoOutlined sx={{ color: '#ef4444', fontSize: 24, mt: 0.5 }} />
+                                <Box>
+                                    <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#ef4444' }}>
+                                        Cancellation Policy
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ mt: 0.5, opacity: 0.8, color: '#ef4444' }}>
+                                        Please note: A $45 fee applies to cancellations made within 72 hours of your confirmed booking.
+                                    </Typography>
+                                </Box>
+                            </Stack>
+                        </Paper>
+
                         {/* Recent History (Minimalist) */}
                         <Box sx={{ pb: 4 }}>
                             <Typography variant="overline" color="text.secondary" fontWeight="bold" letterSpacing={2} sx={{ ml: 1 }}>History</Typography>
