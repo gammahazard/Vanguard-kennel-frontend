@@ -147,7 +147,13 @@ export default function ClientLogin() {
                 localStorage.setItem('vanguard_role', data.role);
                 localStorage.setItem('vanguard_email', email);
                 localStorage.setItem('vanguard_faceid_enabled', 'true');
-                router.push('/client/dashboard');
+
+                // Role-based redirect
+                if (data.role === 'staff' || data.role === 'owner') {
+                    router.push('/staff/dashboard');
+                } else {
+                    router.push('/client/dashboard');
+                }
             } else {
                 const errorText = await resFinish.text();
                 throw new Error(errorText || "Verification failed.");
