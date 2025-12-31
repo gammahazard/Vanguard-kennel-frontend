@@ -135,6 +135,20 @@ export default function PetsView() {
                 setSuccess(`${formData.name}'s profile updated!`);
                 setOpenEdit(false);
                 setEditingPet(null);
+                // Clear form data to prevent it from persisting if Add is clicked next
+                setFormData({
+                    name: "",
+                    breed: "",
+                    age: "",
+                    weight: "",
+                    temperament: "Friendly",
+                    allergies: "",
+                    notes: "",
+                    vet_name: "",
+                    vet_phone: "",
+                    image_url: ""
+                });
+                setCustomTemp("");
                 fetchPets();
             } else {
                 const errorData = await res.json();
@@ -193,6 +207,24 @@ export default function PetsView() {
         setOpenEdit(true);
     };
 
+    const handleOpenAdd = () => {
+        setEditingPet(null);
+        setFormData({
+            name: "",
+            breed: "",
+            age: "",
+            weight: "",
+            temperament: "Friendly",
+            allergies: "",
+            notes: "",
+            vet_name: "",
+            vet_phone: "",
+            image_url: ""
+        });
+        setCustomTemp("");
+        setOpenAdd(true);
+    };
+
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
@@ -240,7 +272,7 @@ export default function PetsView() {
                         <Box sx={{ py: 8, textAlign: 'center' }}>
                             <Pets sx={{ fontSize: 60, color: 'text.secondary', opacity: 0.2, mb: 2 }} />
                             <Typography variant="h6" color="text.secondary">No VIPs registered yet</Typography>
-                            <Button variant="outlined" startIcon={<Add />} onClick={() => setOpenAdd(true)} sx={{ mt: 2 }}>Register Pet</Button>
+                            <Button variant="outlined" startIcon={<Add />} onClick={handleOpenAdd} sx={{ mt: 2 }}>Register Pet</Button>
                         </Box>
                     ) : (
                         <Stack spacing={2.5}>
@@ -256,7 +288,7 @@ export default function PetsView() {
                     )}
                 </Container>
 
-                <Fab color="primary" sx={{ position: 'fixed', bottom: 90, right: 24, bgcolor: '#D4AF37' }} onClick={() => setOpenAdd(true)}>
+                <Fab color="primary" sx={{ position: 'fixed', bottom: 90, right: 24, bgcolor: '#D4AF37' }} onClick={handleOpenAdd}>
                     <Add />
                 </Fab>
 

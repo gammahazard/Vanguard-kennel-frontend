@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
     Box, Typography, Button, CircularProgress,
     IconButton, Avatar, Stack
@@ -20,6 +20,11 @@ export function ImageUpload({ initialUrl, onUploadSuccess, label = "VIP Portrait
     const [error, setError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
+
+    // Sync preview with prop changes (e.g. form reset)
+    useEffect(() => {
+        setPreview(initialUrl || null);
+    }, [initialUrl]);
 
     const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
