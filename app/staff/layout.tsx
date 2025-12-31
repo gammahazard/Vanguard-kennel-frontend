@@ -83,7 +83,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
         localStorage.removeItem('vanguard_token');
         localStorage.removeItem('vanguard_role');
         localStorage.removeItem('vanguard_user');
-        router.push('/staff/login');
+        router.push('/');
     };
 
     const navItems = [
