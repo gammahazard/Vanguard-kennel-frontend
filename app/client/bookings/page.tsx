@@ -317,8 +317,17 @@ export default function BookingsView() {
                                         type="date"
                                         fullWidth
                                         InputLabelProps={{ shrink: true }}
+                                        inputProps={{ min: new Date().toISOString().split('T')[0] }}
                                         value={formData.start_date}
-                                        onChange={e => setFormData({ ...formData, start_date: e.target.value })}
+                                        onChange={e => {
+                                            const newStart = e.target.value;
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                start_date: newStart,
+                                                // Auto-clear end date if it's before new start date
+                                                end_date: prev.end_date && prev.end_date < newStart ? '' : prev.end_date
+                                            }));
+                                        }}
                                         variant="filled"
                                         error={isDateFull(formData.start_date)}
                                         helperText={isDateFull(formData.start_date) ? "Fully booked" : ""}
@@ -328,11 +337,16 @@ export default function BookingsView() {
                                         type="date"
                                         fullWidth
                                         InputLabelProps={{ shrink: true }}
+                                        inputProps={{ min: formData.start_date || new Date().toISOString().split('T')[0] }}
                                         value={formData.end_date}
                                         onChange={e => setFormData({ ...formData, end_date: e.target.value })}
                                         variant="filled"
-                                        error={isDateFull(formData.end_date)}
-                                        helperText={isDateFull(formData.end_date) ? "Fully booked" : ""}
+                                        error={isDateFull(formData.end_date) || Boolean(formData.start_date && formData.end_date && formData.end_date < formData.start_date)}
+                                        helperText={
+                                            formData.start_date && formData.end_date && formData.end_date < formData.start_date
+                                                ? "Must be after check-in"
+                                                : isDateFull(formData.end_date) ? "Fully booked" : undefined
+                                        }
                                     />
                                 </Stack>
                                 {isRangeFull(formData.start_date, formData.end_date) && (
