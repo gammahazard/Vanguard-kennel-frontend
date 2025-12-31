@@ -216,23 +216,40 @@ export default function SplashGate() {
                             </Typography>
 
                             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 4 }}>
-                                Add to home screen for the full interface.
+                                For security reasons, this app runs best from your home screen.
                             </Typography>
 
-                            <Stack spacing={2} sx={{ bgcolor: 'rgba(0,0,0,0.3)', p: 3, borderRadius: 3, textAlign: 'left' }}>
-                                <Stack direction="row" spacing={2} alignItems="center">
-                                    <Share sx={{ color: '#3B82F6', fontSize: 20 }} />
+                            <Stack spacing={2} sx={{ bgcolor: 'rgba(0,0,0,0.3)', p: 3, borderRadius: 3, textAlign: 'left', mb: 3 }}>
+                                <Stack direction="row" spacing={2} alignItems="flex-start">
+                                    <Share sx={{ color: '#3B82F6', fontSize: 24 }} />
                                     <Typography variant="body2" color="#ccc">
-                                        1. Tap <b>Share</b> (or 3 Dots {'>'} Share)
+                                        1. Tap the <b>Share</b> button in the browser menu below.
                                     </Typography>
                                 </Stack>
-                                <Stack direction="row" spacing={2} alignItems="center">
-                                    <AddBox sx={{ color: '#fff', fontSize: 20 }} />
+                                <Stack direction="row" spacing={2} alignItems="flex-start">
+                                    <AddBox sx={{ color: '#fff', fontSize: 24 }} />
                                     <Typography variant="body2" color="#ccc">
-                                        2. Tap <b>Add to Home Screen</b> (Scroll or tap &apos;More&apos;)
+                                        2. Scroll down and select <b>Add to Home Screen</b>.
                                     </Typography>
                                 </Stack>
                             </Stack>
+
+                            {/* Animated Arrow for iOS Safari */}
+                            <Box
+                                component={motion.div}
+                                animate={{ y: [0, 10, 0] }}
+                                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                                sx={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    color: '#D4AF37',
+                                    mt: 2
+                                }}
+                            >
+                                <Typography variant="caption" sx={{ mb: 0.5, letterSpacing: 1, opacity: 0.8 }}>TAP BELOW</Typography>
+                                <ArrowDownward sx={{ fontSize: 32, filter: 'drop-shadow(0 0 8px rgba(212,175,55,0.5))' }} />
+                            </Box>
 
                         </Paper>
                     </Fade>
