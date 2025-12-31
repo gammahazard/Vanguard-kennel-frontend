@@ -527,6 +527,11 @@ export default function ProfileView() {
                                 ))
                             )}
                         </List>
+                        <Box sx={{ mt: 2, p: 1, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 1 }}>
+                            <Typography variant="caption" display="block" align="center" color="text.secondary" sx={{ fontStyle: 'italic', opacity: 0.8 }}>
+                                Rest assured, your account is constantly monitored for your safety. We will notify you immediately of any unusual activity.
+                            </Typography>
+                        </Box>
                     </DialogContent>
                     <DialogActions sx={{ p: 2, justifyContent: 'space-between' }}>
                         <Stack direction="row" spacing={1} alignItems="center" sx={{ pl: 1 }}>
