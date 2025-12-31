@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/lib/config";
-// ... imports ...
 import {
     Box,
     Container,
@@ -31,9 +30,31 @@ import {
     TableHead,
     TableRow,
     Card,
-    CardContent
+    CardContent,
+    BottomNavigation,
+    BottomNavigationAction,
+    CssBaseline,
+    Avatar
 } from "@mui/material";
-import { Security, Task, Person, Logout, TrendingUp, AttachMoney, Pets, Badge, Delete, Add } from "@mui/icons-material";
+import {
+    Security,
+    Person,
+    Logout,
+    TrendingUp,
+    AttachMoney,
+    Pets,
+    Badge as BadgeIcon,
+    Delete,
+    Add,
+    Home,
+    BarChart,
+    People,
+    Settings,
+    EventAvailable,
+    EventBusy,
+    CheckCircle,
+    Schedule
+} from "@mui/icons-material";
 import { theme } from "@/lib/theme";
 
 interface AuditLog {
@@ -47,7 +68,19 @@ interface User {
     id: string;
     email: string;
     name: string;
-    created_at: string;
+    role: string;
+}
+
+interface MonthlyRevenue {
+    month: string;
+    amount: number;
+}
+
+interface BookingCounts {
+    confirmed: number;
+    cancelled: number;
+    pending: number;
+    completed: number;
 }
 
 interface DashboardStats {
@@ -55,16 +88,18 @@ interface DashboardStats {
     occupancy: number;
     active_guests: number;
     staff_count: number;
+    monthly_revenue: MonthlyRevenue[];
+    booking_counts: BookingCounts;
 }
 
-export default function StaffDashboard() {
+export default function OwnerDashboard() {
     const router = useRouter();
-    const [role, setRole] = useState<string | null>(null);
-    const [name, setName] = useState("");
+    const [name, setName] = useState("Owner");
+    // Nav: 0=Overview, 1=Staff, 2=Logs
+    const [navValue, setNavValue] = useState(0);
 
     // Data States
     const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
-    const [clients, setClients] = useState<User[]>([]);
     const [staffList, setStaffList] = useState<User[]>([]);
     const [stats, setStats] = useState<DashboardStats | null>(null);
 
@@ -72,42 +107,28 @@ export default function StaffDashboard() {
     const [openStaffModal, setOpenStaffModal] = useState(false);
     const [newStaffEmail, setNewStaffEmail] = useState("");
     const [newStaffName, setNewStaffName] = useState("");
-    const [newStaffPasword, setNewStaffPassword] = useState("");
+    const [newStaffPassword, setNewStaffPassword] = useState("");
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         const storedRole = localStorage.getItem('vanguard_role');
         const storedName = localStorage.getItem('vanguard_user');
 
-        if (!storedRole || (storedRole !== 'staff' && storedRole !== 'owner')) {
-            router.push('/login');
+        if (storedRole !== 'owner') {
+            router.push('/login'); // Only owners allowed here for now (Staff have different view planned)
             return;
         }
 
-        setRole(storedRole);
-        setName(storedName || "Staff");
-
-        if (storedRole === 'owner') {
-            fetchLogs();
-            fetchClients();
-            fetchStaff();
-            fetchStats();
-        } else if (storedRole === 'staff') {
-            fetchClients();
-        }
+        setName(storedName || "Owner");
+        fetchStats();
+        fetchStaff();
+        fetchLogs();
     }, [router]);
 
     const fetchLogs = async () => {
         try {
             const res = await fetch(`${API_BASE_URL}/api/admin/audit`);
             if (res.ok) setAuditLogs(await res.json());
-        } catch (err) { console.error(err); }
-    };
-
-    const fetchClients = async () => {
-        try {
-            const res = await fetch(`${API_BASE_URL}/api/staff/clients`);
-            if (res.ok) setClients(await res.json());
         } catch (err) { console.error(err); }
     };
 
@@ -134,7 +155,7 @@ export default function StaffDashboard() {
                 body: JSON.stringify({
                     email: newStaffEmail,
                     name: newStaffName,
-                    password: newStaffPasword
+                    password: newStaffPassword
                 })
             });
 
@@ -143,264 +164,264 @@ export default function StaffDashboard() {
                 setNewStaffEmail("");
                 setNewStaffName("");
                 setNewStaffPassword("");
-                fetchStaff(); // Refresh list
-                fetchLogs(); // Log user creation
+                fetchStaff();
+                fetchStats();
             } else {
-                alert("Failed to create staff. Ensure email ends with @vanguard.com");
+                alert("Failed. Ensure email ends with @vanguard.com");
             }
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
+        } catch (err) { console.error(err); }
+        finally { setLoading(false); }
     };
 
     const handleTerminateStaff = async (email: string) => {
-        if (!confirm(`Are you sure you want to TERMINATE access for ${email}? This cannot be undone.`)) return;
-
+        if (!confirm(`Permanently remove ${email}?`)) return;
         try {
             const res = await fetch(`${API_BASE_URL}/api/admin/staff/${email}`, { method: 'DELETE' });
             if (res.ok) {
                 fetchStaff();
-                fetchLogs();
+                fetchStats();
             }
         } catch (err) { console.error(err); }
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('vanguard_token');
-        localStorage.removeItem('vanguard_role');
-        localStorage.removeItem('vanguard_user');
-        router.push('/client/login');
+        localStorage.clear();
+        router.push('/staff/login');
     };
 
     return (
         <ThemeProvider theme={theme}>
-            <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', color: 'text.primary', pb: 8 }}>
-                <Container maxWidth="xl" sx={{ pt: 4 }}>
-                    {/* Header */}
-                    <Stack direction="row" justifyContent="space-between" alignItems="center" mb={6}>
-                        <Box>
-                            <Typography variant="overline" color="primary" sx={{ letterSpacing: '0.2em' }}>
-                                VANGUARD KENNEL SYSTEMS
-                            </Typography>
-                            <Typography variant="h4" fontWeight="bold">
-                                {role === 'owner' ? 'Command Center' : 'Staff Operations'}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                Operator: {name}
-                            </Typography>
-                        </Box>
-                        <Chip
-                            icon={<Logout sx={{ width: 16 }} />}
-                            label="LOGOUT"
-                            onClick={handleLogout}
-                            variant="outlined"
-                            sx={{ color: 'text.secondary', borderColor: 'rgba(255,255,255,0.1)' }}
-                        />
-                    </Stack>
+            <CssBaseline />
+            <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pb: 10 }}>
 
-                    {/* OWNER STATS ROW */}
-                    {role === 'owner' && stats && (
-                        <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} mb={6}>
-                            <Box flex={1}>
-                                <Card sx={{ bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                                    <CardContent>
-                                        <Typography color="text.secondary" variant="overline">Projected Revenue</Typography>
-                                        <Stack direction="row" alignItems="center" spacing={1}>
-                                            <AttachMoney color="success" />
-                                            <Typography variant="h4" fontWeight="bold">${stats.revenue.toLocaleString()}</Typography>
-                                        </Stack>
-                                    </CardContent>
-                                </Card>
+                {/* --- TOP BAR --- */}
+                <Paper elevation={0} sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'rgba(5, 6, 8, 0.9)', position: 'sticky', top: 0, zIndex: 10, backdropFilter: 'blur(10px)' }}>
+                    <Stack direction="row" alignItems="center" spacing={2}>
+                        <Avatar sx={{ bgcolor: 'primary.main', color: 'black', fontWeight: 'bold' }}>
+                            {name.charAt(0).toUpperCase()}
+                        </Avatar>
+                        <Box>
+                            <Typography variant="caption" color="primary" sx={{ letterSpacing: '0.1em', fontWeight: 'bold' }}>COMMAND CENTER</Typography>
+                            <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 700 }}>{name}</Typography>
+                        </Box>
+                    </Stack>
+                    <IconButton size="small" onClick={handleLogout} sx={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+                        <Logout fontSize="small" />
+                    </IconButton>
+                </Paper>
+
+                <Container maxWidth="md" sx={{ pt: 3 }}>
+
+                    {/* VIEW 0: OVERVIEW (Stats & Graphs) */}
+                    {navValue === 0 && stats && (
+                        <Stack spacing={3}>
+                            {/* Key Metrics Grid */}
+                            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
+                                <MetricCard
+                                    label="Revenue"
+                                    value={`$${stats.revenue.toLocaleString()}`}
+                                    icon={<AttachMoney color="success" />}
+                                    trend="+12%"
+                                />
+                                <MetricCard
+                                    label="Occupancy"
+                                    value={`${stats.occupancy}/50`}
+                                    icon={<TrendingUp color="primary" />}
+                                    trend="Normal"
+                                />
+                                <MetricCard
+                                    label="Active Guests"
+                                    value={stats.active_guests.toString()}
+                                    icon={<Pets color="secondary" />}
+                                />
+                                <MetricCard
+                                    label="Staff On Duty"
+                                    value={stats.staff_count.toString()}
+                                    icon={<BadgeIcon color="info" />}
+                                />
                             </Box>
-                            <Box flex={1}>
-                                <Card sx={{ bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                                    <CardContent>
-                                        <Typography color="text.secondary" variant="overline">Capacity / Occupancy</Typography>
-                                        <Stack direction="row" alignItems="center" spacing={1}>
-                                            <TrendingUp color="primary" />
-                                            <Typography variant="h4" fontWeight="bold">{stats.occupancy} <span style={{ fontSize: '1rem', color: 'gray' }}>/ 50</span></Typography>
+
+                            {/* Revenue Graph */}
+                            <Paper sx={{ p: 3, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 4, border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <Typography variant="h6" sx={{ mb: 3 }}>Revenue Trend</Typography>
+                                <Box sx={{ height: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 1 }}>
+                                    {stats.monthly_revenue.length > 0 ? stats.monthly_revenue.map((m, i) => (
+                                        <Stack key={i} alignItems="center" spacing={1} sx={{ flex: 1 }}>
+                                            <Box
+                                                sx={{
+                                                    width: '100%',
+                                                    height: `${Math.max((m.amount / 5000) * 100, 10)}%`, // Mock scale factor
+                                                    maxHeight: '100%',
+                                                    bgcolor: i === stats.monthly_revenue.length - 1 ? 'primary.main' : 'rgba(255,255,255,0.1)',
+                                                    borderRadius: 1,
+                                                    transition: 'all 0.5s'
+                                                }}
+                                            />
+                                            <Typography variant="caption" color="text.secondary">{m.month.split('-')[1]}</Typography>
                                         </Stack>
-                                    </CardContent>
-                                </Card>
-                            </Box>
-                            <Box flex={1}>
-                                <Card sx={{ bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                                    <CardContent>
-                                        <Typography color="text.secondary" variant="overline">Active Guests</Typography>
-                                        <Stack direction="row" alignItems="center" spacing={1}>
-                                            <Pets color="secondary" />
-                                            <Typography variant="h4" fontWeight="bold">{stats.active_guests}</Typography>
-                                        </Stack>
-                                    </CardContent>
-                                </Card>
-                            </Box>
-                            <Box flex={1}>
-                                <Card sx={{ bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                                    <CardContent>
-                                        <Typography color="text.secondary" variant="overline">Active Staff</Typography>
-                                        <Stack direction="row" alignItems="center" spacing={1}>
-                                            <Badge color="info" />
-                                            <Typography variant="h4" fontWeight="bold">{stats.staff_count}</Typography>
-                                        </Stack>
-                                    </CardContent>
-                                </Card>
-                            </Box>
+                                    )) : (
+                                        <Typography color="text.secondary">No revenue data yet.</Typography>
+                                    )}
+                                </Box>
+                            </Paper>
+
+                            {/* Booking Status Breakdown */}
+                            <Paper sx={{ p: 3, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 4, border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <Typography variant="h6" sx={{ mb: 2 }}>Booking Status</Typography>
+                                <Stack spacing={2}>
+                                    <StatusRow label="Confirmed" count={stats.booking_counts.confirmed} total={100} color="#4ade80" icon={<CheckCircle sx={{ fontSize: 16 }} />} />
+                                    <StatusRow label="Pending" count={stats.booking_counts.pending} total={100} color="#facc15" icon={<Schedule sx={{ fontSize: 16 }} />} />
+                                    <StatusRow label="Completed" count={stats.booking_counts.completed} total={100} color="#60a5fa" icon={<EventAvailable sx={{ fontSize: 16 }} />} />
+                                    <StatusRow label="Cancelled" count={stats.booking_counts.cancelled} total={100} color="#f87171" icon={<EventBusy sx={{ fontSize: 16 }} />} />
+                                </Stack>
+                            </Paper>
                         </Stack>
                     )}
 
-                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={4}>
-                        {/* LEFT COLUMN: Main Content */}
-                        <Box sx={{ flex: 2, minWidth: 0 }}>
-                            {/* OWNER VIEW: STAFF MANAGEMENT */}
-                            {role === 'owner' && (
-                                <Paper sx={{ p: 3, mb: 4, bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212, 175, 55, 0.2)' }}>
-                                    <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-                                        <Stack direction="row" alignItems="center" spacing={2}>
-                                            <Badge color="primary" />
-                                            <Typography variant="h6">Staff Management</Typography>
-                                        </Stack>
-                                        <Button startIcon={<Add />} variant="contained" size="small" onClick={() => setOpenStaffModal(true)}>
-                                            Add Staff
-                                        </Button>
-                                    </Stack>
+                    {/* VIEW 1: STAFF MANAGEMENT */}
+                    {navValue === 1 && (
+                        <Stack spacing={3}>
+                            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                <Typography variant="h5" fontWeight="bold">Team Vanguard</Typography>
+                                <Button startIcon={<Add />} variant="contained" size="small" onClick={() => setOpenStaffModal(true)}>
+                                    Hire Staff
+                                </Button>
+                            </Stack>
 
-                                    <TableContainer>
-                                        <Table size="small">
-                                            <TableHead>
-                                                <TableRow>
-                                                    <TableCell sx={{ color: 'gray' }}>Name</TableCell>
-                                                    <TableCell sx={{ color: 'gray' }}>Email</TableCell>
-                                                    <TableCell sx={{ color: 'gray' }}>Role</TableCell>
-                                                    <TableCell align="right" sx={{ color: 'gray' }}>Action</TableCell>
-                                                </TableRow>
-                                            </TableHead>
-                                            <TableBody>
-                                                {staffList.map((staff) => (
-                                                    <TableRow key={staff.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                                                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>{staff.name}</TableCell>
-                                                        <TableCell sx={{ color: 'text.secondary' }}>{staff.email}</TableCell>
-                                                        <TableCell>
-                                                            <Chip label="STAFF" size="small" color="default" sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: 'white' }} />
-                                                        </TableCell>
-                                                        <TableCell align="right">
-                                                            <IconButton color="error" size="small" onClick={() => handleTerminateStaff(staff.email)}>
-                                                                <Delete fontSize="small" />
-                                                            </IconButton>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </TableContainer>
-                                </Paper>
-                            )}
-
-                            {/* OWNER VIEW: SECURITY LOGS */}
-                            {role === 'owner' && (
-                                <Paper sx={{ p: 3, mb: 4, bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                                    <Stack direction="row" alignItems="center" spacing={2} mb={3}>
-                                        <Security color="primary" />
-                                        <Typography variant="h6">Security Audit Stream</Typography>
-                                    </Stack>
-                                    <List dense sx={{ maxHeight: 300, overflow: 'auto' }}>
-                                        {auditLogs.map((log) => (
-                                            <ListItem key={log.id} sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                                <ListItemText
-                                                    primary={<span style={{ color: log.action.includes("FAILURE") || log.action.includes("TERMINAT") ? '#ff4444' : 'white' }}>{log.action}</span>}
-                                                    secondary={<span style={{ color: 'gray' }}>{log.user_email} • {new Date(log.timestamp).toLocaleTimeString()}</span>}
-                                                />
-                                            </ListItem>
+                            <TableContainer component={Paper} sx={{ bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 3 }}>
+                                <Table>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell sx={{ color: 'gray' }}>Staff Member</TableCell>
+                                            <TableCell align="right" sx={{ color: 'gray' }}>Action</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {staffList.map((staff) => (
+                                            <TableRow key={staff.email}>
+                                                <TableCell>
+                                                    <Stack direction="row" spacing={2} alignItems="center">
+                                                        <Avatar sx={{ width: 32, height: 32, fontSize: 14 }}>{staff.name.charAt(0)}</Avatar>
+                                                        <Box>
+                                                            <Typography variant="body2" fontWeight="bold">{staff.name}</Typography>
+                                                            <Typography variant="caption" color="text.secondary">{staff.email}</Typography>
+                                                        </Box>
+                                                    </Stack>
+                                                </TableCell>
+                                                <TableCell align="right">
+                                                    <IconButton color="error" size="small" onClick={() => handleTerminateStaff(staff.email)}>
+                                                        <Delete fontSize="small" />
+                                                    </IconButton>
+                                                </TableCell>
+                                            </TableRow>
                                         ))}
-                                    </List>
-                                </Paper>
-                            )}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </Stack>
+                    )}
 
-                            {/* CLIENTS LIST (Shared) */}
-                            <Paper sx={{ p: 3, bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                                <Stack direction="row" alignItems="center" spacing={2} mb={3}>
-                                    <Person color="primary" />
-                                    <Typography variant="h6">New Member Applications</Typography>
-                                </Stack>
-                                <List dense>
-                                    {clients.map((client) => (
-                                        <ListItem key={client.id} sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                            <ListItemText
-                                                primary={<Typography fontWeight="bold" color="white">{client.name}</Typography>}
-                                                secondary={<Typography variant="caption" color="text.secondary">{client.email}</Typography>}
-                                            />
-                                            <Chip label="PENDING" size="small" color="warning" variant="outlined" sx={{ fontSize: '0.6rem' }} />
+                    {/* VIEW 2: SECURITY LOGS */}
+                    {navValue === 2 && (
+                        <Stack spacing={3}>
+                            <Typography variant="h5" fontWeight="bold">Security Audit</Typography>
+                            <Paper sx={{ bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 3, overflow: 'hidden' }}>
+                                <List>
+                                    {auditLogs.map((log) => (
+                                        <ListItem key={log.id} divider>
+                                            <Stack direction="row" spacing={2} alignItems="center" width="100%">
+                                                <Security color={log.action.includes('FAILURE') ? 'error' : 'primary'} />
+                                                <ListItemText
+                                                    primary={log.action.replace(/_/g, " ")}
+                                                    secondary={`${log.user_email} • ${new Date(log.timestamp).toLocaleTimeString()}`}
+                                                    primaryTypographyProps={{ fontWeight: 500 }}
+                                                />
+                                            </Stack>
                                         </ListItem>
                                     ))}
                                 </List>
                             </Paper>
-                        </Box>
-
-                        {/* RIGHT COLUMN: Sidebar (Could be tasks for staff, or quick stats) */}
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                            <Paper sx={{ p: 3, bgcolor: 'rgba(5,6,8,0.8)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                                <Typography variant="subtitle2" color="text.secondary">SYSTEM STATUS</Typography>
-                                <Stack spacing={2} mt={2}>
-                                    <Stack direction="row" justifyContent="space-between">
-                                        <Typography color="white">Database</Typography>
-                                        <Typography color="success.main">ONLINE</Typography>
-                                    </Stack>
-                                    <Stack direction="row" justifyContent="space-between">
-                                        <Typography color="white">WebAuthn</Typography>
-                                        <Typography color="success.main">ACTIVE</Typography>
-                                    </Stack>
-                                    <Stack direction="row" justifyContent="space-between">
-                                        <Typography color="white">Live Cams</Typography>
-                                        <Typography color="warning.main">OFFLINE</Typography>
-                                    </Stack>
-                                </Stack>
-                            </Paper>
-                        </Box>
-                    </Stack>
-
-                    {/* STAFF MODAL */}
-                    <Dialog open={openStaffModal} onClose={() => setOpenStaffModal(false)} PaperProps={{ sx: { bgcolor: '#1a1a1a', border: '1px solid #333' } }}>
-                        <DialogTitle color="white">Hire New Staff</DialogTitle>
-                        <DialogContent>
-                            <Stack spacing={2} sx={{ mt: 1, minWidth: 300 }}>
-                                <TextField
-                                    label="Full Name"
-                                    fullWidth variant="filled"
-                                    InputProps={{ style: { color: 'white' } }}
-                                    InputLabelProps={{ style: { color: 'gray' } }}
-                                    value={newStaffName}
-                                    onChange={(e) => setNewStaffName(e.target.value)}
-                                />
-                                <TextField
-                                    label="Email (@vanguard.com)"
-                                    fullWidth variant="filled"
-                                    InputProps={{ style: { color: 'white' } }}
-                                    InputLabelProps={{ style: { color: 'gray' } }}
-                                    value={newStaffEmail}
-                                    onChange={(e) => setNewStaffEmail(e.target.value)}
-                                />
-                                <TextField
-                                    label="Initial Password"
-                                    type="password"
-                                    fullWidth variant="filled"
-                                    InputProps={{ style: { color: 'white' } }}
-                                    InputLabelProps={{ style: { color: 'gray' } }}
-                                    value={newStaffPasword}
-                                    onChange={(e) => setNewStaffPassword(e.target.value)}
-                                />
-                            </Stack>
-                        </DialogContent>
-                        <DialogActions>
-                            <Button onClick={() => setOpenStaffModal(false)} color="inherit">Cancel</Button>
-                            <Button onClick={handleCreateStaff} variant="contained" disabled={loading}>
-                                {loading ? <CircularProgress size={24} /> : "Hire Staff"}
-                            </Button>
-                        </DialogActions>
-                    </Dialog>
-
+                        </Stack>
+                    )}
                 </Container>
+
+                {/* --- BOTTOM NAVIGATION --- */}
+                <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100, borderTop: '1px solid rgba(255,255,255,0.05)' }} elevation={3}>
+                    <BottomNavigation
+                        showLabels
+                        value={navValue}
+                        onChange={(e, v) => setNavValue(v)}
+                        sx={{ bgcolor: '#0B0C10', height: 70, '& .Mui-selected': { color: 'primary.main' } }}
+                    >
+                        <BottomNavigationAction label="Overview" icon={<BarChart />} />
+                        <BottomNavigationAction label="Staff" icon={<People />} />
+                        <BottomNavigationAction label="Security" icon={<Security />} />
+                    </BottomNavigation>
+                </Paper>
+
+                {/* HIRE STAFF MODAL */}
+                <Dialog open={openStaffModal} onClose={() => setOpenStaffModal(false)} PaperProps={{ sx: { bgcolor: '#1a1a1a', borderRadius: 3 } }}>
+                    <DialogTitle>Hire New Staff</DialogTitle>
+                    <DialogContent>
+                        <Stack spacing={2} sx={{ mt: 1, minWidth: 300 }}>
+                            <TextField
+                                label="Full Name" fullWidth variant="filled"
+                                value={newStaffName} onChange={e => setNewStaffName(e.target.value)}
+                            />
+                            <TextField
+                                label="Email (@vanguard.com)" fullWidth variant="filled"
+                                value={newStaffEmail} onChange={e => setNewStaffEmail(e.target.value)}
+                            />
+                            <TextField
+                                label="Password" type="password" fullWidth variant="filled"
+                                value={newStaffPassword} onChange={e => setNewStaffPassword(e.target.value)}
+                            />
+                        </Stack>
+                    </DialogContent>
+                    <DialogActions sx={{ p: 2 }}>
+                        <Button onClick={() => setOpenStaffModal(false)}>Cancel</Button>
+                        <Button variant="contained" onClick={handleCreateStaff} disabled={loading}>
+                            {loading ? <CircularProgress size={20} /> : "Hire"}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
             </Box>
         </ThemeProvider>
+    );
+}
+
+// --- SUB-COMPONENTS ---
+
+function MetricCard({ label, value, icon, trend }: any) {
+    return (
+        <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 3, border: '1px solid rgba(255,255,255,0.05)' }}>
+            <Stack spacing={1}>
+                <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                    <Typography variant="caption" color="text.secondary">{label}</Typography>
+                    {icon}
+                </Stack>
+                <Typography variant="h5" fontWeight="bold">{value}</Typography>
+                {trend && <Typography variant="caption" color={trend.includes('+') ? 'success.main' : 'text.secondary'}>{trend} vs last month</Typography>}
+            </Stack>
+        </Paper>
+    );
+}
+
+function StatusRow({ label, count, total, color, icon }: any) {
+    const pct = (count / (total || 1)) * 100; // Mock total for now or use real total
+    return (
+        <Stack spacing={0.5}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Stack direction="row" spacing={1} alignItems="center">
+                    {icon}
+                    <Typography variant="body2">{label}</Typography>
+                </Stack>
+                <Typography variant="body2" fontWeight="bold">{count}</Typography>
+            </Stack>
+            <Box sx={{ width: '100%', height: 6, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 1, overflow: 'hidden' }}>
+                <Box sx={{ width: `${Math.min(count * 5, 100)}%`, height: '100%', bgcolor: color }} />
+            </Box>
+        </Stack>
     );
 }
