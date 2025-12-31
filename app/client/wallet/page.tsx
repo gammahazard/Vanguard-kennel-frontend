@@ -174,7 +174,7 @@ export default function WalletView() {
 
                                                 {/* Balance & Action */}
                                                 <Stack direction="row" alignItems="center" spacing={3} sx={{ width: { xs: '100%', sm: 'auto' }, justifyContent: 'space-between' }}>
-                                                    <Box sx={{ textAlign: 'right' }}>
+                                                    <Box sx={{ textAlign: 'right', mr: 3 }}>
                                                         <Typography variant="caption" color="text.secondary" display="block">Balance</Typography>
                                                         <Typography variant="body2" fontWeight="bold">{coin.balance}</Typography>
                                                     </Box>
