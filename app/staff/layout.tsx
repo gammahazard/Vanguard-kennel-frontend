@@ -69,10 +69,13 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
     const pathname = usePathname();
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
+    const [userRole, setUserRole] = useState<string | null>(null);
+
     useEffect(() => {
         // Enforce Staff Role
         const role = localStorage.getItem('vanguard_role');
         const token = localStorage.getItem('vanguard_token');
+        setUserRole(role);
 
         if (!token || (role !== 'staff' && role !== 'owner')) {
             router.push('/');
@@ -83,13 +86,16 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
         localStorage.removeItem('vanguard_token');
         localStorage.removeItem('vanguard_role');
         localStorage.removeItem('vanguard_user');
+        localStorage.removeItem('vanguard_email');
         router.push('/');
     };
 
     const navItems = [
         { label: "Daily Run", icon: <DashboardIcon />, path: "/staff/dashboard" },
-        { label: "Comms Log", icon: <MessageIcon />, path: "/staff/comms" },
-        { label: "System Audit", icon: <Settings />, path: "/staff/audit" },
+        ...(userRole === 'owner' ? [
+            { label: "Comms Log", icon: <MessageIcon />, path: "/staff/comms" },
+            { label: "System Audit", icon: <Settings />, path: "/staff/audit" },
+        ] : []),
     ];
 
     return (

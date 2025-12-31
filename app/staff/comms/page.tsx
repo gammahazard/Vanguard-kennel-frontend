@@ -8,7 +8,9 @@ import {
     AccessTime,
     ArrowForward,
     MarkChatRead,
-    AdminPanelSettings
+    AdminPanelSettings,
+    Refresh,
+    Message as MessageIcon
 } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -31,14 +33,14 @@ export default function StaffCommsLog() {
 
     useEffect(() => {
         fetchMessages();
-        const interval = setInterval(fetchMessages, 10000); // Poll every 10s
+        const interval = setInterval(fetchMessages, 30000); // Poll every 30s
         return () => clearInterval(interval);
     }, []);
 
     const fetchMessages = async () => {
         try {
             const token = localStorage.getItem("vanguard_token");
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/admin/messages`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://api.pokeframe.me'}/api/admin/messages`, {
                 headers: { "Authorization": `Bearer ${token}` }
             });
             if (res.ok) {
@@ -53,8 +55,9 @@ export default function StaffCommsLog() {
     };
 
     const getRoleBadge = (email: string) => {
-        if (email.includes('owner') || email.includes('admin')) return { label: 'OWNER', color: '#f59e0b', bgcolor: 'rgba(245, 158, 11, 0.1)' };
-        if (email.includes('staff') || email.includes('vanguard')) return { label: 'STAFF', color: '#3b82f6', bgcolor: 'rgba(59, 130, 246, 0.1)' };
+        const lowerEmail = email.toLowerCase();
+        if (lowerEmail.includes('owner') || lowerEmail.includes('admin')) return { label: 'OWNER', color: '#D4AF37', bgcolor: 'rgba(212, 175, 55, 0.1)' };
+        if (lowerEmail.includes('staff') || lowerEmail.includes('vanguard')) return { label: 'STAFF', color: '#3b82f6', bgcolor: 'rgba(59, 130, 246, 0.1)' };
         return { label: 'CLIENT', color: '#10b981', bgcolor: 'rgba(16, 185, 129, 0.1)' };
     };
 
@@ -81,162 +84,162 @@ export default function StaffCommsLog() {
     });
 
     return (
-        <Box sx={{ p: 4, bgcolor: 'background.default', minHeight: '100vh' }}>
+        <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: '#0B0C10', minHeight: '100vh', color: '#f8fafc' }}>
             <Container maxWidth="lg">
 
                 {/* Header */}
-                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
+                <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }} spacing={2} sx={{ mb: 4 }}>
                     <Box>
                         <Stack direction="row" spacing={1} alignItems="center">
-                            <AdminPanelSettings sx={{ color: 'text.secondary' }} />
-                            <Typography variant="overline" color="text.secondary" fontWeight="bold" letterSpacing={1}>
-                                OVERSIGHT
+                            <AdminPanelSettings sx={{ color: '#D4AF37' }} />
+                            <Typography variant="overline" color="#D4AF37" fontWeight="bold" letterSpacing={1}>
+                                SYSTEM OVERSIGHT
                             </Typography>
                         </Stack>
-                        <Typography variant="h4" fontWeight="bold" color="text.primary">
+                        <Typography variant="h4" fontWeight="bold" sx={{ color: 'white', borderBottom: '2px solid #D4AF37', display: 'inline-block', pb: 0.5 }}>
                             The Black Box
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            Global communication log. Total visibility.
+                        <Typography variant="body2" sx={{ color: '#94a3b8', mt: 1 }}>
+                            Global communication intercept. Full transparency.
                         </Typography>
                     </Box>
-                    <Stack direction="row" spacing={2} alignItems="center">
+                    <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
                         <Chip
-                            label={`${messages.length} Total Messages`}
-                            sx={{ bgcolor: 'rgba(255,255,255,0.05)', color: 'text.secondary', fontWeight: 'medium' }}
+                            label={`${messages.length} RECORDS`}
+                            size="small"
+                            sx={{ bgcolor: 'rgba(255,255,255,0.05)', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.1)', fontWeight: 'bold' }}
                         />
+                        <Button
+                            size="small"
+                            startIcon={<Refresh />}
+                            onClick={fetchMessages}
+                            sx={{ color: '#D4AF37', borderColor: 'rgba(212, 175, 55, 0.3)', border: '1px solid', '&:hover': { bgcolor: 'rgba(212, 175, 55, 0.05)' } }}
+                        >
+                            Refresh
+                        </Button>
                     </Stack>
                 </Stack>
 
                 {/* Filter Bar */}
-                <Paper sx={{ p: 2, mb: 3, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(212, 175, 55, 0.1)' }}>
+                <Paper sx={{ p: 2, mb: 3, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212, 175, 55, 0.1)' }}>
                     <Stack spacing={2}>
                         <TextField
                             fullWidth
-                            placeholder="Search by name, email, or content..."
+                            placeholder="Search records by name, email, or content..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             InputProps={{
                                 startAdornment: <InputAdornment position="start"><Search sx={{ color: '#D4AF37' }} /></InputAdornment>,
-                                sx: { bgcolor: 'rgba(0,0,0,0.3)', borderRadius: 2, '& fieldset': { borderColor: 'rgba(212, 175, 55, 0.2)' } }
+                                sx: { bgcolor: 'rgba(0,0,0,0.3)', borderRadius: 2, color: 'white', '& fieldset': { borderColor: 'rgba(212, 175, 55, 0.2)' } }
                             }}
                             size="small"
                         />
                         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                            <Chip
-                                label="All"
-                                onClick={() => setFilter('all')}
-                                size="small"
-                                sx={{
-                                    bgcolor: filter === 'all' ? '#D4AF37' : 'transparent',
-                                    color: filter === 'all' ? 'black' : '#94a3b8',
-                                    fontWeight: 'bold',
-                                    border: filter === 'all' ? 'none' : '1px solid rgba(255,255,255,0.1)',
-                                    cursor: 'pointer'
-                                }}
-                            />
-                            <Chip
-                                label="Client Comms"
-                                onClick={() => setFilter('client')}
-                                size="small"
-                                sx={{
-                                    bgcolor: filter === 'client' ? '#10b981' : 'transparent',
-                                    color: filter === 'client' ? 'white' : '#94a3b8',
-                                    fontWeight: 'bold',
-                                    border: filter === 'client' ? 'none' : '1px solid rgba(255,255,255,0.1)',
-                                    cursor: 'pointer'
-                                }}
-                            />
-                            <Chip
-                                label="Internal"
-                                onClick={() => setFilter('staff')}
-                                size="small"
-                                sx={{
-                                    bgcolor: filter === 'staff' ? '#3b82f6' : 'transparent',
-                                    color: filter === 'staff' ? 'white' : '#94a3b8',
-                                    fontWeight: 'bold',
-                                    border: filter === 'staff' ? 'none' : '1px solid rgba(255,255,255,0.1)',
-                                    cursor: 'pointer'
-                                }}
-                            />
+                            {(['all', 'client', 'staff'] as const).map((mode) => (
+                                <Chip
+                                    key={mode}
+                                    label={mode === 'all' ? 'FULL STREAM' : mode === 'client' ? 'CLIENT COMMS' : 'INTERNAL OPS'}
+                                    onClick={() => setFilter(mode)}
+                                    size="small"
+                                    sx={{
+                                        bgcolor: filter === mode ? (mode === 'all' ? '#D4AF37' : mode === 'client' ? '#10b981' : '#3b82f6') : 'transparent',
+                                        color: filter === mode ? (mode === 'all' ? 'black' : 'white') : '#94a3b8',
+                                        fontWeight: 'bold',
+                                        border: filter === mode ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s',
+                                        '&:hover': { bgcolor: filter === mode ? '' : 'rgba(255,255,255,0.05)' }
+                                    }}
+                                />
+                            ))}
                         </Stack>
                     </Stack>
                 </Paper>
 
                 {/* Message Stream */}
-                <Stack spacing={2}>
+                <Stack spacing={1.5}>
                     {loading ? (
                         <Box sx={{ textAlign: 'center', py: 8 }}>
-                            <CircularProgress size={40} />
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>Loading records...</Typography>
+                            <CircularProgress size={32} sx={{ color: '#D4AF37' }} />
+                            <Typography variant="caption" sx={{ mt: 2, display: 'block', color: '#64748b', letterSpacing: 2 }}>ESTABLISHING LINK...</Typography>
                         </Box>
+                    ) : filteredMessages.length === 0 ? (
+                        <Paper sx={{ p: 6, textAlign: 'center', bgcolor: 'rgba(255,255,255,0.01)', borderRadius: 3, border: '1px dashed rgba(255,255,255,0.05)' }}>
+                            <MessageIcon sx={{ fontSize: 48, color: 'rgba(255,255,255,0.05)', mb: 2 }} />
+                            <Typography sx={{ color: '#64748b' }}>NO INTERCEPTED COMMUNICATIONS FOUND</Typography>
+                        </Paper>
                     ) : (
-                        <AnimatePresence>
-                            {filteredMessages.map((msg) => {
+                        <AnimatePresence mode="popLayout">
+                            {filteredMessages.map((msg, i) => {
                                 const senderBadge = getRoleBadge(msg.sender_email);
                                 const receiverBadge = getRoleBadge(msg.receiver_email);
 
                                 return (
                                     <motion.div
                                         key={msg.id}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
+                                        initial={{ opacity: 0, x: -10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95 }}
+                                        transition={{ delay: i * 0.02 }}
                                         layout
                                     >
-                                        <Paper sx={{ p: 2, borderRadius: 2, bgcolor: 'background.paper', border: '1px solid rgba(255,255,255,0.02)' }}>
-                                            <Stack direction="row" spacing={3} alignItems="flex-start">
+                                        <Paper sx={{
+                                            p: 0,
+                                            borderRadius: 2,
+                                            bgcolor: 'rgba(255,255,255,0.015)',
+                                            border: '1px solid rgba(255,255,255,0.05)',
+                                            borderLeft: `3px solid ${senderBadge.color}`,
+                                            overflow: 'hidden',
+                                            '&:hover': { bgcolor: 'rgba(255,255,255,0.03)', borderColor: 'rgba(212, 175, 55, 0.2)' },
+                                            transition: 'all 0.2s'
+                                        }}>
+                                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={0}>
 
-                                                {/* Timestamp Column */}
-                                                <Box sx={{ minWidth: 100, pt: 0.5 }}>
-                                                    <Stack direction="row" spacing={0.5} alignItems="center" sx={{ opacity: 0.5 }}>
-                                                        <AccessTime sx={{ fontSize: 14 }} />
-                                                        <Typography variant="caption" fontFamily="monospace">
-                                                            {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                {/* Left Panel: Actors & Meta */}
+                                                <Box sx={{ p: 2, minWidth: { sm: 220 }, bgcolor: 'rgba(0,0,0,0.2)', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
+                                                    <Stack spacing={1.5}>
+                                                        {/* Timestamp */}
+                                                        <Stack direction="row" spacing={1} alignItems="center" sx={{ opacity: 0.5 }}>
+                                                            <AccessTime sx={{ fontSize: 12 }} />
+                                                            <Typography variant="caption" sx={{ fontFamily: 'monospace', letterSpacing: 1 }}>
+                                                                {new Date(msg.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                                                            </Typography>
+                                                        </Stack>
+
+                                                        {/* Actors */}
+                                                        <Box>
+                                                            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+                                                                <Chip label={senderBadge.label} size="small" sx={{ height: 14, fontSize: '0.55rem', bgcolor: senderBadge.bgcolor, color: senderBadge.color, fontWeight: 'bold', borderRadius: 0.5 }} />
+                                                                <Typography variant="caption" sx={{ color: 'white', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                    {msg.sender_email.split('@')[0]}
+                                                                </Typography>
+                                                            </Stack>
+                                                            <ArrowForward sx={{ fontSize: 10, color: '#64748b', ml: 1, my: 0.2, transform: 'rotate(90deg)' }} />
+                                                            <Stack direction="row" spacing={1} alignItems="center">
+                                                                <Chip label={receiverBadge.label} size="small" sx={{ height: 14, fontSize: '0.55rem', bgcolor: receiverBadge.bgcolor, color: receiverBadge.color, fontWeight: 'bold', borderRadius: 0.5 }} />
+                                                                <Typography variant="caption" sx={{ color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                    {msg.receiver_email.split('@')[0]}
+                                                                </Typography>
+                                                            </Stack>
+                                                        </Box>
+
+                                                        <Typography variant="caption" sx={{ color: '#475569', fontSize: '0.65rem' }}>
+                                                            {new Date(msg.timestamp).toLocaleDateString()}
                                                         </Typography>
                                                     </Stack>
-                                                    <Typography variant="caption" color="text.secondary" sx={{ opacity: 0.3, display: 'block', mt: 0.5 }}>
-                                                        {new Date(msg.timestamp).toLocaleDateString()}
-                                                    </Typography>
                                                 </Box>
 
-                                                {/* Actors Column */}
-                                                <Box sx={{ minWidth: 200 }}>
-                                                    <Tooltip title="Click to copy email">
-                                                        <Stack
-                                                            direction="row"
-                                                            spacing={1}
-                                                            alignItems="center"
-                                                            sx={{ mb: 1, cursor: 'pointer', '&:hover': { opacity: 0.8 } }}
-                                                            onClick={() => handleCopyEmail(msg.sender_email)}
-                                                        >
-                                                            <Chip label={senderBadge.label} size="small" sx={{ height: 16, fontSize: '0.6rem', bgcolor: senderBadge.bgcolor, color: senderBadge.color, fontWeight: 'bold' }} />
-                                                            <Typography variant="caption" fontWeight="bold" color="text.primary">
-                                                                {msg.sender_email.split('@')[0]}
-                                                            </Typography>
-                                                        </Stack>
-                                                    </Tooltip>
-                                                    <ArrowForward sx={{ fontSize: 14, color: 'text.disabled', my: 0.5, transform: 'rotate(90deg)' }} />
-                                                    <Tooltip title="Click to copy email">
-                                                        <Stack
-                                                            direction="row"
-                                                            spacing={1}
-                                                            alignItems="center"
-                                                            sx={{ mt: 1, cursor: 'pointer', '&:hover': { opacity: 0.8 } }}
-                                                            onClick={() => handleCopyEmail(msg.receiver_email)}
-                                                        >
-                                                            <Chip label={receiverBadge.label} size="small" sx={{ height: 16, fontSize: '0.6rem', bgcolor: receiverBadge.bgcolor, color: receiverBadge.color, fontWeight: 'bold' }} />
-                                                            <Typography variant="caption" color="text.secondary">
-                                                                {msg.receiver_email.split('@')[0]}
-                                                            </Typography>
-                                                        </Stack>
-                                                    </Tooltip>
-                                                </Box>
-
-                                                {/* Content Column */}
-                                                <Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255,255,255,0.05)' }} />
-
-                                                <Box sx={{ flex: 1, pt: 0.5 }}>
-                                                    <Typography variant="body2" color="text.primary" sx={{ lineHeight: 1.6 }}>
+                                                {/* Right Panel: Content */}
+                                                <Box sx={{ p: 2.5, flex: 1, position: 'relative' }}>
+                                                    <Typography variant="body2" sx={{
+                                                        color: '#e2e8f0',
+                                                        lineHeight: 1.7,
+                                                        whiteSpace: 'pre-wrap',
+                                                        wordBreak: 'break-word',
+                                                        fontFamily: i % 2 === 0 ? 'inherit' : 'monospace',
+                                                        fontSize: i % 2 === 0 ? '0.875rem' : '0.8rem',
+                                                        opacity: 0.9
+                                                    }}>
                                                         {msg.content}
                                                     </Typography>
                                                 </Box>

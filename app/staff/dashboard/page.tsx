@@ -45,7 +45,8 @@ import {
     Face,
     CheckCircle,
     Cancel,
-    Message
+    Message,
+    Assignment as AssignmentIcon
 } from "@mui/icons-material";
 import { startRegistration } from '@simplewebauthn/browser';
 import { useState, useEffect } from "react";
@@ -76,12 +77,18 @@ const MOCK_FINANCIALS = {
 export default function StaffDashboard() {
     const [guests, setGuests] = useState<GuestPet[]>([]);
     const [loadingGuests, setLoadingGuests] = useState(true);
-    const [viewMode, setViewMode] = useState<'operations' | 'business'>('operations');
+    const [viewMode, setViewMode] = useState<'operations' | 'business' | 'requests' | 'directory'>('operations');
     const [isOwner, setIsOwner] = useState(false);
     const [isFaceIdEnabled, setIsFaceIdEnabled] = useState(false);
     const [showSettingsDialog, setShowSettingsDialog] = useState(false);
     const [isRegistering, setIsRegistering] = useState(false);
     const [message, setMessage] = useState({ text: "", severity: "info", open: false });
+
+    // New States for Staff 2.0
+    const [pendingBookings, setPendingBookings] = useState<any[]>([]);
+    const [clients, setClients] = useState<any[]>([]);
+    const [loadingBookings, setLoadingBookings] = useState(false);
+    const [loadingClients, setLoadingClients] = useState(false);
 
     // Initial Face ID Check
     useEffect(() => {
@@ -183,7 +190,88 @@ export default function StaffDashboard() {
         }
         // Always fetch pets for the Ops view
         fetchGuests();
+        fetchPendingBookings();
+        fetchClients();
     }, []);
+
+    const fetchPendingBookings = async () => {
+        setLoadingBookings(true);
+        try {
+            const token = localStorage.getItem('vanguard_token');
+            const res = await fetch(`${API_BASE_URL}/api/admin/audit`, { // Hack: Using audit to see actions or we need a real bookings endpoint
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            // Actually we need real bookings. Let's try /api/bookings if the backend has it
+            const resBookings = await fetch(`${API_BASE_URL}/api/user/bookings`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (resBookings.ok) {
+                const data = await resBookings.json();
+                // Filter for pending if the backend supports it, otherwise mock for demo
+                setPendingBookings(data.filter((b: any) => b.status === 'pending') || []);
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoadingBookings(false);
+        }
+    };
+
+    const fetchClients = async () => {
+        setLoadingClients(true);
+        try {
+            const token = localStorage.getItem('vanguard_token');
+            const res = await fetch(`${API_BASE_URL}/api/staff/clients`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setClients(data);
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoadingClients(false);
+        }
+    };
+
+    const handleBookingAction = async (id: string, action: 'confirmed' | 'cancelled') => {
+        try {
+            const token = localStorage.getItem('vanguard_token');
+            const res = await fetch(`${API_BASE_URL}/api/bookings/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ status: action })
+            });
+            if (res.ok) {
+                setMessage({ text: `Booking ${action} successfully!`, severity: "success", open: true });
+                fetchPendingBookings();
+                fetchGuests(); // Refresh guest list if they are checking in
+            }
+        } catch (e) {
+            setMessage({ text: "Failed to update booking", severity: "error", open: true });
+        }
+    };
+
+    const handleDeleteStaff = async (email: string) => {
+        if (!confirm(`Are you sure you want to terminate ${email}?`)) return;
+        try {
+            const token = localStorage.getItem('vanguard_token');
+            const res = await fetch(`${API_BASE_URL}/api/admin/staff/${encodeURIComponent(email)}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                setMessage({ text: "Staff member removed", severity: "info", open: true });
+                fetchStaff();
+            }
+        } catch (e) {
+            setMessage({ text: "Failed to delete staff", severity: "error", open: true });
+        }
+    };
 
     const fetchGuests = async () => {
         setLoadingGuests(true);
@@ -310,29 +398,45 @@ export default function StaffDashboard() {
                         alignItems={{ xs: 'stretch', sm: 'center' }}
                         sx={{ width: { xs: '100%', sm: 'auto' } }}
                     >
-                        {isOwner && (
-                            <Box sx={{ bgcolor: 'rgba(255,255,255,0.05)', p: 0.5, borderRadius: 3, display: 'flex', alignItems: 'center' }}>
-                                <Button
-                                    variant={viewMode === 'operations' ? 'contained' : 'text'}
-                                    onClick={() => setViewMode('operations')}
-                                    startIcon={<Store />}
-                                    sx={{ borderRadius: 2.5, px: 3, color: viewMode === 'operations' ? 'black' : 'text.secondary', bgcolor: viewMode === 'operations' ? 'white' : 'transparent', '&:hover': { bgcolor: viewMode === 'operations' ? 'white' : 'rgba(255,255,255,0.05)' } }}
-                                >
-                                    Ops
-                                </Button>
+                        <Box sx={{ bgcolor: 'rgba(255,255,255,0.05)', p: 0.5, borderRadius: 3, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.5 }}>
+                            <Button
+                                variant={viewMode === 'operations' ? 'contained' : 'text'}
+                                onClick={() => setViewMode('operations')}
+                                startIcon={<Store />}
+                                sx={{ borderRadius: 2.5, px: 2, fontSize: '0.8rem', color: viewMode === 'operations' ? 'black' : 'text.secondary', bgcolor: viewMode === 'operations' ? 'white' : 'transparent', '&:hover': { bgcolor: viewMode === 'operations' ? 'white' : 'rgba(255,255,255,0.05)' } }}
+                            >
+                                Ops
+                            </Button>
+                            <Button
+                                variant={viewMode === 'requests' ? 'contained' : 'text'}
+                                onClick={() => setViewMode('requests')}
+                                startIcon={<AssignmentIcon />}
+                                sx={{ borderRadius: 2.5, px: 2, fontSize: '0.8rem', color: viewMode === 'requests' ? 'black' : 'text.secondary', bgcolor: viewMode === 'requests' ? '#3b82f6' : 'transparent', '&:hover': { bgcolor: viewMode === 'requests' ? '#3b82f6' : 'rgba(255,255,255,0.05)' } }}
+                            >
+                                Requests {pendingBookings.length > 0 && `(${pendingBookings.length})`}
+                            </Button>
+                            <Button
+                                variant={viewMode === 'directory' ? 'contained' : 'text'}
+                                onClick={() => setViewMode('directory')}
+                                startIcon={<People />}
+                                sx={{ borderRadius: 2.5, px: 2, fontSize: '0.8rem', color: viewMode === 'directory' ? 'black' : 'text.secondary', bgcolor: viewMode === 'directory' ? 'white' : 'transparent', '&:hover': { bgcolor: viewMode === 'directory' ? 'white' : 'rgba(255,255,255,0.05)' } }}
+                            >
+                                Clients
+                            </Button>
+                            {isOwner && (
                                 <Button
                                     variant={viewMode === 'business' ? 'contained' : 'text'}
                                     onClick={() => setViewMode('business')}
                                     startIcon={<Dashboard />}
-                                    sx={{ borderRadius: 2.5, px: 3, color: viewMode === 'business' ? 'black' : 'text.secondary', bgcolor: viewMode === 'business' ? '#D4AF37' : 'transparent', '&:hover': { bgcolor: viewMode === 'business' ? '#D4AF37' : 'rgba(255,255,255,0.05)' } }}
+                                    sx={{ borderRadius: 2.5, px: 2, fontSize: '0.8rem', color: viewMode === 'business' ? 'black' : 'text.secondary', bgcolor: viewMode === 'business' ? '#D4AF37' : 'transparent', '&:hover': { bgcolor: viewMode === 'business' ? '#D4AF37' : 'rgba(255,255,255,0.05)' } }}
                                 >
                                     Command
                                 </Button>
-                                <IconButton onClick={() => setShowSettingsDialog(true)} sx={{ ml: 1, color: 'text.secondary', '&:hover': { color: 'white' } }}>
-                                    <Settings />
-                                </IconButton>
-                            </Box>
-                        )}
+                            )}
+                            <IconButton onClick={() => setShowSettingsDialog(true)} sx={{ ml: 1, color: 'text.secondary', '&:hover': { color: 'white' } }}>
+                                <Settings />
+                            </IconButton>
+                        </Box>
 
                         {viewMode === 'operations' && (
                             <Stack direction="row" spacing={2} sx={{ width: '100%', justifyContent: { xs: 'space-between', sm: 'flex-end' } }}>
@@ -515,7 +619,14 @@ export default function StaffDashboard() {
                                                             <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'capitalize' }}>{staff.role}</Typography>
                                                         </Box>
                                                     </Stack>
-                                                    <Chip label="Active" size="small" sx={{ height: 20, fontSize: 10, bgcolor: 'rgba(34, 197, 94, 0.1)', color: '#22c55e' }} />
+                                                    <Stack direction="row" spacing={1} alignItems="center">
+                                                        <Chip label="Active" size="small" sx={{ height: 20, fontSize: 10, bgcolor: 'rgba(34, 197, 94, 0.1)', color: '#22c55e' }} />
+                                                        {isOwner && staff.role !== 'owner' && (
+                                                            <IconButton size="small" color="error" onClick={() => handleDeleteStaff(staff.email)}>
+                                                                <Cancel sx={{ fontSize: 16 }} />
+                                                            </IconButton>
+                                                        )}
+                                                    </Stack>
                                                 </Stack>
                                             ))
                                         )}
@@ -562,6 +673,72 @@ export default function StaffDashboard() {
                                     </Button>
                                 </Paper>
                             </Stack>
+                        </Stack>
+                    </motion.div>
+                )}
+
+                {/* --- BOOKING REQUESTS VIEW --- */}
+                {viewMode === 'requests' && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                        <Typography variant="h6" fontWeight="bold" sx={{ mb: 3, color: 'white' }}>Pending Booking Requests</Typography>
+                        <Stack spacing={2}>
+                            {loadingBookings ? (
+                                <Box sx={{ py: 4, textAlign: 'center' }}>
+                                    <CircularProgress size={32} sx={{ color: '#3b82f6' }} />
+                                </Box>
+                            ) : pendingBookings.length === 0 ? (
+                                <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 3, bgcolor: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                                    <Typography color="#64748b">No pending requests at this time.</Typography>
+                                </Paper>
+                            ) : pendingBookings.map((booking) => (
+                                <Paper key={booking.id} sx={{ p: 3, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }} spacing={2}>
+                                        <Stack direction="row" spacing={2} alignItems="center">
+                                            <Avatar sx={{ bgcolor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}><AssignmentIcon /></Avatar>
+                                            <Box>
+                                                <Typography fontWeight="bold" color="white">{booking.dog_name || "Unknown Pet"}</Typography>
+                                                <Typography variant="caption" color="#94a3b8">Owner: {booking.owner_email}</Typography>
+                                                <Typography variant="body2" sx={{ mt: 0.5, color: '#e2e8f0' }}>Service: {booking.service_type} | Date: {new Date(booking.start_date).toLocaleDateString()}</Typography>
+                                            </Box>
+                                        </Stack>
+                                        <Stack direction="row" spacing={1}>
+                                            <Button variant="outlined" color="error" size="small" onClick={() => handleBookingAction(booking.id, 'cancelled')}>Decline</Button>
+                                            <Button variant="contained" color="success" size="small" onClick={() => handleBookingAction(booking.id, 'confirmed')}>Accept</Button>
+                                        </Stack>
+                                    </Stack>
+                                </Paper>
+                            ))}
+                        </Stack>
+                    </motion.div>
+                )}
+
+                {/* --- CLIENT DIRECTORY VIEW --- */}
+                {viewMode === 'directory' && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                        <Typography variant="h6" fontWeight="bold" sx={{ mb: 3, color: 'white' }}>Client & Pet Directory</Typography>
+                        <Stack spacing={2}>
+                            {loadingClients ? (
+                                <Box sx={{ py: 4, textAlign: 'center' }}>
+                                    <CircularProgress size={32} sx={{ color: '#D4AF37' }} />
+                                </Box>
+                            ) : clients.length === 0 ? (
+                                <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 3, bgcolor: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                                    <Typography color="#64748b">No clients or pets found.</Typography>
+                                </Paper>
+                            ) : clients.map((client, idx) => (
+                                <Paper key={idx} sx={{ p: 2, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                        <Stack direction="row" spacing={2} alignItems="center">
+                                            <Avatar src={client.pets?.[0]?.photo_url} sx={{ bgcolor: 'rgba(212, 175, 55, 0.1)', color: '#D4AF37' }}>{client.email[0].toUpperCase()}</Avatar>
+                                            <Box>
+                                                <Typography fontWeight="bold" color="white">{client.email}</Typography>
+                                                <Typography variant="caption" color="#94a3b8">Pets: {client.pets?.map((p: any) => p.name).join(', ') || 'No pets registered'}</Typography>
+                                            </Box>
+                                        </Stack>
+                                        <Button size="small" variant="outlined" sx={{ borderColor: 'rgba(255,255,255,0.1)', color: '#94a3b8' }}>View Stats</Button>
+                                    </Stack>
+                                </Paper>
+                            ))}
                         </Stack>
                     </motion.div>
                 )}
