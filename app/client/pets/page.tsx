@@ -203,7 +203,7 @@ export default function PetsView() {
                         <Box>
                             <Typography variant="h6" fontWeight="bold">My Pets</Typography>
                             <Typography variant="caption" sx={{ color: 'rgba(212, 175, 55, 0.6)', fontStyle: 'italic', fontSize: 10 }}>
-                                "Exquisite care for your Very Important Pet (VIP)"
+                                &quot;Exquisite care for your Very Important Pet (VIP)&quot;
                             </Typography>
                         </Box>
                         <Chip label={`${pets.length} VIPs`} size="small" sx={{ bgcolor: 'rgba(212, 175, 55, 0.1)', color: '#D4AF37', fontWeight: 'bold' }} />
