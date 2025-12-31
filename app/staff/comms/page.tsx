@@ -12,7 +12,7 @@ import {
     Refresh,
     Message as MessageIcon
 } from "@mui/icons-material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Message {
@@ -21,6 +21,15 @@ interface Message {
     receiver_email: string;
     content: string;
     timestamp: string;
+    sender_name?: string;
+}
+
+interface Conversation {
+    clientEmail: string;
+    clientName: string;
+    messages: Message[];
+    lastMessage: Message;
+    unreadCount: number;
 }
 
 export default function StaffCommsLog() {
@@ -28,6 +37,7 @@ export default function StaffCommsLog() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [filter, setFilter] = useState<'all' | 'staff' | 'client'>('all');
+    const [selectedConvo, setSelectedConvo] = useState<Conversation | null>(null);
 
     const [snackbar, setSnackbar] = useState<{ open: boolean, message: string }>({ open: false, message: "" });
 
@@ -82,6 +92,33 @@ export default function StaffCommsLog() {
 
         return true;
     });
+
+    // Group messages into conversations (by client email)
+    const conversations: Conversation[] = useMemo(() => {
+        const staffEmails = ['owner@vanguard.com', 'staff@vanguard.com', 'admin@vanguard.com'];
+        const convoMap = new Map<string, Message[]>();
+
+        filteredMessages.forEach(msg => {
+            const isStaffSender = staffEmails.some(s => msg.sender_email.toLowerCase().includes(s.split('@')[0]));
+            const clientEmail = isStaffSender ? msg.receiver_email : msg.sender_email;
+
+            if (!convoMap.has(clientEmail)) {
+                convoMap.set(clientEmail, []);
+            }
+            convoMap.get(clientEmail)!.push(msg);
+        });
+
+        return Array.from(convoMap.entries()).map(([email, msgs]) => {
+            const sorted = msgs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+            return {
+                clientEmail: email,
+                clientName: sorted[0]?.sender_name || email.split('@')[0],
+                messages: sorted.reverse(), // Show oldest first in conversation
+                lastMessage: sorted[sorted.length - 1],
+                unreadCount: 0
+            };
+        }).sort((a, b) => new Date(b.lastMessage.timestamp).getTime() - new Date(a.lastMessage.timestamp).getTime());
+    }, [filteredMessages]);
 
     return (
         <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: '#0B0C10', minHeight: '100vh', color: '#f8fafc' }}>
