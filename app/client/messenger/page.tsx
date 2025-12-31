@@ -23,8 +23,8 @@ export default function MessengerView() {
     const scrollRef = useRef<HTMLDivElement>(null);
     const [navValue, setNavValue] = useState(3);
 
-    const userEmail = typeof window !== 'undefined' ? localStorage.getItem('vanguard_email') : "";
-    const staffEmail = "staff@vanguard.com";
+    const userEmail = typeof window !== 'undefined' ? localStorage.getItem('vanguard_email')?.toLowerCase() || "" : "";
+    const staffEmail = "staff@vanguard.com".toLowerCase();
 
     const fetchMessages = async () => {
         if (!userEmail) return;
@@ -53,8 +53,8 @@ export default function MessengerView() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    sender: userEmail,
-                    receiver: staffEmail,
+                    sender: userEmail.toLowerCase(),
+                    receiver: staffEmail.toLowerCase(),
                     content: newMessage
                 })
             });
@@ -136,7 +136,7 @@ export default function MessengerView() {
                         </Box>
                     ) : (
                         messages.map((msg, i) => {
-                            const isMe = msg.sender_email === userEmail;
+                            const isMe = msg.sender_email.toLowerCase() === userEmail.toLowerCase();
                             return (
                                 <Box
                                     key={i}
