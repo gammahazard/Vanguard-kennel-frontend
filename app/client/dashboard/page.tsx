@@ -234,7 +234,7 @@ export default function ClientDashboard() {
                         </Box>
 
                         {/* 3. NEXT STAY QUICK VIEW */}
-                        {nextStay && (
+                        {nextStay && nextStay.status === 'Confirmed' && (
                             <Paper sx={{
                                 p: 2.5,
                                 borderRadius: 4,
