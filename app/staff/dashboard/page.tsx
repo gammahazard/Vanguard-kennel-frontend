@@ -73,23 +73,24 @@ export default function StaffDashboard() {
                         { label: "Departures", value: "5", color: "text.secondary" },
                         { label: "Pending Walks", value: "8", color: "#ef4444" },
                     ].map((kpi, i) => (
-                        <Grid item xs={6} md={3} key={i}>
-                            <Paper sx={{ p: 3, borderRadius: 3, bgcolor: 'background.paper', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                <Typography variant="h3" fontWeight="bold" sx={{ color: kpi.color }}>
-                                    {kpi.value}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary" fontWeight="medium">
-                                    {kpi.label}
-                                </Typography>
-                            </Paper>
-                        </Grid>
+                    ].map((kpi, i) => (
+                    <Grid xs={6} md={3} key={i} component="div">
+                        <Paper sx={{ p: 3, borderRadius: 3, bgcolor: 'background.paper', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <Typography variant="h3" fontWeight="bold" sx={{ color: kpi.color }}>
+                                {kpi.value}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" fontWeight="medium">
+                                {kpi.label}
+                            </Typography>
+                        </Paper>
+                    </Grid>
                     ))}
                 </Grid>
 
                 {/* Guest Grid */}
-                <Grid container spacing={3}>
+                <Grid container spacing={3} component="div">
                     {guests.map((guest) => (
-                        <Grid item xs={12} sm={6} md={4} lg={3} key={guest.id}>
+                        <Grid xs={12} sm={6} md={4} lg={3} key={guest.id} component="div">
                             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
                                 <Paper sx={{
                                     overflow: 'hidden',
