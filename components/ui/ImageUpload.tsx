@@ -19,10 +19,16 @@ export function ImageUpload({ initialUrl, onUploadSuccess, label = "VIP Portrait
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
 
     const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
+
+        // Cancel previous upload if still running
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
 
         setError(null);
 
@@ -38,20 +44,24 @@ export function ImageUpload({ initialUrl, onUploadSuccess, label = "VIP Portrait
             return;
         }
 
-        // Create local preview
-        const reader = new FileReader();
-        reader.onloadend = () => setPreview(reader.result as string);
-        reader.readAsDataURL(file);
+        // Create local preview instantly (synchronous)
+        const objectUrl = URL.createObjectURL(file);
+        setPreview(objectUrl);
 
         // 3. Upload to Backend
         setUploading(true);
         const formData = new FormData();
         formData.append("file", file);
 
+        // Create a new AbortController for this request
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+
         try {
             const response = await fetch(`${API_BASE_URL}/api/upload`, {
                 method: "POST",
                 body: formData,
+                signal: controller.signal
             });
 
             if (!response.ok) {
@@ -62,11 +72,20 @@ export function ImageUpload({ initialUrl, onUploadSuccess, label = "VIP Portrait
             const data = await response.json();
             onUploadSuccess(data.url);
         } catch (err: any) {
+            if (err.name === 'AbortError') {
+                console.log("Upload aborted due to new selection");
+                return; // Silence abort errors
+            }
             console.error("Upload Error:", err);
             setError(err.message || "Failed to upload image");
             setPreview(initialUrl || null); // Reset preview on failure
         } finally {
-            setUploading(false);
+            if (abortControllerRef.current === controller) {
+                setUploading(false);
+                abortControllerRef.current = null;
+            }
+            // Cleanup object URL to prevent memory leaks
+            URL.revokeObjectURL(objectUrl);
         }
     };
 
