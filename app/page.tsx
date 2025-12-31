@@ -13,7 +13,8 @@ import {
     CssBaseline,
     useMediaQuery
 } from "@mui/material";
-import { Download, Smartphone, Share, AddBox, Login } from "@mui/icons-material";
+import { Download, Smartphone, Share, AddBox, Login, ArrowDownward } from "@mui/icons-material";
+import { motion } from "framer-motion";
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 // --- Custom Dark/Gold Theme ---
