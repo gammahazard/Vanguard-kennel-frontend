@@ -479,7 +479,7 @@ export default function OwnerDashboard() {
                                                         </Typography>
                                                     </Stack>
                                                     <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
-                                                        "{lastMsg.content.substring(0, 100)}{lastMsg.content.length > 100 ? '...' : ''}"
+                                                        &quot;{lastMsg.content.substring(0, 100)}{lastMsg.content.length > 100 ? '...' : ''}&quot;
                                                     </Typography>
                                                     <Typography variant="caption" sx={{ textAlign: 'right', display: 'block' }}>
                                                         {msgs.length} messages in thread
