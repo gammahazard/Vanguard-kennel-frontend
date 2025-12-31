@@ -6,7 +6,7 @@ import {
     IconButton, Divider, Avatar, List, ListItem,
     ListItemText, ListItemAvatar, CircularProgress,
     Dialog, AppBar, Toolbar, ThemeProvider, CssBaseline,
-    Chip, Snackbar, Alert
+    Chip, Snackbar, Alert, Grid
 } from "@mui/material";
 import {
     Wallet, Add, ArrowBack, Apple, CreditCard,
@@ -223,23 +223,39 @@ export default function WalletView() {
                             </Stack>
                         </Paper>
 
-                        {/* Cancellation Policy */}
+                        {/* Platform Standards & Policies */}
                         <Paper sx={{
-                            p: 2.5,
+                            p: 3,
                             borderRadius: 4,
-                            bgcolor: 'rgba(239, 68, 68, 0.05)',
-                            border: '1px solid rgba(239, 68, 68, 0.15)',
+                            bgcolor: 'rgba(239, 68, 68, 0.03)',
+                            border: '1px solid rgba(239, 68, 68, 0.1)',
                         }}>
-                            <Stack direction="row" spacing={2} alignItems="flex-start">
-                                <InfoOutlined sx={{ color: '#ef4444', fontSize: 24, mt: 0.5 }} />
-                                <Box>
-                                    <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#ef4444' }}>
-                                        Cancellation Policy
+                            <Stack spacing={2}>
+                                <Stack direction="row" alignItems="center" spacing={1}>
+                                    <InfoOutlined sx={{ color: '#ef4444', fontSize: 20 }} />
+                                    <Typography variant="overline" fontWeight="bold" sx={{ color: '#ef4444', letterSpacing: 2 }}>
+                                        PLATFORM STANDARDS
                                     </Typography>
-                                    <Typography variant="body2" sx={{ mt: 0.5, opacity: 0.8, color: '#ef4444' }}>
-                                        Please note: A $45 fee applies to cancellations made within 72 hours of your confirmed booking.
-                                    </Typography>
-                                </Box>
+                                </Stack>
+
+                                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
+                                    <Box sx={{ flex: 1 }}>
+                                        <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#ef4444', mb: 0.5 }}>
+                                            Cancellation Policy
+                                        </Typography>
+                                        <Typography variant="caption" sx={{ opacity: 0.7, color: '#ef4444', display: 'block', lineHeight: 1.6 }}>
+                                            A $45 fee automatically applies to cancellations made within 72 hours of a confirmed reservation.
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ flex: 1 }}>
+                                        <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#ef4444', mb: 0.5 }}>
+                                            Attendance & No-Shows
+                                        </Typography>
+                                        <Typography variant="caption" sx={{ opacity: 0.7, color: '#ef4444', display: 'block', lineHeight: 1.6 }}>
+                                            Confirmed slots are reserved exclusively for you. Uncommunicated absences may result in immediate account suspension.
+                                        </Typography>
+                                    </Box>
+                                </Stack>
                             </Stack>
                         </Paper>
 
