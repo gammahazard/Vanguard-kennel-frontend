@@ -57,7 +57,7 @@ import {
     Chat as ChatIcon
 } from "@mui/icons-material";
 import { startRegistration } from '@simplewebauthn/browser';
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { API_BASE_URL } from "@/lib/config";
 
@@ -98,6 +98,21 @@ export default function StaffDashboard() {
     const [clients, setClients] = useState<any[]>([]);
     const [loadingBookings, setLoadingBookings] = useState(false);
     const [loadingClients, setLoadingClients] = useState(false);
+
+    // Optimized sorting for Comms: Unread first, then longest waiting
+    const sortedCommsClients = useMemo(() => {
+        return [...clients].sort((a, b) => {
+            if (a.unread_messages_count > 0 && b.unread_messages_count === 0) return -1;
+            if (a.unread_messages_count === 0 && b.unread_messages_count > 0) return 1;
+
+            if (a.oldest_unread_timestamp && b.oldest_unread_timestamp) {
+                return a.oldest_unread_timestamp.localeCompare(b.oldest_unread_timestamp);
+            }
+            if (a.oldest_unread_timestamp) return -1;
+            if (b.oldest_unread_timestamp) return 1;
+            return 0;
+        });
+    }, [clients]);
 
     // Detail & Modal States
     const [selectedClient, setSelectedClient] = useState<any>(null);
@@ -218,6 +233,17 @@ export default function StaffDashboard() {
         fetchPendingBookings();
         fetchClients();
     }, []);
+
+    // Periodic Refresh for Comms/Directory
+    useEffect(() => {
+        const interval = setInterval(() => {
+            fetchClients();
+            if (viewMode === 'comms' && activeChat) {
+                fetchMessages(activeChat.email);
+            }
+        }, 10000); // 10s sync
+        return () => clearInterval(interval);
+    }, [viewMode, activeChat]);
 
     const fetchPendingBookings = async () => {
         setLoadingBookings(true);
@@ -858,10 +884,10 @@ export default function StaffDashboard() {
                                     <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
                                         <Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
                                             <MuiBadge
-                                                badgeContent={client.unread_messages_count}
+                                                badgeContent={client.pets?.length || 0}
                                                 color="error"
                                                 overlap="circular"
-                                                invisible={!client.unread_messages_count}
+                                                invisible={!(client.pets?.length)}
                                             >
                                                 <Avatar
                                                     src={client.pets?.[0]?.photo_url}
@@ -934,7 +960,7 @@ export default function StaffDashboard() {
                                     <Typography variant="subtitle2" color="#94a3b8">Active Threads</Typography>
                                 </Box>
                                 <Box sx={{ overflowY: 'auto', height: 'calc(70vh - 51px)' }}>
-                                    {clients.map((client, idx) => (
+                                    {sortedCommsClients.map((client, idx) => (
                                         <Box
                                             key={idx}
                                             onClick={() => { setActiveChat(client); fetchMessages(client.email); }}
