@@ -88,7 +88,7 @@ export default function BookingsView() {
             const start = new Date(formData.start_date);
             const end = new Date(formData.end_date);
             const diffTime = Math.abs(end.getTime() - start.getTime());
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // Inclusive
 
             let dailyRate = 45; // Standard Boarding
             if (formData.service_type === "Grooming") dailyRate = 65;
@@ -115,6 +115,8 @@ export default function BookingsView() {
                 })
             });
 
+            const data = await res.json();
+
             if (res.ok) {
                 setSuccessMsg("Reservation confirmed! 🍾");
                 setShowWizard(false);
@@ -122,7 +124,7 @@ export default function BookingsView() {
                 setFormData({ dog_ids: [], service_type: "Boarding", start_date: "", end_date: "", notes: "", total_price: 0 });
                 fetchData();
             } else {
-                setError("Failed to create reservation.");
+                setError(data.error || "Failed to create reservation.");
             }
         } catch (err) {
             setError("Network error.");
@@ -161,6 +163,19 @@ export default function BookingsView() {
 
     // Check if a date is full
     const isDateFull = (dateStr: string) => availability.includes(dateStr);
+
+    const isRangeFull = (start: string, end: string) => {
+        if (!start || !end) return false;
+        const s = new Date(start);
+        const e = new Date(end);
+        if (s > e) return false;
+
+        for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+            const dStr = d.toISOString().split('T')[0];
+            if (availability.includes(dStr)) return true;
+        }
+        return false;
+    };
 
     return (
         <ThemeProvider theme={theme}>
@@ -311,6 +326,11 @@ export default function BookingsView() {
                                         helperText={isDateFull(formData.end_date) ? "Fully booked" : ""}
                                     />
                                 </Stack>
+                                {isRangeFull(formData.start_date, formData.end_date) && (
+                                    <Alert severity="error" sx={{ bgcolor: 'rgba(211, 47, 47, 0.1)', color: '#ff1744', border: '1px solid rgba(211, 47, 47, 0.2)' }}>
+                                        One or more days in this range are fully booked.
+                                    </Alert>
+                                )}
                                 <TextField
                                     label="Stay Notes"
                                     fullWidth
@@ -337,7 +357,7 @@ export default function BookingsView() {
                         <Button variant="contained"
                             disabled={
                                 formData.dog_ids.length === 0 ||
-                                (activeStep === 1 && (!formData.start_date || !formData.end_date || isDateFull(formData.start_date) || isDateFull(formData.end_date))) ||
+                                (activeStep === 1 && (!formData.start_date || !formData.end_date || isRangeFull(formData.start_date, formData.end_date))) ||
                                 (activeStep === 2 && submitting)
                             }
                             onClick={activeStep < 2 ? handleNext : handleCreateBooking}
