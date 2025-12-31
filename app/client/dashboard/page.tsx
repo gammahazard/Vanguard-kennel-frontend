@@ -88,7 +88,7 @@ export default function ClientDashboard() {
 
                 // Calculate Balance
                 const total = bookings
-                    .filter((b: any) => b.status === "Confirmed")
+                    .filter((b: any) => b.status?.toLowerCase() === "confirmed")
                     .reduce((sum: number, b: any) => sum + b.total_price, 0);
                 setBalance(total);
 
