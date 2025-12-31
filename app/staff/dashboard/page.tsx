@@ -808,13 +808,19 @@ export default function StaffDashboard() {
                                                     </Typography>
 
                                                     {/* List of Dogs */}
-                                                    <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
+                                                    <Stack direction="row" spacing={1} sx={{ mt: 1.5, flexWrap: 'wrap', gap: 1 }}>
                                                         {group.bookings.map((b: any) => (
                                                             <Chip
                                                                 key={b.id}
                                                                 label={`${b.dog_name} (${b.service_type})`}
                                                                 size="small"
-                                                                sx={{ bgcolor: 'rgba(255,255,255,0.05)', color: '#cbd5e1', border: '1px solid rgba(255,255,255,0.1)' }}
+                                                                sx={{
+                                                                    bgcolor: 'rgba(255,255,255,0.05)',
+                                                                    color: '#cbd5e1',
+                                                                    border: '1px solid rgba(255,255,255,0.1)',
+                                                                    maxWidth: '100%',
+                                                                    mb: 1
+                                                                }}
                                                             />
                                                         ))}
                                                     </Stack>
