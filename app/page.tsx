@@ -110,21 +110,35 @@ export default function SplashGate() {
                                 fontSize: { xs: '2rem', md: '3rem' }
                             }}
                         >
-                            Vanguard
+                            LakeShore Kennels
                         </Typography>
-                        <Typography
-                            variant="subtitle2"
-                            sx={{
-                                color: '#D4AF37',
-                                letterSpacing: '0.4em',
-                                fontWeight: 700,
-                                textTransform: 'uppercase',
-                                opacity: 0.8,
-                                fontSize: '0.7rem'
-                            }}
-                        >
-                            Premium Kennel Services
-                        </Typography>
+                        <Stack spacing={0.5}>
+                            <Typography
+                                variant="subtitle2"
+                                sx={{
+                                    color: '#D4AF37',
+                                    letterSpacing: '0.4em',
+                                    fontWeight: 700,
+                                    textTransform: 'uppercase',
+                                    opacity: 0.8,
+                                    fontSize: '0.7rem'
+                                }}
+                            >
+                                Premium Kennel Services
+                            </Typography>
+                            <Typography
+                                variant="caption"
+                                sx={{
+                                    color: 'grey.500',
+                                    letterSpacing: '0.1em',
+                                    textTransform: 'uppercase',
+                                    fontSize: '0.55rem',
+                                    pt: 1
+                                }}
+                            >
+                                Powered by Vanguard Secure Solutions
+                            </Typography>
+                        </Stack>
                     </Stack>
 
                     {/* Content Switch */}
