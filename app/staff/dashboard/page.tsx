@@ -190,7 +190,8 @@ export default function StaffDashboard() {
             });
             if (resBookings.ok) {
                 const data = await resBookings.json();
-                setPendingBookings(data.filter((b: any) => b.status === 'pending') || []);
+                // Filter for Pending bookings (case-insensitive)
+                setPendingBookings(data.filter((b: any) => b.status?.toLowerCase() === 'pending') || []);
             }
         } catch (e) {
             console.error(e);
