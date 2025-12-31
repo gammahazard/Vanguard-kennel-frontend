@@ -405,7 +405,7 @@ export default function ProfileView() {
                                 localStorage.removeItem('vanguard_role');
                                 localStorage.removeItem('vanguard_user');
                                 // WE KEEP: vanguard_email and vanguard_faceid_enabled
-                                router.push('/client/login');
+                                router.push('/');
                             }}
                             fullWidth
                             sx={{ py: 1.5, borderRadius: 3, borderColor: 'rgba(239, 68, 68, 0.3)', color: '#ef4444' }}

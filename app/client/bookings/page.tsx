@@ -6,9 +6,10 @@ import {
     BottomNavigation, BottomNavigationAction, ThemeProvider, CssBaseline,
     Fab, Divider, Button, Dialog, DialogTitle, DialogContent,
     DialogActions, Stepper, Step, StepLabel, TextField,
-    MenuItem, CircularProgress, Snackbar, Alert, Avatar, IconButton
+    MenuItem, CircularProgress, Snackbar, Alert, Avatar, IconButton,
+    Grid
 } from "@mui/material";
-import { Home, Pets, CalendarMonth, Person, Add, LocationOn, AccessTime, CheckCircle, ArrowBack, ArrowForward, Close, Dangerous, Chat } from "@mui/icons-material";
+import { Home, Pets, CalendarMonth, Person, Add, AccessTime, CheckCircle, Close, Dangerous, Chat, Warning, Info } from "@mui/icons-material";
 import { theme } from "@/lib/theme";
 import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/lib/config";
@@ -20,6 +21,7 @@ export default function BookingsView() {
     // Data State
     const [bookings, setBookings] = useState<any[]>([]);
     const [pets, setPets] = useState<any[]>([]);
+    const [availability, setAvailability] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
 
@@ -58,14 +60,15 @@ export default function BookingsView() {
         if (!email) return;
 
         try {
-            // backend::get_user_bookings_handler && backend::get_pets_handler
-            const [bookingsRes, petsRes] = await Promise.all([
+            const [bookingsRes, petsRes, availRes] = await Promise.all([
                 fetch(`${API_BASE_URL}/api/user/bookings?email=${encodeURIComponent(email)}`),
-                fetch(`${API_BASE_URL}/api/pets?email=${encodeURIComponent(email)}`)
+                fetch(`${API_BASE_URL}/api/pets?email=${encodeURIComponent(email)}`),
+                fetch(`${API_BASE_URL}/api/bookings/availability`)
             ]);
 
             if (bookingsRes.ok) setBookings(await bookingsRes.json());
             if (petsRes.ok) setPets(await petsRes.json());
+            if (availRes.ok) setAvailability(await availRes.json());
         } catch (err) {
             console.error("Fetch failed", err);
             setError("Failed to sync with server.");
@@ -78,7 +81,7 @@ export default function BookingsView() {
         fetchData();
     }, []);
 
-    // Price Calculation Mock
+    // Price Calculation
     useEffect(() => {
         if (formData.start_date && formData.end_date) {
             const start = new Date(formData.start_date);
@@ -102,7 +105,6 @@ export default function BookingsView() {
         const email = localStorage.getItem('vanguard_email');
         setSubmitting(true);
         try {
-            // backend::create_booking_handler (POST /api/bookings)
             const res = await fetch(`${API_BASE_URL}/api/bookings`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -131,9 +133,7 @@ export default function BookingsView() {
     const handleCancelBooking = async () => {
         if (!bookingToCancel) return;
         setCancelling(true);
-        setCancelling(true);
         try {
-            // backend::update_booking_handler (PUT /api/bookings/:id)
             const res = await fetch(`${API_BASE_URL}/api/bookings/${bookingToCancel.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -158,12 +158,14 @@ export default function BookingsView() {
     const upcomingBookings = bookings.filter(b => b.status !== 'Completed' && b.status !== 'Cancelled');
     const pastBookings = bookings.filter(b => b.status === 'Completed' || b.status === 'Cancelled');
 
+    // Check if a date is full
+    const isDateFull = (dateStr: string) => availability.includes(dateStr);
+
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
             <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pb: 10 }}>
 
-                {/* Header */}
                 <Paper elevation={0} sx={{ p: 2, bgcolor: 'rgba(5, 6, 8, 0.9)', position: 'sticky', top: 0, zIndex: 10, backdropFilter: 'blur(10px)' }}>
                     <Stack direction="row" justifyContent="space-between" alignItems="center">
                         <Typography variant="h6" fontWeight="bold">Reservations</Typography>
@@ -173,8 +175,6 @@ export default function BookingsView() {
 
                 <Container maxWidth="sm" sx={{ pt: 2 }}>
                     <Stack spacing={3}>
-
-                        {/* Section: UPCOMING */}
                         <Box>
                             <Typography variant="overline" color="text.secondary" fontWeight="bold" letterSpacing={2}>Your Stays</Typography>
                             {loading ? (
@@ -183,31 +183,18 @@ export default function BookingsView() {
                                 <Paper sx={{ mt: 1, p: 4, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', textAlign: 'center' }}>
                                     <CalendarMonth sx={{ fontSize: 48, color: 'text.secondary', opacity: 0.5, mb: 2 }} />
                                     <Typography variant="h6" color="text.secondary">Ready for a getaway?</Typography>
-                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                        Book a professional stay for your VIP.
-                                    </Typography>
-                                    <Button variant="outlined" startIcon={<Add />} onClick={() => setShowWizard(true)}>
-                                        New Booking
-                                    </Button>
+                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>Book a professional stay for your VIP.</Typography>
+                                    <Button variant="outlined" startIcon={<Add />} onClick={() => setShowWizard(true)}>New Booking</Button>
                                 </Paper>
                             ) : (
                                 <Stack spacing={2} sx={{ mt: 1 }}>
                                     {upcomingBookings.map(b => (
-                                        <BookingCard
-                                            key={b.id}
-                                            booking={b}
-                                            pets={pets}
-                                            onCancel={() => {
-                                                setBookingToCancel(b);
-                                                setShowCancelConfirm(true);
-                                            }}
-                                        />
+                                        <BookingCard key={b.id} booking={b} pets={pets} onCancel={() => { setBookingToCancel(b); setShowCancelConfirm(true); }} />
                                     ))}
                                 </Stack>
                             )}
                         </Box>
 
-                        {/* Section: PAST */}
                         {pastBookings.length > 0 && (
                             <Box>
                                 <Typography variant="overline" color="text.secondary" fontWeight="bold" letterSpacing={2}>Past Activity</Typography>
@@ -221,30 +208,9 @@ export default function BookingsView() {
                     </Stack>
                 </Container>
 
-                <Fab
-                    color="primary"
-                    sx={{ position: 'fixed', bottom: 90, right: 24, bgcolor: '#D4AF37', '&:hover': { bgcolor: '#b5952f' } }}
-                    onClick={() => setShowWizard(true)}
-                >
-                    <Add />
-                </Fab>
+                <Fab color="primary" sx={{ position: 'fixed', bottom: 90, right: 24, bgcolor: '#D4AF37' }} onClick={() => setShowWizard(true)}><Add /></Fab>
 
-                {/* Cancellation Dialog */}
-                <Dialog open={showCancelConfirm} onClose={() => !cancelling && setShowCancelConfirm(false)}>
-                    <DialogContent sx={{ pt: 4, textAlign: 'center', bgcolor: '#1A1B1F' }}>
-                        <Dangerous color="error" sx={{ fontSize: 54, mb: 2 }} />
-                        <Typography variant="h6" fontWeight="bold">Cancel Reservation?</Typography>
-                        <Typography variant="body2" color="text.secondary">Retract this request? This cannot be undone.</Typography>
-                        <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
-                            <Button fullWidth variant="outlined" onClick={() => setShowCancelConfirm(false)} disabled={cancelling}>Keep</Button>
-                            <Button fullWidth variant="contained" color="error" onClick={handleCancelBooking} disabled={cancelling}>
-                                {cancelling ? <CircularProgress size={20} /> : "Cancel"}
-                            </Button>
-                        </Stack>
-                    </DialogContent>
-                </Dialog>
-
-                {/* Booking Wizard */}
+                {/* Wizard Dialog */}
                 <Dialog open={showWizard} onClose={() => !submitting && setShowWizard(false)} fullWidth maxWidth="xs" PaperProps={{ sx: { bgcolor: '#1A1B1F', borderRadius: 3 } }}>
                     <DialogTitle sx={{ textAlign: 'center', pt: 3 }}>
                         <Typography variant="h5" fontWeight="bold">New Reservation</Typography>
@@ -282,9 +248,34 @@ export default function BookingsView() {
                                     <MenuItem value="Grooming">Grooming</MenuItem>
                                 </TextField>
                                 <Stack direction="row" spacing={2}>
-                                    <TextField label="Check-in" type="date" fullWidth InputLabelProps={{ shrink: true }} value={formData.start_date} onChange={e => setFormData({ ...formData, start_date: e.target.value })} variant="filled" />
-                                    <TextField label="Check-out" type="date" fullWidth InputLabelProps={{ shrink: true }} value={formData.end_date} onChange={e => setFormData({ ...formData, end_date: e.target.value })} variant="filled" />
+                                    <TextField
+                                        label="Check-in"
+                                        type="date"
+                                        fullWidth
+                                        InputLabelProps={{ shrink: true }}
+                                        value={formData.start_date}
+                                        onChange={e => setFormData({ ...formData, start_date: e.target.value })}
+                                        variant="filled"
+                                        error={isDateFull(formData.start_date)}
+                                        helperText={isDateFull(formData.start_date) ? "Fully booked" : ""}
+                                    />
+                                    <TextField
+                                        label="Check-out"
+                                        type="date"
+                                        fullWidth
+                                        InputLabelProps={{ shrink: true }}
+                                        value={formData.end_date}
+                                        onChange={e => setFormData({ ...formData, end_date: e.target.value })}
+                                        variant="filled"
+                                        error={isDateFull(formData.end_date)}
+                                        helperText={isDateFull(formData.end_date) ? "Fully booked" : ""}
+                                    />
                                 </Stack>
+                                {(isDateFull(formData.start_date) || isDateFull(formData.end_date)) && (
+                                    <Alert severity="warning" variant="outlined" sx={{ borderRadius: 2 }}>
+                                        One or more selected dates have reached premium capacity. Please try another date.
+                                    </Alert>
+                                )}
                             </Stack>
                         )}
                         {activeStep === 2 && (
@@ -298,12 +289,33 @@ export default function BookingsView() {
                     <DialogActions sx={{ px: 3, pb: 4 }}>
                         {activeStep > 0 && <Button onClick={handleBack}>Back</Button>}
                         <Box sx={{ flex: 1 }} />
-                        {activeStep < 2 ? (
-                            <Button variant="contained" disabled={formData.dog_ids.length === 0 || (activeStep === 1 && (!formData.start_date || !formData.end_date))} onClick={handleNext} sx={{ bgcolor: '#D4AF37', color: 'black' }}>Next</Button>
-                        ) : (
-                            <Button variant="contained" onClick={handleCreateBooking} disabled={submitting} sx={{ bgcolor: '#D4AF37', color: 'black' }}>Confirm</Button>
-                        )}
+                        <Button variant="contained"
+                            disabled={
+                                formData.dog_ids.length === 0 ||
+                                (activeStep === 1 && (!formData.start_date || !formData.end_date || isDateFull(formData.start_date) || isDateFull(formData.end_date))) ||
+                                (activeStep === 2 && submitting)
+                            }
+                            onClick={activeStep < 2 ? handleNext : handleCreateBooking}
+                            sx={{ bgcolor: '#D4AF37', color: 'black' }}
+                        >
+                            {activeStep < 2 ? "Next" : "Confirm"}
+                        </Button>
                     </DialogActions>
+                </Dialog>
+
+                {/* Cancel Confirm */}
+                <Dialog open={showCancelConfirm} onClose={() => !cancelling && setShowCancelConfirm(false)}>
+                    <DialogContent sx={{ pt: 4, textAlign: 'center', bgcolor: '#1A1B1F' }}>
+                        <Dangerous color="error" sx={{ fontSize: 54, mb: 2 }} />
+                        <Typography variant="h6" fontWeight="bold">Cancel Reservation?</Typography>
+                        <Typography variant="body2" color="text.secondary">Retract this request?</Typography>
+                        <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
+                            <Button fullWidth variant="outlined" onClick={() => setShowCancelConfirm(false)} disabled={cancelling}>Keep</Button>
+                            <Button fullWidth variant="contained" color="error" onClick={handleCancelBooking} disabled={cancelling}>
+                                {cancelling ? <CircularProgress size={20} /> : "Cancel"}
+                            </Button>
+                        </Stack>
+                    </DialogContent>
                 </Dialog>
 
                 <Snackbar open={!!error} autoHideDuration={4000} onClose={() => setError("")}><Alert severity="error">{error}</Alert></Snackbar>
