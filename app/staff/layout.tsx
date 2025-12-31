@@ -75,7 +75,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
         const token = localStorage.getItem('vanguard_token');
 
         if (!token || (role !== 'staff' && role !== 'owner')) {
-            router.push('/staff/login');
+            router.push('/');
         }
     }, [router]);
 
@@ -89,9 +89,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
     const navItems = [
         { label: "Daily Run", icon: <DashboardIcon />, path: "/staff/dashboard" },
         { label: "Comms Log", icon: <MessageIcon />, path: "/staff/comms" },
-        // Future features
-        // { label: "Incidents", icon: <AssignmentIcon />, path: "/staff/incidents" },
-        // { label: "Guests", icon: <PetsIcon />, path: "/staff/guests" }, 
+        { label: "System Audit", icon: <Settings />, path: "/staff/audit" },
     ];
 
     return (

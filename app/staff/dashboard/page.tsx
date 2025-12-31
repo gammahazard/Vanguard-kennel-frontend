@@ -23,7 +23,8 @@ import {
     FormControl,
     InputLabel,
     Select,
-    InputAdornment
+    InputAdornment,
+    Switch
 } from "@mui/material";
 import {
     Restaurant,
@@ -39,8 +40,14 @@ import {
     PersonAdd,
     AttachMoney,
     Visibility,
-    VisibilityOff
+    VisibilityOff,
+    Settings,
+    Face,
+    CheckCircle,
+    Cancel,
+    Message
 } from "@mui/icons-material";
+import { startRegistration } from '@simplewebauthn/browser';
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { API_BASE_URL } from "@/lib/config";
@@ -68,6 +75,93 @@ export default function StaffDashboard() {
     const [guests, setGuests] = useState(activeGuests);
     const [viewMode, setViewMode] = useState<'operations' | 'business'>('operations');
     const [isOwner, setIsOwner] = useState(false);
+    const [isFaceIdEnabled, setIsFaceIdEnabled] = useState(false);
+    const [showSettingsDialog, setShowSettingsDialog] = useState(false);
+    const [isRegistering, setIsRegistering] = useState(false);
+    const [message, setMessage] = useState({ text: "", severity: "info", open: false });
+
+    // Initial Face ID Check
+    useEffect(() => {
+        const email = localStorage.getItem('vanguard_email');
+        if (email) {
+            fetch(`${API_BASE_URL}/api/auth/check?email=${encodeURIComponent(email)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.faceid_registered) {
+                        setIsFaceIdEnabled(true);
+                        localStorage.setItem('vanguard_faceid_enabled', 'true');
+                    } else {
+                        setIsFaceIdEnabled(false);
+                        localStorage.setItem('vanguard_faceid_enabled', 'false');
+                    }
+                })
+                .catch(err => console.error("Face ID Status Check Failed", err));
+        }
+    }, [isOwner]);
+
+    const handleFaceIdToggle = async () => {
+        if (isFaceIdEnabled) {
+            // Unregister Logic (Simplified for Owner)
+            try {
+                const email = localStorage.getItem('vanguard_email');
+                if (!email) return;
+                const res = await fetch(`${API_BASE_URL}/api/auth/webauthn/unregister?email=${encodeURIComponent(email)}`, { method: 'DELETE' });
+                if (res.ok) {
+                    setIsFaceIdEnabled(false);
+                    localStorage.setItem('vanguard_faceid_enabled', 'false');
+                    setMessage({ text: "Face ID Disabled", severity: "info", open: true });
+                }
+            } catch (err) {
+                setMessage({ text: "Failed to disable", severity: "error", open: true });
+            }
+        } else {
+            // Register Logic
+            setIsRegistering(true);
+            try {
+                const email = localStorage.getItem('vanguard_email');
+                if (!email) {
+                    setMessage({ text: "Session Error. Please re-login.", severity: "error", open: true });
+                    return;
+                }
+
+                // 1. Start
+                const resStart = await fetch(`${API_BASE_URL}/api/auth/webauthn/register/start`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                if (!resStart.ok) throw new Error("Registration Rejected");
+                const options = await resStart.json();
+
+                // 2. Prompt
+                const authOptions = options.publicKey || options;
+                const cleanOptions = { ...authOptions };
+                if (cleanOptions.challenge_id) delete (cleanOptions as any).challenge_id;
+
+                const attResp = await startRegistration(cleanOptions);
+
+                // 3. Finish
+                const resFinish = await fetch(`${API_BASE_URL}/api/auth/webauthn/register/finish`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ challenge_id: options.challenge_id, response: attResp })
+                });
+
+                if (resFinish.ok) {
+                    setIsFaceIdEnabled(true);
+                    localStorage.setItem('vanguard_faceid_enabled', 'true');
+                    setMessage({ text: "Face ID Activated!", severity: "success", open: true });
+                } else {
+                    throw new Error("Verification Failed");
+                }
+            } catch (err: any) {
+                console.error(err);
+                setMessage({ text: "Face ID Registration Failed", severity: "error", open: true });
+            } finally {
+                setIsRegistering(false);
+            }
+        }
+    };
 
     // Staff Management State
     const [openAddStaff, setOpenAddStaff] = useState(false);
@@ -149,7 +243,13 @@ export default function StaffDashboard() {
             <Container maxWidth="xl">
 
                 {/* Header Actions */}
-                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
+                <Stack
+                    direction={{ xs: 'column', md: 'row' }}
+                    justifyContent="space-between"
+                    alignItems={{ xs: 'flex-start', md: 'center' }}
+                    spacing={3}
+                    sx={{ mb: 4 }}
+                >
                     <Box>
                         <Stack direction="row" spacing={1} alignItems="center">
                             <Typography variant="overline" color="text.secondary" fontWeight="bold" letterSpacing={1}>
@@ -168,9 +268,14 @@ export default function StaffDashboard() {
                         </Typography>
                     </Box>
 
-                    <Stack direction="row" spacing={2}>
+                    <Stack
+                        direction={{ xs: 'column', sm: 'row' }}
+                        spacing={2}
+                        alignItems={{ xs: 'stretch', sm: 'center' }}
+                        sx={{ width: { xs: '100%', sm: 'auto' } }}
+                    >
                         {isOwner && (
-                            <Box sx={{ bgcolor: 'rgba(255,255,255,0.05)', p: 0.5, borderRadius: 3, display: 'flex' }}>
+                            <Box sx={{ bgcolor: 'rgba(255,255,255,0.05)', p: 0.5, borderRadius: 3, display: 'flex', alignItems: 'center' }}>
                                 <Button
                                     variant={viewMode === 'operations' ? 'contained' : 'text'}
                                     onClick={() => setViewMode('operations')}
@@ -187,18 +292,21 @@ export default function StaffDashboard() {
                                 >
                                     Command
                                 </Button>
+                                <IconButton onClick={() => setShowSettingsDialog(true)} sx={{ ml: 1, color: 'text.secondary', '&:hover': { color: 'white' } }}>
+                                    <Settings />
+                                </IconButton>
                             </Box>
                         )}
 
                         {viewMode === 'operations' && (
-                            <>
-                                <Button variant="outlined" color="warning" startIcon={<Warning />} sx={{ borderColor: 'rgba(234, 179, 8, 0.5)', color: '#eab308' }}>
-                                    Log Incident
+                            <Stack direction="row" spacing={2} sx={{ width: '100%', justifyContent: { xs: 'space-between', sm: 'flex-end' } }}>
+                                <Button variant="outlined" color="warning" startIcon={<Warning />} sx={{ borderColor: 'rgba(234, 179, 8, 0.5)', color: '#eab308', flex: { xs: 1, sm: 'none' } }}>
+                                    Incident
                                 </Button>
-                                <Button variant="contained" startIcon={<Add />}>
-                                    Quick Check-In
+                                <Button variant="contained" startIcon={<Add />} sx={{ flex: { xs: 1, sm: 'none' } }}>
+                                    Check-In
                                 </Button>
-                            </>
+                            </Stack>
                         )}
                     </Stack>
                 </Stack>
@@ -370,7 +478,18 @@ export default function StaffDashboard() {
                                     </Stack>
                                 </Paper>
 
-                                <Paper sx={{ p: 3, borderRadius: 3, bgcolor: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.1)' }}>
+                                <Paper
+                                    onClick={() => window.location.href = '/staff/audit'}
+                                    sx={{
+                                        p: 3,
+                                        borderRadius: 3,
+                                        bgcolor: 'rgba(239, 68, 68, 0.05)',
+                                        border: '1px solid rgba(239, 68, 68, 0.1)',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s',
+                                        '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.1)', transform: 'translateY(-2px)' }
+                                    }}
+                                >
                                     <Stack direction="row" spacing={2} alignItems="center">
                                         <Warning color="error" />
                                         <Box>
@@ -378,6 +497,25 @@ export default function StaffDashboard() {
                                             <Typography variant="caption" color="text.secondary">3 failed login attempts blocked from IP 192.168.1.45</Typography>
                                         </Box>
                                     </Stack>
+                                </Paper>
+
+                                {/* Global Comms Shortcut */}
+                                <Paper sx={{ p: 3, borderRadius: 3, bgcolor: 'background.paper', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <Stack direction="row" spacing={1} alignItems="center" mb={2}>
+                                        <Message sx={{ color: 'text.secondary' }} />
+                                        <Typography variant="h6" fontWeight="bold">Global Comms</Typography>
+                                    </Stack>
+                                    <Typography variant="body2" color="text.secondary" mb={2}>
+                                        View, filter, and audit all client-staff communication logs.
+                                    </Typography>
+                                    <Button
+                                        fullWidth
+                                        variant="outlined"
+                                        onClick={() => window.location.href = '/staff/comms'}
+                                        sx={{ borderColor: 'rgba(255,255,255,0.1)', color: 'text.primary', '&:hover': { borderColor: 'white', bgcolor: 'rgba(255,255,255,0.05)' } }}
+                                    >
+                                        Open Black Box
+                                    </Button>
                                 </Paper>
                             </Stack>
                         </Box>
@@ -445,6 +583,53 @@ export default function StaffDashboard() {
                     >
                         {loadingStaff ? <CircularProgress size={24} color="inherit" /> : "Create Account"}
                     </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Owner Settings Modal */}
+            <Dialog
+                open={showSettingsDialog}
+                onClose={() => setShowSettingsDialog(false)}
+                PaperProps={{ sx: { bgcolor: '#1e293b', backgroundImage: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 3, minWidth: 350 } }}
+            >
+                <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'white' }}>
+                    <Settings /> Command Settings
+                </DialogTitle>
+                <DialogContent>
+                    <Stack spacing={3} sx={{ mt: 1 }}>
+                        <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 2 }}>
+                            <Stack direction="row" alignItems="center" justifyContent="space-between">
+                                <Stack direction="row" spacing={2} alignItems="center">
+                                    <Face sx={{ color: isFaceIdEnabled ? '#22c55e' : 'text.secondary' }} />
+                                    <Box>
+                                        <Typography variant="body1" fontWeight="bold" color="white">Face ID Access</Typography>
+                                        <Typography variant="caption" color="text.secondary">Use biometrics for quick login</Typography>
+                                    </Box>
+                                </Stack>
+                                <Switch
+                                    checked={isFaceIdEnabled}
+                                    onChange={handleFaceIdToggle}
+                                    disabled={isRegistering}
+                                    color="success"
+                                />
+                            </Stack>
+                        </Paper>
+
+                        <Button
+                            variant="outlined"
+                            color="error"
+                            fullWidth
+                            onClick={() => {
+                                localStorage.removeItem('vanguard_token');
+                                window.location.href = '/';
+                            }}
+                        >
+                            Emergency Sign Out
+                        </Button>
+                    </Stack>
+                </DialogContent>
+                <DialogActions sx={{ p: 2 }}>
+                    <Button onClick={() => setShowSettingsDialog(false)} sx={{ color: 'text.secondary' }}>Close</Button>
                 </DialogActions>
             </Dialog>
 
