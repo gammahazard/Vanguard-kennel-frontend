@@ -3,6 +3,8 @@
 ## Project: "The Kennel Platform" (MVP)
 
 ![Status](https://img.shields.io/badge/Status-Project--Active-D4AF37?style=for-the-badge)
+![Platform](https://img.shields.io/badge/Platform-PWA%20%7C%20Mobile--First-blueviolet?style=for-the-badge&logo=pwa)
+![Security](https://img.shields.io/badge/Security-Biometric%20Auth-success?style=for-the-badge&logo=auth0)
 ![Tech Stack](https://img.shields.io/badge/Stack-Rust--NextJS--SQLite-blue?style=for-the-badge)
 ![Deployment](https://img.shields.io/badge/Infrastructure-Linode--Vercel-black?style=for-the-badge&logo=vercel)
 
