@@ -6,7 +6,7 @@ import {
     BottomNavigation, BottomNavigationAction, ThemeProvider, CssBaseline,
     List, ListItem, ListItemButton, ListItemIcon, ListItemText, ListItemSecondaryAction, Switch, Divider, Button, Alert, Snackbar,
     Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions,
-    IconButton, TextField, CircularProgress
+    IconButton, TextField, CircularProgress, Skeleton
 } from "@mui/material";
 import { Home, Pets, CalendarMonth, Person, Face, Notifications, CreditCard, Security, ChevronRight, Logout, CheckCircle, Cancel, DeleteForever, Warning, Wallet, Edit, Chat } from "@mui/icons-material";
 import { theme } from "@/lib/theme";
@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import Link from 'next/link';
 import { startRegistration } from '@simplewebauthn/browser';
 import { API_BASE_URL } from "@/lib/config";
+import { sanitizeInput, sanitizePhone } from "@/lib/security";
 
 export default function ProfileView() {
     const router = useRouter();
@@ -307,12 +308,55 @@ export default function ProfileView() {
 
                 <Container maxWidth="sm" sx={{ pt: 4 }}>
                     <Stack spacing={4}>
-                        <Stack alignItems="center" spacing={1} sx={{ position: 'relative' }}>
-                            <Box sx={{ position: 'relative' }}>
-                                <Avatar sx={{ width: 100, height: 100, bgcolor: 'primary.main', fontSize: '2.5rem', fontWeight: 'bold', mb: 1 }}>
+                        <Paper sx={{
+                            p: 3,
+                            borderRadius: 4,
+                            background: 'linear-gradient(135deg, #1a1b1f 0%, #0b0c10 100%)',
+                            border: '1px solid rgba(212, 175, 55, 0.2)',
+                            position: 'relative',
+                            overflow: 'hidden',
+                            boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+                            minHeight: 200,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between'
+                        }}>
+                            {/* Decorative Seal */}
+                            <Box sx={{ position: 'absolute', top: -20, right: -20, opacity: 0.1, transform: 'rotate(25deg)' }}>
+                                <Pets sx={{ fontSize: 150, color: '#D4AF37' }} />
+                            </Box>
+
+                            <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ position: 'relative', zIndex: 1 }}>
+                                <Box>
+                                    <Typography variant="overline" sx={{ color: '#D4AF37', fontWeight: 900, letterSpacing: 2 }}>VANGUARD VIP KEY</Typography>
+                                    <Typography variant="h5" fontWeight="bold" sx={{ mt: 1 }}>{userName.toUpperCase()}</Typography>
+                                    <Typography variant="body2" sx={{ opacity: 0.6, fontFamily: 'monospace' }}>
+                                        ID: {localStorage.getItem('vanguard_email')?.substring(0, 10).toUpperCase()}
+                                    </Typography>
+                                </Box>
+                                <Avatar
+                                    sx={{
+                                        width: 64,
+                                        height: 64,
+                                        bgcolor: 'primary.main',
+                                        color: 'black',
+                                        fontWeight: 'bold',
+                                        border: '2px solid rgba(255,255,255,0.1)'
+                                    }}
+                                >
                                     {userName.charAt(0).toUpperCase()}
                                 </Avatar>
+                            </Stack>
+
+                            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ position: 'relative', zIndex: 1, mt: 4 }}>
+                                <Box>
+                                    <Typography variant="caption" sx={{ display: 'block', opacity: 0.5, letterSpacing: 1 }}>TIER</Typography>
+                                    <Typography variant="body2" fontWeight="bold" color="primary">
+                                        {profileData?.role === 'owner' ? 'COMMANDER' : 'ELITE MEMBER'}
+                                    </Typography>
+                                </Box>
                                 <IconButton
+                                    size="small"
                                     onClick={() => {
                                         setEditData({
                                             name: userName,
@@ -321,26 +365,15 @@ export default function ProfileView() {
                                         });
                                         setShowEditDialog(true);
                                     }}
-                                    sx={{
-                                        position: 'absolute', bottom: 8, right: 0,
-                                        bgcolor: 'background.paper', border: '1px solid rgba(255,255,255,0.1)',
-                                        p: 0.8, '&:hover': { bgcolor: '#333' }
-                                    }}
-                                    size="small"
+                                    sx={{ bgcolor: 'rgba(255,255,255,0.05)', color: 'white' }}
                                 >
-                                    <Edit sx={{ fontSize: 16, color: 'primary.main' }} />
+                                    <Edit fontSize="small" />
                                 </IconButton>
-                            </Box>
-                            <Typography variant="h5" fontWeight="bold">{userName}</Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                {profileData?.role === 'owner' ? 'Founding Member' : 'Elite Member'}
-                            </Typography>
-                            {profileData?.created_at && (
-                                <Typography variant="caption" sx={{ opacity: 0.5 }}>
-                                    Member since {new Date(profileData.created_at).getFullYear()}
-                                </Typography>
-                            )}
-                        </Stack>
+                            </Stack>
+
+                            {/* Magnetic Strip Detail */}
+                            <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 4, bgcolor: 'primary.main', opacity: 0.3 }} />
+                        </Paper>
 
                         <Stack spacing={2}>
                             <Typography variant="overline" color="text.secondary" fontWeight="bold" letterSpacing={2} sx={{ ml: 1 }}>Security & Access</Typography>
@@ -578,7 +611,7 @@ export default function ProfileView() {
                                 fullWidth
                                 variant="filled"
                                 value={editData.name}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditData({ ...editData, name: e.target.value })}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditData({ ...editData, name: sanitizeInput(e.target.value, 32) })}
                             />
                             <TextField
                                 label="Email Address"
@@ -587,14 +620,13 @@ export default function ProfileView() {
                                 value={editData.email}
                                 disabled
                                 helperText="Contact support to change email"
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditData({ ...editData, email: e.target.value })}
                             />
                             <TextField
                                 label="Phone Number"
                                 fullWidth
                                 variant="filled"
                                 value={editData.phone}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditData({ ...editData, phone: e.target.value })}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditData({ ...editData, phone: sanitizePhone(e.target.value) })}
                             />
                         </Stack>
                     </DialogContent>

@@ -7,7 +7,7 @@ import {
     Fab, Avatar, Grid, IconButton, Button,
     CircularProgress, Snackbar, Alert, Dialog, DialogTitle,
     DialogContent, DialogActions, TextField, MenuItem, Divider,
-    DialogContentText
+    DialogContentText, Skeleton
 } from "@mui/material";
 import {
     Home, Pets, CalendarMonth, ModeEdit, Close, Warning, Notes,
@@ -16,6 +16,7 @@ import {
 } from "@mui/icons-material";
 import { theme } from "@/lib/theme";
 import { API_BASE_URL } from "@/lib/config";
+import { sanitizeInput, sanitizePhone } from "@/lib/security";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -205,7 +206,30 @@ export default function PetsView() {
 
                 <Container maxWidth="sm" sx={{ pt: 2 }}>
                     {loading ? (
-                        <Box display="flex" justifyContent="center" py={8}><CircularProgress size={32} color="primary" /></Box>
+                        <Stack spacing={2.5}>
+                            {[1, 2, 3].map(i => (
+                                <Paper key={i} sx={{ p: 0, borderRadius: 4, bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+                                    <Stack direction="row" spacing={0}>
+                                        <Skeleton variant="rectangular" width={40} height={200} sx={{ bgcolor: 'rgba(212, 175, 55, 0.1)' }} />
+                                        <Box sx={{ flex: 1, p: 2.5 }}>
+                                            <Stack direction="row" spacing={2} mb={3}>
+                                                <Skeleton variant="rectangular" width={90} height={90} sx={{ borderRadius: 2 }} />
+                                                <Box sx={{ flex: 1 }}>
+                                                    <Skeleton width="40%" height={20} />
+                                                    <Skeleton width="70%" height={32} />
+                                                    <Skeleton width="50%" height={20} />
+                                                </Box>
+                                            </Stack>
+                                            <Grid container spacing={2}>
+                                                <Grid size={{ xs: 4 }}><Skeleton height={40} /></Grid>
+                                                <Grid size={{ xs: 4 }}><Skeleton height={40} /></Grid>
+                                                <Grid size={{ xs: 4 }}><Skeleton height={40} /></Grid>
+                                            </Grid>
+                                        </Box>
+                                    </Stack>
+                                </Paper>
+                            ))}
+                        </Stack>
                     ) : pets.length === 0 ? (
                         <Box sx={{ py: 8, textAlign: 'center' }}>
                             <Pets sx={{ fontSize: 60, color: 'text.secondary', opacity: 0.2, mb: 2 }} />
@@ -237,8 +261,8 @@ export default function PetsView() {
                     </DialogTitle>
                     <DialogContent sx={{ px: 3 }}>
                         <Stack spacing={2} sx={{ mt: 1 }}>
-                            <TextField label="VIP Name" fullWidth value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} variant="filled" />
-                            <TextField label="Breed" fullWidth value={formData.breed} onChange={e => setFormData({ ...formData, breed: e.target.value })} variant="filled" />
+                            <TextField label="VIP Name" fullWidth value={formData.name} onChange={e => setFormData({ ...formData, name: sanitizeInput(e.target.value, 32) })} variant="filled" />
+                            <TextField label="Breed" fullWidth value={formData.breed} onChange={e => setFormData({ ...formData, breed: sanitizeInput(e.target.value, 40) })} variant="filled" />
                             <Stack direction="row" spacing={2}>
                                 <TextField label="Age" type="number" fullWidth value={formData.age} onChange={e => setFormData({ ...formData, age: e.target.value })} variant="filled" />
                                 <TextField label="Weight (kg)" type="number" fullWidth value={formData.weight} onChange={e => setFormData({ ...formData, weight: e.target.value })} variant="filled" />
@@ -263,19 +287,19 @@ export default function PetsView() {
                                     autoFocus
                                     value={customTemp}
                                     onChange={e => {
-                                        const val = e.target.value.substring(0, 30).replace(/[<>]/g, ""); // Max 30 chars, basic sanitization
+                                        const val = sanitizeInput(e.target.value, 30);
                                         setCustomTemp(val);
                                     }}
                                     variant="filled"
                                     placeholder="e.g. Very Cuddly"
                                 />
                             )}
-                            <TextField label="Allergies" fullWidth value={formData.allergies} onChange={e => setFormData({ ...formData, allergies: e.target.value })} variant="filled" placeholder="N/A" />
-                            <TextField label="Medical Notes" fullWidth multiline rows={2} value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })} variant="filled" placeholder="Medications, behavioral notes..." />
+                            <TextField label="Allergies" fullWidth value={formData.allergies} onChange={e => setFormData({ ...formData, allergies: sanitizeInput(e.target.value, 60) })} variant="filled" placeholder="N/A" />
+                            <TextField label="Medical Notes" fullWidth multiline rows={2} value={formData.notes} onChange={e => setFormData({ ...formData, notes: sanitizeInput(e.target.value, 500) })} variant="filled" placeholder="Medications, behavioral notes..." />
                             <Divider sx={{ my: 1, opacity: 0.1 }} />
                             <Typography variant="caption" color="primary" fontWeight="bold">EMERGENCY VETERINARY INFO</Typography>
-                            <TextField label="Vet Name" fullWidth value={formData.vet_name} onChange={e => setFormData({ ...formData, vet_name: e.target.value })} variant="filled" />
-                            <TextField label="Vet Phone" fullWidth value={formData.vet_phone} onChange={e => setFormData({ ...formData, vet_phone: e.target.value })} variant="filled" />
+                            <TextField label="Vet Name" fullWidth value={formData.vet_name} onChange={e => setFormData({ ...formData, vet_name: sanitizeInput(e.target.value, 50) })} variant="filled" />
+                            <TextField label="Vet Phone" fullWidth value={formData.vet_phone} onChange={e => setFormData({ ...formData, vet_phone: sanitizePhone(e.target.value) })} variant="filled" />
                         </Stack>
                     </DialogContent>
                     <DialogActions sx={{ p: 3 }}>

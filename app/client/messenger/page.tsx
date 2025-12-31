@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import {
     Box, Typography, Container, Stack, Paper, TextField, IconButton,
     Avatar, CircularProgress, ThemeProvider, CssBaseline, BottomNavigation,
-    BottomNavigationAction, AppBar, Toolbar
+    BottomNavigationAction, AppBar, Toolbar, Skeleton
 } from "@mui/material";
 import {
     Send, ArrowBack, Home, Pets as PetIcon, CalendarMonth,
@@ -121,7 +121,14 @@ export default function MessengerView() {
                     }}
                 >
                     {loading ? (
-                        <Box display="flex" justifyContent="center" py={4}><CircularProgress size={24} /></Box>
+                        <Stack spacing={2}>
+                            {[1, 2, 3].map(i => (
+                                <Box key={i} sx={{ alignSelf: i % 2 === 0 ? 'flex-end' : 'flex-start', width: '60%' }}>
+                                    <Skeleton variant="rectangular" height={40} sx={{ borderRadius: 2, bgcolor: 'rgba(255,255,255,0.05)' }} />
+                                    <Skeleton width="30%" height={15} sx={{ mt: 0.5, alignSelf: i % 2 === 0 ? 'flex-end' : 'flex-start' }} />
+                                </Box>
+                            ))}
+                        </Stack>
                     ) : messages.length === 0 ? (
                         <Box sx={{ textAlign: 'center', py: 10, opacity: 0.5 }}>
                             <ChatIcon sx={{ fontSize: 60, mb: 1 }} />

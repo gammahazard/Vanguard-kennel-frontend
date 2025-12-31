@@ -7,12 +7,13 @@ import {
     Fab, Divider, Button, Dialog, DialogTitle, DialogContent,
     DialogActions, Stepper, Step, StepLabel, TextField,
     MenuItem, CircularProgress, Snackbar, Alert, Avatar, IconButton,
-    Grid
+    Grid, Skeleton
 } from "@mui/material";
 import { Home, Pets, CalendarMonth, Person, Add, AccessTime, CheckCircle, Close, Dangerous, Chat, Warning, Info } from "@mui/icons-material";
 import { theme } from "@/lib/theme";
 import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/lib/config";
+import { sanitizeInput } from "@/lib/security";
 
 export default function BookingsView() {
     const router = useRouter();
@@ -178,7 +179,25 @@ export default function BookingsView() {
                         <Box>
                             <Typography variant="overline" color="text.secondary" fontWeight="bold" letterSpacing={2}>Your Stays</Typography>
                             {loading ? (
-                                <Box display="flex" justifyContent="center" py={4}><CircularProgress size={24} /></Box>
+                                <Stack spacing={2} sx={{ mt: 1 }}>
+                                    {[1, 2].map(i => (
+                                        <Paper key={i} sx={{ p: 2, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                            <Stack direction="row" spacing={2} alignItems="center">
+                                                <Skeleton variant="circular" width={40} height={40} />
+                                                <Box sx={{ flex: 1 }}>
+                                                    <Skeleton width="40%" height={20} />
+                                                    <Skeleton width="20%" height={15} />
+                                                </Box>
+                                                <Skeleton variant="rectangular" width={60} height={20} sx={{ borderRadius: 1 }} />
+                                            </Stack>
+                                            <Divider sx={{ my: 1.5, opacity: 0.1 }} />
+                                            <Stack direction="row" spacing={2}>
+                                                <Skeleton width="50%" height={15} />
+                                                <Skeleton width="15%" height={15} />
+                                            </Stack>
+                                        </Paper>
+                                    ))}
+                                </Stack>
                             ) : upcomingBookings.length === 0 ? (
                                 <Paper sx={{ mt: 1, p: 4, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', textAlign: 'center' }}>
                                     <Pets sx={{ fontSize: 48, color: 'text.secondary', opacity: 0.5, mb: 2 }} />
@@ -281,67 +300,74 @@ export default function BookingsView() {
                                         helperText={isDateFull(formData.end_date) ? "Fully booked" : ""}
                                     />
                                 </Stack>
-                                {(isDateFull(formData.start_date) || isDateFull(formData.end_date)) && (
-                                    <Alert severity="warning" variant="outlined" sx={{ borderRadius: 2 }}>
-                                        One or more selected dates have reached premium capacity. Please try another date.
-                                    </Alert>
-                                )}
-                            </Stack>
+                            </Alert>
                         )}
-                        {activeStep === 2 && (
-                            <Box sx={{ py: 2, textAlign: 'center' }}>
-                                <Typography variant="h6">Ready to book?</Typography>
-                                <Typography variant="body2" color="text.secondary">VIPs: {pets.filter(p => formData.dog_ids.includes(p.id)).map(p => p.name).join(", ")}</Typography>
-                                <Typography variant="h4" sx={{ mt: 2, color: '#D4AF37' }}>${formData.total_price.toFixed(2)}</Typography>
-                            </Box>
+                        <TextField
+                            label="Stay Notes"
+                            fullWidth
+                            multiline
+                            rows={2}
+                            value={formData.notes}
+                            onChange={e => setFormData({ ...formData, notes: sanitizeInput(e.target.value, 500) })}
+                            variant="filled"
+                            placeholder="Drop-off time, dietary specifics, etc."
+                        />
+                    </Stack>
                         )}
-                    </DialogContent>
-                    <DialogActions sx={{ px: 3, pb: 4 }}>
-                        {activeStep > 0 && <Button onClick={handleBack}>Back</Button>}
-                        <Box sx={{ flex: 1 }} />
-                        <Button variant="contained"
-                            disabled={
-                                formData.dog_ids.length === 0 ||
-                                (activeStep === 1 && (!formData.start_date || !formData.end_date || isDateFull(formData.start_date) || isDateFull(formData.end_date))) ||
-                                (activeStep === 2 && submitting)
-                            }
-                            onClick={activeStep < 2 ? handleNext : handleCreateBooking}
-                            sx={{ bgcolor: '#D4AF37', color: 'black' }}
-                        >
-                            {activeStep < 2 ? "Next" : "Confirm"}
+                    {activeStep === 2 && (
+                        <Box sx={{ py: 2, textAlign: 'center' }}>
+                            <Typography variant="h6">Ready to book?</Typography>
+                            <Typography variant="body2" color="text.secondary">VIPs: {pets.filter(p => formData.dog_ids.includes(p.id)).map(p => p.name).join(", ")}</Typography>
+                            <Typography variant="h4" sx={{ mt: 2, color: '#D4AF37' }}>${formData.total_price.toFixed(2)}</Typography>
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions sx={{ px: 3, pb: 4 }}>
+                    {activeStep > 0 && <Button onClick={handleBack}>Back</Button>}
+                    <Box sx={{ flex: 1 }} />
+                    <Button variant="contained"
+                        disabled={
+                            formData.dog_ids.length === 0 ||
+                            (activeStep === 1 && (!formData.start_date || !formData.end_date || isDateFull(formData.start_date) || isDateFull(formData.end_date))) ||
+                            (activeStep === 2 && submitting)
+                        }
+                        onClick={activeStep < 2 ? handleNext : handleCreateBooking}
+                        sx={{ bgcolor: '#D4AF37', color: 'black' }}
+                    >
+                        {activeStep < 2 ? "Next" : "Confirm"}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Cancel Confirm */}
+            <Dialog open={showCancelConfirm} onClose={() => !cancelling && setShowCancelConfirm(false)}>
+                <DialogContent sx={{ pt: 4, textAlign: 'center', bgcolor: '#1A1B1F' }}>
+                    <Dangerous color="error" sx={{ fontSize: 54, mb: 2 }} />
+                    <Typography variant="h6" fontWeight="bold">Cancel Reservation?</Typography>
+                    <Typography variant="body2" color="text.secondary">Retract this request?</Typography>
+                    <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
+                        <Button fullWidth variant="outlined" onClick={() => setShowCancelConfirm(false)} disabled={cancelling}>Keep</Button>
+                        <Button fullWidth variant="contained" color="error" onClick={handleCancelBooking} disabled={cancelling}>
+                            {cancelling ? <CircularProgress size={20} /> : "Cancel"}
                         </Button>
-                    </DialogActions>
-                </Dialog>
+                    </Stack>
+                </DialogContent>
+            </Dialog>
 
-                {/* Cancel Confirm */}
-                <Dialog open={showCancelConfirm} onClose={() => !cancelling && setShowCancelConfirm(false)}>
-                    <DialogContent sx={{ pt: 4, textAlign: 'center', bgcolor: '#1A1B1F' }}>
-                        <Dangerous color="error" sx={{ fontSize: 54, mb: 2 }} />
-                        <Typography variant="h6" fontWeight="bold">Cancel Reservation?</Typography>
-                        <Typography variant="body2" color="text.secondary">Retract this request?</Typography>
-                        <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
-                            <Button fullWidth variant="outlined" onClick={() => setShowCancelConfirm(false)} disabled={cancelling}>Keep</Button>
-                            <Button fullWidth variant="contained" color="error" onClick={handleCancelBooking} disabled={cancelling}>
-                                {cancelling ? <CircularProgress size={20} /> : "Cancel"}
-                            </Button>
-                        </Stack>
-                    </DialogContent>
-                </Dialog>
+            <Snackbar open={!!error} autoHideDuration={4000} onClose={() => setError("")}><Alert severity="error">{error}</Alert></Snackbar>
+            <Snackbar open={!!successMsg} autoHideDuration={4000} onClose={() => setSuccessMsg("")}><Alert severity="success">{successMsg}</Alert></Snackbar>
 
-                <Snackbar open={!!error} autoHideDuration={4000} onClose={() => setError("")}><Alert severity="error">{error}</Alert></Snackbar>
-                <Snackbar open={!!successMsg} autoHideDuration={4000} onClose={() => setSuccessMsg("")}><Alert severity="success">{successMsg}</Alert></Snackbar>
-
-                <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100 }} elevation={3}>
-                    <BottomNavigation showLabels value={navValue} onChange={(e, v) => handleNavChange(v)} sx={{ bgcolor: '#0B0C10', height: 70, '& .Mui-selected': { color: '#D4AF37 !important' } }}>
-                        <BottomNavigationAction label="Home" icon={<Home />} />
-                        <BottomNavigationAction label="Pets" icon={<Pets />} />
-                        <BottomNavigationAction label="Bookings" icon={<CalendarMonth />} />
-                        <BottomNavigationAction label="Chat" icon={<Chat />} />
-                        <BottomNavigationAction label="Profile" icon={<Person />} />
-                    </BottomNavigation>
-                </Paper>
-            </Box>
-        </ThemeProvider>
+            <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100 }} elevation={3}>
+                <BottomNavigation showLabels value={navValue} onChange={(e, v) => handleNavChange(v)} sx={{ bgcolor: '#0B0C10', height: 70, '& .Mui-selected': { color: '#D4AF37 !important' } }}>
+                    <BottomNavigationAction label="Home" icon={<Home />} />
+                    <BottomNavigationAction label="Pets" icon={<Pets />} />
+                    <BottomNavigationAction label="Bookings" icon={<CalendarMonth />} />
+                    <BottomNavigationAction label="Chat" icon={<Chat />} />
+                    <BottomNavigationAction label="Profile" icon={<Person />} />
+                </BottomNavigation>
+            </Paper>
+        </Box>
+        </ThemeProvider >
     );
 }
 
