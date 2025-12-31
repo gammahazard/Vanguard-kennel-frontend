@@ -198,7 +198,7 @@ export default function BookingsView() {
                                         </Paper>
                                     ))}
                                 </Stack>
-                            ) : upcomingBookings.length === 0 ? (
+                            ) : pets.length === 0 ? (
                                 <Paper sx={{ mt: 1, p: 4, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', textAlign: 'center' }}>
                                     <Pets sx={{ fontSize: 48, color: 'text.secondary', opacity: 0.5, mb: 2 }} />
                                     <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>Register your VIPS first</Typography>
@@ -207,6 +207,17 @@ export default function BookingsView() {
                                     </Typography>
                                     <Button variant="contained" startIcon={<Pets />} onClick={() => router.push('/client/pets')} sx={{ bgcolor: '#D4AF37', color: 'black' }}>
                                         Register VIP
+                                    </Button>
+                                </Paper>
+                            ) : upcomingBookings.length === 0 ? (
+                                <Paper sx={{ mt: 1, p: 4, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                                    <CalendarMonth sx={{ fontSize: 48, color: 'primary.main', opacity: 0.5, mb: 2 }} />
+                                    <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>No Active Reservations</Typography>
+                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3, maxWidth: 300, mx: 'auto' }}>
+                                        Your VIPs are ready for an upgrade. Start a new booking to reserve their spot in our luxury kennels.
+                                    </Typography>
+                                    <Button variant="contained" startIcon={<Add />} onClick={() => setShowWizard(true)} sx={{ bgcolor: '#D4AF37', color: 'black' }}>
+                                        New Booking
                                     </Button>
                                 </Paper>
                             ) : (
