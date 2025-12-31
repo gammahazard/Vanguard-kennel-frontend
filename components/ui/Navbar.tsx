@@ -16,6 +16,17 @@ export function Navbar() {
             setScrolled(window.scrollY > 20);
         };
         window.addEventListener("scroll", handleScroll);
+
+        // FORCE LOGOUT if using old dummy token
+        // The backend now requires real JWTs. If we detect the old string, we must clear it.
+        const token = localStorage.getItem('vanguard_token');
+        if (token === 'vanguard_demo_token' || token?.startsWith('fake-jwt')) {
+            console.warn("Detected legacy token. Forcing logout to acquire real JWT.");
+            localStorage.removeItem('vanguard_token');
+            localStorage.removeItem('vanguard_user');
+            window.location.href = '/staff/login';
+        }
+
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
