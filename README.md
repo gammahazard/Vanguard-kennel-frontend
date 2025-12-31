@@ -1,44 +1,26 @@
-﻿# 🐕 Vanguard Kennel Systems | Premium Pet Care
+﻿# 🛡️ Vanguard Secure Solutions | Portfolio Showcase
 
-![Status](https://img.shields.io/badge/Status-Ultra--Premium-D4AF37?style=for-the-badge&logo=appveyor)
-![Security](https://img.shields.io/badge/Security-Biometric%20Verified-4ade80?style=for-the-badge&logo=faceid)
-![Frontend](https://img.shields.io/badge/Frontend-Next.js%2014-000000?style=for-the-badge&logo=next.js)
-![Backend](https://img.shields.io/badge/Backend-Rust%20🦀-orange?style=for-the-badge&logo=rust)
-![PWA](https://img.shields.io/badge/Platform-PWA%20Mobile-blue?style=for-the-badge&logo=pwa)
+## Project: "The Kennel Platform" (MVP)
 
-Vanguard is a high-end kennel management platform designed for performance, security, and a premium user experience.
-Vanguard offers 5-star care, expansive open spaces, and state-of-the-art security for your VIP (Very Important Pup), ensuring peace of mind while you travel.
+![Status](https://img.shields.io/badge/Status-Project--Active-D4AF37?style=for-the-badge)
+![Tech Stack](https://img.shields.io/badge/Stack-Rust--NextJS--SQLite-blue?style=for-the-badge)
+![Deployment](https://img.shields.io/badge/Infrastructure-Linode--Vercel-black?style=for-the-badge&logo=vercel)
 
-Built with a decoupled architecture, it leverages a high-performance Rust backend and a modern Next.js frontend.
+**This repository serves as a technical demonstration of Vanguard Secure Solutions' capabilities.** 
 
-## 🏗️ System Architecture
+It represents a high-reliability management platform developed for luxury dog kennels, showcasing our ability to deliver:
+*   **Decoupled Architecture**: Strictly separated Frontend (Next.js) and Backend (Rust).
+*   **High-Security Auth**: Implementation of WebAuthn (FaceID/Biometrics) and RBAC.
+*   **Mission-Critical Reliability**: Rust-based backend for zero-downtime stability.
 
-Vanguard uses a modern, decoupled architecture for maximum security and performance.
+---
 
-```mermaid
-graph TD
-    Client((Client PWA))
-    Frontend[Vercel Frontend]
-    Backend[Linode Rust API]
-    DB[(SQLite Database)]
+## 🏗️ The Case Study: "Vanguard Kennel Systems"
 
-    Client -- HTTPS/JSON --> Frontend
-    Frontend -- API Request --> Backend
-    Backend -- SQLx --> DB
-    
-    subgraph "Infrastructure Layer (Linode)"
-    Backend
-    DB
-    end
+We built this platform to solve a specific problem: **Managing luxury pet care with military-grade precision.**
 
-    subgraph "Edge Layer (Vercel)"
-    Frontend
-    end
-```
-
-## 🏰 System Hierarchy & Access Levels
-
-Vanguard is built with a strictly tiered access model, ensuring that every user has exactly what they need for their specific role.
+### System Hierarchy & Role Isolation
+The platform enforces strict role separation using our proprietary Access Control Engine:
 
 ```mermaid
 graph TD
@@ -67,25 +49,22 @@ graph TD
     ChatStaff <--> ChatClient
 ```
 
-## 🔒 Security Architecture
+### Key Solutions Delivered
+1.  **The "Dinner Demo" UI**: A mobile-first Client Portal designed to wow investors in under 30 seconds.
+2.  **The "Unbreakable" Backend**: A Rust/Axum API that handles scheduling, financials, and audit logging without the bloat of traditional frameworks.
+3.  **Secure Access**: Role-Based Dashboards for Owners, Staff, and Clients.
 
-Vanguard employs a **Decoupled Architecture**, explicitly separating the frontend presentation layer from the backend logic and database.
+---
 
-*   **Frontend (Next.js)**: Hosted on Vercel/Edge. Acts purely as a visual client. It processes no sensitive logic and has no direct access to the database.
-*   **Backend (Rust)**: Hosted on a secure, isolated Linux VPS. Written in high-performance Rust, it handles all authentication, business logic, and database transactions.
+## 🔒 Defense-in-Depth Security
+We employ a multi-layered security strategy protecting user data from the edge to the database.
 
-### Vulnerability Mitigation
-This separation ensures that common web vulnerabilities (like Next.js Server-Side Request Forgery or RCE exploits) cannot compromise the core system. Even if the frontend were compromised, the attacker would have no access to the backend environment, database credentials, or server files.
-
-## 🔒 Security Flow
-
-Vanguard employs a defense-in-depth strategy to ensure user data remains private.
-
+### 1. The Security Flow
 ```mermaid
 sequenceDiagram
     participant U as User
     participant F as Frontend (Vercel)
-    participant B as Backend (Rust/Axum)
+    participant B as Backend (AWS/Linode)
     participant D as Database (SQLite)
 
     U->>F: Enter Credentials
@@ -93,72 +72,64 @@ sequenceDiagram
     B->>D: SELECT user_hash
     D-->>B: Password Hash
     B->>B: Argon2 Verification
-    B-->>F: JWT Token + Role
-    F-->>U: Redirection to Dashboard
+    B-->>F: JWT Token + Role (HS256)
+    F-->>U: Secure Redirection
 ```
 
-## 🚀 Key Features
+### 2. Biometric Authentication (WebAuthn)
+Vanguard implements the FIDO2/WebAuthn standard, ensuring biometric data **never leaves the device**.
 
-- **Blazing Fast Backend**: Powered by Rust (Axum + Tokio) for unmatched concurrency.
-- **Bank-Grade Security**: Argon2 password hashing and TLS 1.3 encryption.
-- **Decoupled Privacy**: Physical isolation between frontend and backend servers.
-- **Premium UI**: Material UI components with a glassmorphism aesthetic.
-- **Rich Data Seeding**: Complete demo environment with 12+ VIP clients and audit logs.
-
-## 🛡️ Biometric Authentication (WebAuthn)
-
-Vanguard provides cutting-edge security via **WebAuthn (Face ID / Touch ID)**. This allows users to authenticate without passwords using their device's hardware security module.
-
-### How it works
-
-Vanguard implements the FIDO2/WebAuthn standard, ensuring that your biometric data **never leaves your device**. Only a cryptographically signed "challenge" is sent to our Rust backend.
-
-#### 1. Registration Flow
+**Registration Flow:**
 ```mermaid
 sequenceDiagram
     participant U as User
-    participant F as Frontend (PWA)
-    participant B as Backend (Rust)
+    participant F as Frontend
+    participant B as Backend
     participant HW as Secure Enclave
 
-    U->>F: Toggle Face ID (Profile)
+    U->>F: Toggle Face ID
     F->>B: POST /register/start (Challenge)
     B-->>F: Challenge + RP ID
-    F->>HW: Browser Invoke (WebAuthn)
-    HW-->>U: Prompt Face/Fingerprint
+    F->>HW: Invoke WebAuthn
+    HW-->>U: Prompt Face/Touch ID
     U-->>HW: Authenticate
     HW-->>F: Signed Attestation
     F->>B: POST /register/finish
-    B->>B: Verify & Store Credential
+    B->>B: Verify & Store
     B-->>F: Success
 ```
 
-#### 2. Authentication (Login) Flow
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant F as Frontend (PWA)
-    participant B as Backend (Rust)
-    participant HW as Secure Enclave
+---
 
-    U->>F: Tap "Login with Face ID"
-    F->>B: POST /login/start (Challenge)
-    B-->>F: Challenge + Allowed Credentials
-    F->>HW: Browser Invoke (WebAuthn)
-    HW-->>U: Prompt Face/Fingerprint
-    U-->>HW: Authenticate
-    HW-->>F: Signed Assertion
-    F->>B: POST /login/finish
-    B->>B: Verify Signature
-    B-->>F: JWT Login Token
-```
+## 📂 Technical Structure
 
-## 🛠️ Tech Stack
-
-- **Frontend**: Next.js 14, Material UI, Emotion, PWA, `@simplewebauthn/browser`.
-- **Backend**: Rust, Axum, SQLx, Argon2, `webauthn-rs`.
-- **Database**: SQLite.
-- **Infrastructure**: Vercel (Frontend), Linode VPS (Backend).
+*   **/frontend**: Next.js 14 + Tailwind CSS (The visual experience).
+*   **/backend**: Rust + SQLite (The secure engine).
+*   **/docs**: System architecture and technical onboarding manuals.
 
 ---
-© 2025 Vanguard Kennel Systems. All Rights Reserved.
+
+## 🔒 Why Rust & Next.js?
+We chose this stack to demonstrate **Vanguard Secure Solutions'** commitment to:
+*   **Performance**: Sub-millisecond API response times.
+*   **Security**: Memory-safe languages (Rust) prevent entire classes of vulnerabilities.
+*   **Scalability**: A cloud-native design ready for high-load environments.
+
+---
+
+### 🚀 Getting Started (Run the Demo)
+
+Since this is a showcase prototype, you can run the visual interface locally:
+
+1.  **Install Node.js**: [Download Here](https://nodejs.org/) (LTS Version).
+2.  Go to the `frontend` folder:
+    ```bash
+    cd frontend
+    npm install
+    npm run dev
+    ```
+3.  Open `http://localhost:3000`.
+
+---
+
+*Powered by Vanguard Secure Solutions — Engineering Trust.*
