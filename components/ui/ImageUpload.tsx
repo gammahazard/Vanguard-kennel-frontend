@@ -26,9 +26,9 @@ export function ImageUpload({ initialUrl, onUploadSuccess, label = "VIP Portrait
 
         setError(null);
 
-        // 1. Client-side Size Validation (5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            setError("Image must be smaller than 5MB");
+        // 1. Client-side Size Validation (7MB)
+        if (file.size > 7 * 1024 * 1024) {
+            setError("Image must be smaller than 7MB");
             return;
         }
 
@@ -147,7 +147,7 @@ export function ImageUpload({ initialUrl, onUploadSuccess, label = "VIP Portrait
                             </Stack>
                         ) : (
                             <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
-                                JPG, PNG or WebP. Max 5MB.
+                                JPG, PNG or WebP. Max 7MB.
                             </Typography>
                         )}
 
