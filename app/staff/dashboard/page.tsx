@@ -56,7 +56,6 @@ import {
     History,
     Chat as ChatIcon
 } from "@mui/icons-material";
-import { startRegistration } from '@simplewebauthn/browser';
 import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { API_BASE_URL } from "@/lib/config";
@@ -88,12 +87,9 @@ export default function StaffDashboard() {
     const [loadingGuests, setLoadingGuests] = useState(true);
     const [viewMode, setViewMode] = useState<'operations' | 'business' | 'requests' | 'directory' | 'comms'>('operations');
     const [isOwner, setIsOwner] = useState(false);
-    const [isFaceIdEnabled, setIsFaceIdEnabled] = useState(false);
-    const [showSettingsDialog, setShowSettingsDialog] = useState(false);
-    const [isRegistering, setIsRegistering] = useState(false);
-    const [message, setMessage] = useState({ text: "", severity: "info", open: false });
+    const [message, setMessage] = useState({ text: "", severity: "info" as any, open: false });
 
-    // New States for Staff 2.0 & Phase 10
+    // States for Staff 2.0 & Phase 10
     const [pendingBookings, setPendingBookings] = useState<any[]>([]);
     const [clients, setClients] = useState<any[]>([]);
     const [loadingBookings, setLoadingBookings] = useState(false);
@@ -129,90 +125,6 @@ export default function StaffDashboard() {
     const [messages, setMessages] = useState<any[]>([]);
     const [sendingMsg, setSendingMsg] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
-
-    // Initial Face ID Check
-    useEffect(() => {
-        const email = localStorage.getItem('vanguard_email');
-        if (email) {
-            fetch(`${API_BASE_URL}/api/auth/check?email=${encodeURIComponent(email)}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.faceid_registered) {
-                        setIsFaceIdEnabled(true);
-                        localStorage.setItem('vanguard_faceid_enabled', 'true');
-                    } else {
-                        setIsFaceIdEnabled(false);
-                        localStorage.setItem('vanguard_faceid_enabled', 'false');
-                    }
-                })
-                .catch(err => console.error("Face ID Status Check Failed", err));
-        }
-    }, [isOwner]);
-
-    const handleFaceIdToggle = async () => {
-        if (isFaceIdEnabled) {
-            // Unregister Logic (Simplified for Owner)
-            try {
-                const email = localStorage.getItem('vanguard_email');
-                if (!email) return;
-                const res = await fetch(`${API_BASE_URL}/api/auth/webauthn/unregister?email=${encodeURIComponent(email)}`, { method: 'DELETE' });
-                if (res.ok) {
-                    setIsFaceIdEnabled(false);
-                    localStorage.setItem('vanguard_faceid_enabled', 'false');
-                    setMessage({ text: "Face ID Disabled", severity: "info", open: true });
-                }
-            } catch (err) {
-                setMessage({ text: "Failed to disable", severity: "error", open: true });
-            }
-        } else {
-            // Register Logic
-            setIsRegistering(true);
-            try {
-                const email = localStorage.getItem('vanguard_email');
-                if (!email) {
-                    setMessage({ text: "Session Error. Please re-login.", severity: "error", open: true });
-                    return;
-                }
-
-                // 1. Start
-                const resStart = await fetch(`${API_BASE_URL}/api/auth/webauthn/register/start`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email })
-                });
-                if (!resStart.ok) throw new Error("Registration Rejected");
-                const options = await resStart.json();
-
-                // 2. Prompt
-                const authOptions = options.publicKey || options;
-                const cleanOptions = { ...authOptions };
-                if (cleanOptions.challenge_id) delete (cleanOptions as any).challenge_id;
-
-                const attResp = await startRegistration(cleanOptions);
-
-                // 3. Finish
-                const resFinish = await fetch(`${API_BASE_URL}/api/auth/webauthn/register/finish`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ challenge_id: options.challenge_id, response: attResp })
-                });
-
-                if (resFinish.ok) {
-                    setIsFaceIdEnabled(true);
-                    localStorage.setItem('vanguard_faceid_enabled', 'true');
-                    setMessage({ text: "Face ID Activated!", severity: "success", open: true });
-                } else {
-                    throw new Error("Verification Failed");
-                }
-            } catch (err: any) {
-                console.error(err);
-                setMessage({ text: "Face ID Registration Failed", severity: "error", open: true });
-            } finally {
-                setIsRegistering(false);
-            }
-        }
-    };
-
     // Staff Management State
     const [openAddStaff, setOpenAddStaff] = useState(false);
     const [staffList, setStaffList] = useState<any[]>([]);
@@ -221,6 +133,7 @@ export default function StaffDashboard() {
     const [showPassword, setShowPassword] = useState(false);
     const [formError, setFormError] = useState("");
     const [formSuccess, setFormSuccess] = useState("");
+    const [showSettingsDialog, setShowSettingsDialog] = useState(false);
 
     useEffect(() => {
         const role = localStorage.getItem('vanguard_role');
@@ -249,16 +162,11 @@ export default function StaffDashboard() {
         setLoadingBookings(true);
         try {
             const token = localStorage.getItem('vanguard_token');
-            const res = await fetch(`${API_BASE_URL}/api/admin/audit`, { // Hack: Using audit to see actions or we need a real bookings endpoint
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            // Actually we need real bookings. Let's try /api/bookings if the backend has it
             const resBookings = await fetch(`${API_BASE_URL}/api/user/bookings`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (resBookings.ok) {
                 const data = await resBookings.json();
-                // Filter for pending if the backend supports it, otherwise mock for demo
                 setPendingBookings(data.filter((b: any) => b.status === 'pending') || []);
             }
         } catch (e) {
@@ -300,7 +208,7 @@ export default function StaffDashboard() {
             if (res.ok) {
                 setMessage({ text: `Booking ${action} successfully!`, severity: "success", open: true });
                 fetchPendingBookings();
-                fetchGuests(); // Refresh guest list if they are checking in
+                fetchGuests();
             }
         } catch (e) {
             setMessage({ text: "Failed to update booking", severity: "error", open: true });
@@ -333,7 +241,6 @@ export default function StaffDashboard() {
             });
             if (res.ok) {
                 const pets = await res.json();
-                // Map API response to GuestPet format
                 const mapped: GuestPet[] = pets.map((p: any) => ({
                     id: p.id,
                     name: p.name,
@@ -356,8 +263,6 @@ export default function StaffDashboard() {
 
     const fetchStaff = async () => {
         try {
-            // Using existing clients list endpoint as a base or if get_staff_handler is distinct
-            // For now, let's try fetching from /api/admin/staff if it exists, else user list
             const token = localStorage.getItem('vanguard_token');
             const res = await fetch(`${API_BASE_URL}/api/admin/staff`, {
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -375,11 +280,9 @@ export default function StaffDashboard() {
         setFormError("");
         setFormSuccess("");
         setLoadingStaff(true);
-
         try {
             const token = localStorage.getItem('vanguard_token');
-            const url = `${API_BASE_URL}/api/users`;
-            const res = await fetch(url, {
+            const res = await fetch(`${API_BASE_URL}/api/users`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -387,7 +290,6 @@ export default function StaffDashboard() {
                 },
                 body: JSON.stringify(newStaff)
             });
-
             if (res.ok) {
                 setFormSuccess("Employee added successfully!");
                 setNewStaff({ name: "", email: "", password: "", role: "staff" });
@@ -422,7 +324,6 @@ export default function StaffDashboard() {
             if (res.ok) {
                 const data = await res.json();
                 setMessages(data);
-                // Mark as read after fetching if not already
                 markAsRead(targetEmail);
             }
         } catch (e) {
@@ -438,7 +339,6 @@ export default function StaffDashboard() {
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ sender_email: email })
             });
-            // Update counts in directory view
             setClients(prev => prev.map(c => c.email === email ? { ...c, unread_messages_count: 0 } : c));
         } catch (e) {
             console.error("Read mark failed", e);
@@ -490,7 +390,7 @@ export default function StaffDashboard() {
                 setMessage({ text: "Alert logged successfully!", severity: "success", open: true });
                 setShowIncidentModal(false);
                 setIncidentText("");
-                fetchGuests(); // Refresh to show new alerts
+                fetchGuests();
             }
         } catch (e) {
             console.error("Incident log failed", e);
@@ -1265,23 +1165,9 @@ export default function StaffDashboard() {
                 </DialogTitle>
                 <DialogContent>
                     <Stack spacing={3} sx={{ mt: 1 }}>
-                        <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 2 }}>
-                            <Stack direction="row" alignItems="center" justifyContent="space-between">
-                                <Stack direction="row" spacing={2} alignItems="center">
-                                    <Face sx={{ color: isFaceIdEnabled ? '#22c55e' : 'text.secondary' }} />
-                                    <Box>
-                                        <Typography variant="body1" fontWeight="bold" color="white">Face ID Access</Typography>
-                                        <Typography variant="caption" color="text.secondary">Use biometrics for quick login</Typography>
-                                    </Box>
-                                </Stack>
-                                <Switch
-                                    checked={isFaceIdEnabled}
-                                    onChange={handleFaceIdToggle}
-                                    disabled={isRegistering}
-                                    color="success"
-                                />
-                            </Stack>
-                        </Paper>
+                        <Typography variant="body2" color="text.secondary">
+                            General system settings and profile management for the Operational Command.
+                        </Typography>
 
                         <Button
                             variant="outlined"

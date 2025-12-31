@@ -1,6 +1,20 @@
 "use client";
 
-import { Box, Typography, Stack, IconButton, Avatar, Tooltip, Divider, Button, ThemeProvider, CssBaseline } from "@mui/material";
+import {
+    Box,
+    Typography,
+    Stack,
+    IconButton,
+    Avatar,
+    Tooltip,
+    Divider,
+    Button,
+    ThemeProvider,
+    CssBaseline,
+    Switch,
+    Snackbar,
+    Alert
+} from "@mui/material";
 import {
     Dashboard as DashboardIcon,
     Message as MessageIcon,
@@ -9,13 +23,16 @@ import {
     Logout,
     Settings,
     Menu as MenuIcon,
-    ChevronLeft
+    ChevronLeft,
+    Face
 } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { createTheme } from "@mui/material/styles";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { API_BASE_URL } from "@/lib/config";
+import { startRegistration } from '@simplewebauthn/browser';
 
 // Distinct "Utility" Theme for Staff (Blue/Slate vs Client Gold/Black)
 const staffTheme = createTheme({
@@ -70,6 +87,9 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const [userRole, setUserRole] = useState<string | null>(null);
+    const [isFaceIdEnabled, setIsFaceIdEnabled] = useState(false);
+    const [isRegistering, setIsRegistering] = useState(false);
+    const [message, setMessage] = useState({ text: "", severity: "info" as any, open: false });
 
     useEffect(() => {
         // Enforce Staff Role
@@ -77,10 +97,63 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
         const token = localStorage.getItem('vanguard_token');
         setUserRole(role);
 
+        // Check Face ID status
+        const faceId = localStorage.getItem('vanguard_faceid_enabled');
+        setIsFaceIdEnabled(faceId === 'true');
+
         if (!token || (role !== 'staff' && role !== 'owner')) {
             router.push('/');
         }
     }, [router]);
+
+    const handleFaceIdToggle = async () => {
+        if (isFaceIdEnabled) {
+            // Unregister logic
+            localStorage.removeItem('vanguard_faceid_enabled');
+            setIsFaceIdEnabled(false);
+            setMessage({ text: "Face ID Disabled", severity: "info", open: true });
+        } else {
+            // Register Logic
+            setIsRegistering(true);
+            try {
+                const email = localStorage.getItem('vanguard_email');
+                if (!email) throw new Error("No email found");
+
+                const resStart = await fetch(`${API_BASE_URL}/api/auth/webauthn/register/start`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                const options = await resStart.json();
+
+                // Standardize options
+                const authOptions = options.publicKey || options;
+                const cleanOptions = { ...authOptions };
+                if (cleanOptions.challenge_id) delete (cleanOptions as any).challenge_id;
+
+                const attResp = await startRegistration(cleanOptions);
+
+                const resFinish = await fetch(`${API_BASE_URL}/api/auth/webauthn/register/finish`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ challenge_id: options.challenge_id, response: attResp })
+                });
+
+                if (resFinish.ok) {
+                    setIsFaceIdEnabled(true);
+                    localStorage.setItem('vanguard_faceid_enabled', 'true');
+                    setMessage({ text: "Face ID Activated!", severity: "success", open: true });
+                } else {
+                    throw new Error("Verification Failed");
+                }
+            } catch (err: any) {
+                console.error(err);
+                setMessage({ text: "Registration Failed", severity: "error", open: true });
+            } finally {
+                setIsRegistering(false);
+            }
+        }
+    };
 
     const handleLogout = () => {
         localStorage.removeItem('vanguard_token');
@@ -179,6 +252,37 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
 
                     {/* Footer / User */}
                     <Box sx={{ p: 2 }}>
+                        {/* Biometric Quick Toggle (Sidebar) */}
+                        <Box sx={{
+                            mb: 2,
+                            p: 1.5,
+                            bgcolor: 'rgba(255,255,255,0.03)',
+                            borderRadius: 2,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: isSidebarOpen ? 'space-between' : 'center',
+                            border: '1px solid rgba(255,255,255,0.05)'
+                        }}>
+                            <Tooltip title={!isSidebarOpen ? "Biometric Login" : ""} placement="right">
+                                <Stack direction="row" spacing={2} alignItems="center">
+                                    <Face sx={{ color: isFaceIdEnabled ? 'primary.main' : 'text.secondary', fontSize: 20 }} />
+                                    {isSidebarOpen && (
+                                        <Typography variant="body2" sx={{ fontWeight: 500, color: 'white' }}>
+                                            Face ID
+                                        </Typography>
+                                    )}
+                                </Stack>
+                            </Tooltip>
+                            {isSidebarOpen && (
+                                <Switch
+                                    size="small"
+                                    checked={isFaceIdEnabled}
+                                    onChange={handleFaceIdToggle}
+                                    disabled={isRegistering}
+                                />
+                            )}
+                        </Box>
+
                         <Button
                             onClick={handleLogout}
                             fullWidth={isSidebarOpen}
@@ -209,6 +313,15 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
                 >
                     {children}
                 </Box>
+                <Snackbar
+                    open={message.open}
+                    autoHideDuration={4000}
+                    onClose={() => setMessage({ ...message, open: false })}
+                >
+                    <Alert severity={message.severity} sx={{ width: '100%', borderRadius: 3 }}>
+                        {message.text}
+                    </Alert>
+                </Snackbar>
             </Box>
         </ThemeProvider>
     );
