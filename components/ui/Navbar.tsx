@@ -85,9 +85,7 @@ export function Navbar() {
                         <Link href="/staff/login" onClick={() => setIsOpen(false)} className="text-2xl font-bold text-white uppercase tracking-widest">
                             Staff Portal
                         </Link>
-                        <Link href="/demo" onClick={() => setIsOpen(false)} className="text-2xl font-bold text-gray-500 uppercase tracking-widest">
-                            View Demo Page
-                        </Link>
+
                         <Link href="/client/signup" onClick={() => setIsOpen(false)}>
                             <PremiumButton variant="primary" className="mt-8 text-lg px-12 py-4">
                                 Book Boarding
