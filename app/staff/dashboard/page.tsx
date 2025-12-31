@@ -1105,7 +1105,7 @@ export default function StaffDashboard() {
                     <DialogContent sx={{ mt: 2 }}>
                         <Stack spacing={3} sx={{ mt: 1 }}>
                             <Typography variant="body2" color="text.secondary">
-                                This will add a persistent alert to this VIP's operational card until resolved.
+                                This will add a persistent alert to this VIP&apos;s operational card until resolved.
                             </Typography>
                             <FormControl fullWidth>
                                 <InputLabel>Severity</InputLabel>
