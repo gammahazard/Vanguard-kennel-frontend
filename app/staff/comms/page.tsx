@@ -109,44 +109,56 @@ export default function StaffCommsLog() {
                 </Stack>
 
                 {/* Filter Bar */}
-                <Paper sx={{ p: 2, mb: 4, borderRadius: 3, bgcolor: 'background.paper', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <Stack direction="row" spacing={2} alignItems="center">
+                <Paper sx={{ p: 2, mb: 3, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(212, 175, 55, 0.1)' }}>
+                    <Stack spacing={2}>
                         <TextField
                             fullWidth
                             placeholder="Search by name, email, or content..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             InputProps={{
-                                startAdornment: <InputAdornment position="start"><Search sx={{ color: 'text.secondary' }} /></InputAdornment>,
-                                sx: { bgcolor: 'rgba(0,0,0,0.2)', borderRadius: 2 }
+                                startAdornment: <InputAdornment position="start"><Search sx={{ color: '#D4AF37' }} /></InputAdornment>,
+                                sx: { bgcolor: 'rgba(0,0,0,0.3)', borderRadius: 2, '& fieldset': { borderColor: 'rgba(212, 175, 55, 0.2)' } }
                             }}
                             size="small"
                         />
-                        <Stack direction="row" spacing={1}>
-                            <Button
-                                variant={filter === 'all' ? 'contained' : 'outlined'}
+                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                            <Chip
+                                label="All"
                                 onClick={() => setFilter('all')}
                                 size="small"
-                                sx={{ borderRadius: 2, borderColor: 'rgba(255,255,255,0.1)', color: filter === 'all' ? 'black' : 'text.secondary', bgcolor: filter === 'all' ? 'white' : 'transparent' }}
-                            >
-                                All
-                            </Button>
-                            <Button
-                                variant={filter === 'client' ? 'contained' : 'outlined'}
+                                sx={{
+                                    bgcolor: filter === 'all' ? '#D4AF37' : 'transparent',
+                                    color: filter === 'all' ? 'black' : '#94a3b8',
+                                    fontWeight: 'bold',
+                                    border: filter === 'all' ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                                    cursor: 'pointer'
+                                }}
+                            />
+                            <Chip
+                                label="Client Comms"
                                 onClick={() => setFilter('client')}
                                 size="small"
-                                sx={{ borderRadius: 2, borderColor: 'rgba(255,255,255,0.1)', color: filter === 'client' ? 'black' : 'text.secondary', bgcolor: filter === 'client' ? '#10b981' : 'transparent', '&:hover': { bgcolor: filter === 'client' ? '#10b981' : 'rgba(16, 185, 129, 0.1)' } }}
-                            >
-                                Client Comms
-                            </Button>
-                            <Button
-                                variant={filter === 'staff' ? 'contained' : 'outlined'}
+                                sx={{
+                                    bgcolor: filter === 'client' ? '#10b981' : 'transparent',
+                                    color: filter === 'client' ? 'white' : '#94a3b8',
+                                    fontWeight: 'bold',
+                                    border: filter === 'client' ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                                    cursor: 'pointer'
+                                }}
+                            />
+                            <Chip
+                                label="Internal"
                                 onClick={() => setFilter('staff')}
                                 size="small"
-                                sx={{ borderRadius: 2, borderColor: 'rgba(255,255,255,0.1)', color: filter === 'staff' ? 'white' : 'text.secondary', bgcolor: filter === 'staff' ? '#3b82f6' : 'transparent', '&:hover': { bgcolor: filter === 'staff' ? '#3b82f6' : 'rgba(59, 130, 246, 0.1)' } }}
-                            >
-                                Internal
-                            </Button>
+                                sx={{
+                                    bgcolor: filter === 'staff' ? '#3b82f6' : 'transparent',
+                                    color: filter === 'staff' ? 'white' : '#94a3b8',
+                                    fontWeight: 'bold',
+                                    border: filter === 'staff' ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                                    cursor: 'pointer'
+                                }}
+                            />
                         </Stack>
                     </Stack>
                 </Paper>
