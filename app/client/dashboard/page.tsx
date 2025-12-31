@@ -48,6 +48,8 @@ import { theme } from "@/lib/theme";
 import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/lib/config";
 
+import { authenticatedFetch } from "@/lib/api";
+
 export default function ClientDashboard() {
     const router = useRouter();
     const [userName, setUserName] = useState("Guest");
@@ -69,6 +71,7 @@ export default function ClientDashboard() {
     }, []);
 
     const fetchDashboardData = async () => {
+        // We still get email for local logic (Upsell hiding), but NOT for fetching
         const email = typeof window !== 'undefined' ? localStorage.getItem('vanguard_email') : null;
         if (!email) return;
 
@@ -82,7 +85,8 @@ export default function ClientDashboard() {
         }
 
         try {
-            const res = await fetch(`${API_BASE_URL}/api/user/bookings?email=${encodeURIComponent(email)}`);
+            // AUTH UPDATE: Use authenticatedFetch and remove query param
+            const res = await authenticatedFetch(`/api/user/bookings`);
             if (res.ok) {
                 const bookings = await res.json();
 
@@ -101,8 +105,7 @@ export default function ClientDashboard() {
                     setNextStay(upcoming[0]);
 
                     // Fetch latest report for this booking
-                    // In a real app we'd iterate active bookings, here we grab the first relevant one
-                    const reportRes = await fetch(`${API_BASE_URL}/api/reports/${upcoming[0].id}`);
+                    const reportRes = await authenticatedFetch(`/api/reports/${upcoming[0].id}`);
                     if (reportRes.ok) {
                         const reports = await reportRes.json();
                         if (reports.length > 0) {
@@ -113,7 +116,7 @@ export default function ClientDashboard() {
             }
 
             // Fetch notifications
-            const notifRes = await fetch(`${API_BASE_URL}/api/notifications?email=${encodeURIComponent(email)}`);
+            const notifRes = await authenticatedFetch(`/api/notifications`);
             if (notifRes.ok) {
                 const notifs = await notifRes.json();
                 setUnreadCount(notifs.filter((n: any) => !n.is_read).length);

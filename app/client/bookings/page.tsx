@@ -15,6 +15,8 @@ import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/lib/config";
 import { sanitizeInput } from "@/lib/security";
 
+import { authenticatedFetch } from "@/lib/api";
+
 export default function BookingsView() {
     const router = useRouter();
     const [navValue, setNavValue] = useState(2); // Index 2 is Bookings
@@ -57,14 +59,15 @@ export default function BookingsView() {
 
     const fetchData = async () => {
         setLoading(true);
+        // We still check localStorage for existence, but token is handled by authenticatedFetch
         const email = typeof window !== 'undefined' ? localStorage.getItem('vanguard_email') : null;
         if (!email) return;
 
         try {
             const [bookingsRes, petsRes, availRes] = await Promise.all([
-                fetch(`${API_BASE_URL}/api/user/bookings?email=${encodeURIComponent(email)}`),
-                fetch(`${API_BASE_URL}/api/pets?email=${encodeURIComponent(email)}`),
-                fetch(`${API_BASE_URL}/api/bookings/availability`)
+                authenticatedFetch(`/api/user/bookings`),
+                authenticatedFetch(`/api/pets`),
+                authenticatedFetch(`/api/bookings/availability`)
             ]);
 
             if (bookingsRes.ok) setBookings(await bookingsRes.json());
@@ -106,11 +109,11 @@ export default function BookingsView() {
         const email = typeof window !== 'undefined' ? localStorage.getItem('vanguard_email') : null;
         setSubmitting(true);
         try {
-            const res = await fetch(`${API_BASE_URL}/api/bookings`, {
+            const res = await authenticatedFetch(`/api/bookings`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                // Content-Type is added by authenticatedFetch
                 body: JSON.stringify({
-                    user_email: email,
+                    user_email: email, // Backend ignores this for Auth, but uses it for logic if needed (though it shouldn't rely on it for security)
                     ...formData
                 })
             });

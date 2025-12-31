@@ -19,6 +19,7 @@ import { API_BASE_URL } from "@/lib/config";
 import { sanitizeInput, sanitizePhone } from "@/lib/security";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { authenticatedFetch } from "@/lib/api";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 
 export default function PetsView() {
@@ -64,7 +65,8 @@ export default function PetsView() {
         if (!email) return;
 
         try {
-            const res = await fetch(`${API_BASE_URL}/api/pets?email=${encodeURIComponent(email)}`);
+            // AUTH UPDATE: Use authenticatedFetch & remove email query param
+            const res = await authenticatedFetch(`/api/pets`);
             if (res.ok) {
                 const data = await res.json();
                 setPets(data);
@@ -85,9 +87,9 @@ export default function PetsView() {
         setSubmitting(true);
         const email = typeof window !== 'undefined' ? localStorage.getItem('vanguard_email') : null;
         try {
-            const res = await fetch(`${API_BASE_URL}/api/pets`, {
+            const res = await authenticatedFetch(`/api/pets`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                // Header auto-added
                 body: JSON.stringify({
                     owner_email: email,
                     ...formData,
@@ -118,9 +120,8 @@ export default function PetsView() {
         setSubmitting(true);
         const email = localStorage.getItem('vanguard_email');
         try {
-            const res = await fetch(`${API_BASE_URL}/api/pets/${editingPet.id}`, {
+            const res = await authenticatedFetch(`/api/pets/${editingPet.id}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     id: editingPet.id,
                     owner_email: email,

@@ -16,6 +16,8 @@ import { startRegistration } from '@simplewebauthn/browser';
 import { API_BASE_URL } from "@/lib/config";
 import { sanitizeInput, sanitizePhone } from "@/lib/security";
 
+import { authenticatedFetch } from "@/lib/api";
+
 export default function ProfileView() {
     const router = useRouter();
     const [userName, setUserName] = useState("Guest");
@@ -43,8 +45,8 @@ export default function ProfileView() {
         const email = typeof window !== 'undefined' ? localStorage.getItem('vanguard_email') : null;
         if (!email) return;
 
-        // hitting backend::get_user_audit_handler (paginated now)
-        fetch(`${API_BASE_URL}/api/user/security-logs?email=${encodeURIComponent(email)}&page=${page}&limit=5`)
+        // AUTH UPDATE: Use authenticatedFetch
+        authenticatedFetch(`/api/user/security-logs?page=${page}&limit=5`)
             .then(res => res.json())
             .then(data => {
                 if (data.logs) {
@@ -52,7 +54,6 @@ export default function ProfileView() {
                     setAuditTotal(data.total);
                     setSuspiciousCount(data.suspicious_count);
                 } else {
-                    // Fallback for old API if needed during transition
                     setAuditLogs(Array.isArray(data) ? data : []);
                 }
             })
@@ -70,20 +71,18 @@ export default function ProfileView() {
         const email = typeof window !== 'undefined' ? localStorage.getItem('vanguard_email') : null;
         if (storedName) setUserName(storedName);
 
-        // Fetch actual status from backend to force-sync the slider
         if (email) {
             console.log("🔍 Checking Face ID status for:", email);
-            // backendAuth::auth_check_handler
-            // checks if face id credential exists in db for this user
-            fetch(`${API_BASE_URL}/api/auth/check?email=${encodeURIComponent(email)}`)
+
+            // Note: Auth Check/WebAuthn endpoints might be public OR auth'd depending on design
+            // Assuming auth check might need token if extracting user from it, but often it's public.
+            // Let's use authenticatedFetch to be safe if token exists
+            authenticatedFetch(`/api/auth/check?email=${encodeURIComponent(email)}`)
                 .then(res => {
-                    // backendAuth::auth_check_handler
-                    // checks if face id credential exists in db for this user
                     if (!res.ok) throw new Error("Status check failed");
                     return res.json();
                 })
                 .then(data => {
-                    console.log("✅ Face ID status received:", data);
                     if (data.faceid_registered) {
                         setIsFaceIdEnabled(true);
                         localStorage.setItem('vanguard_faceid_enabled', 'true');
@@ -95,8 +94,7 @@ export default function ProfileView() {
                 .catch(err => console.error("❌ Error checking Face ID status:", err));
 
             // NEW: Fetch full profile
-            // backend::get_user_profile_handler - gets phone/created_at etc
-            fetch(`${API_BASE_URL}/api/user/profile?email=${encodeURIComponent(email)}`)
+            authenticatedFetch(`/api/user/profile`)
                 .then(res => res.json())
                 .then(data => setProfileData(data))
                 .catch(err => console.error("❌ Error fetching profile:", err));
@@ -134,10 +132,8 @@ export default function ProfileView() {
             console.log("🚀 Starting Face ID Registration for:", email);
 
             // 1. Get challenge
-            // backendAuth::register_start - generates webauthn challenge
-            const resStart = await fetch(`${API_BASE_URL}/api/auth/webauthn/register/start`, {
+            const resStart = await authenticatedFetch(`/api/auth/webauthn/register/start`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email })
             });
 
@@ -169,10 +165,8 @@ export default function ProfileView() {
             console.log("✅ Biometric Response received:", attResp);
 
             // 3. Verify
-            // backendAuth::register_finish - verifies sig and stores cred
-            const resFinish = await fetch(`${API_BASE_URL}/api/auth/webauthn/register/finish`, {
+            const resFinish = await authenticatedFetch(`/api/auth/webauthn/register/finish`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ challenge_id: options.challenge_id, response: attResp })
             });
 
@@ -198,22 +192,17 @@ export default function ProfileView() {
         try {
             const email = localStorage.getItem('vanguard_email');
             if (!email) {
-                // No email? Just clear and leave.
                 localStorage.clear();
                 router.push('/');
                 return;
             }
 
-            const res = await fetch(`${API_BASE_URL}/api/user?email=${encodeURIComponent(email)}`, {
-                // backend::delete_user_handler - CASACADING DELETE (careful)
+            const res = await authenticatedFetch(`/api/user`, {
                 method: 'DELETE'
             });
 
             if (res.ok || res.status === 404) {
-                // Success OR Already Gone (404)
                 if (res.status === 404) console.log("Account was already deleted (404). Cleaning up.");
-
-                // Nuclear Cleanup
                 localStorage.clear();
                 router.push('/');
             } else {
@@ -232,7 +221,7 @@ export default function ProfileView() {
             const email = localStorage.getItem('vanguard_email');
             if (!email) return;
 
-            const res = await fetch(`${API_BASE_URL}/api/auth/webauthn/unregister?email=${encodeURIComponent(email)}`, {
+            const res = await authenticatedFetch(`/api/auth/webauthn/unregister?email=${encodeURIComponent(email)}`, {
                 method: 'DELETE'
             });
 
@@ -255,17 +244,13 @@ export default function ProfileView() {
         if (!currentEmail) return;
 
         try {
-            // backend::update_user_profile_handler
-            // email updates are blocked server side just fyi
-            const res = await fetch(`${API_BASE_URL}/api/user/profile`, {
+            const res = await authenticatedFetch(`/api/user/profile`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     current_email: currentEmail,
                     new_email: editData.email || null,
                     new_name: editData.name || null,
                     new_phone: editData.phone || null
-                    // new_email: ... blocked
                 })
             });
 

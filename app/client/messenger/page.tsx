@@ -14,6 +14,8 @@ import { theme } from "@/lib/theme";
 import { API_BASE_URL } from "@/lib/config";
 import { useRouter } from "next/navigation";
 
+import { authenticatedFetch } from "@/lib/api";
+
 export default function MessengerView() {
     const router = useRouter();
     const [messages, setMessages] = useState<any[]>([]);
@@ -45,9 +47,8 @@ export default function MessengerView() {
     const fetchMessages = async () => {
         if (!userEmail) return;
         try {
-            // backend::get_messages_handler (GET /api/messages)
-            // polling happens every 5s further down
-            const res = await fetch(`${API_BASE_URL}/api/messages?email=${encodeURIComponent(userEmail)}`);
+            // AUTH UPDATE: Use authenticatedFetch & remove email query param
+            const res = await authenticatedFetch(`/api/messages`);
             if (res.ok) {
                 const data = await res.json();
                 setMessages(data);
@@ -62,12 +63,10 @@ export default function MessengerView() {
     const handleSendMessage = async () => {
         if (!newMessage.trim() || !userEmail || sending) return;
         setSending(true);
-        setSending(true);
         try {
-            // backend::send_message_handler (POST /api/messages)
-            const res = await fetch(`${API_BASE_URL}/api/messages`, {
+            const res = await authenticatedFetch(`/api/messages`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                // Header handled by helper
                 body: JSON.stringify({
                     sender: userEmail.toLowerCase(),
                     receiver: staffEmail.toLowerCase(),
