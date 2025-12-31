@@ -17,7 +17,10 @@ import {
     CssBaseline,
     Grid,
     Collapse,
-    Badge
+    Badge,
+    Dialog,
+    DialogContent,
+    DialogActions,
 } from "@mui/material";
 import {
     Home,
@@ -36,7 +39,9 @@ import {
     Celebration,
     Info,
     ArrowForward,
-    Chat
+    Chat,
+    Fingerprint,
+    Close
 } from "@mui/icons-material";
 import { theme } from "@/lib/theme";
 import { useRouter } from "next/navigation";
@@ -50,6 +55,7 @@ export default function ClientDashboard() {
     const [nextStay, setNextStay] = useState<any>(null);
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [showUpsell, setShowUpsell] = useState(false);
 
     useEffect(() => {
         const storedName = localStorage.getItem('vanguard_user');
@@ -60,6 +66,15 @@ export default function ClientDashboard() {
     const fetchDashboardData = async () => {
         const email = localStorage.getItem('vanguard_email');
         if (!email) return;
+
+        // FACE ID UPSELL LOGIC
+        const faceidEnabled = localStorage.getItem('vanguard_faceid_enabled') === 'true';
+        const upsellSeen = localStorage.getItem('vanguard_upsell_seen') === 'true';
+
+        if (!faceidEnabled && !upsellSeen) {
+            // Delay slightly for better UX
+            setTimeout(() => setShowUpsell(true), 1500);
+        }
 
         try {
             const res = await fetch(`${API_BASE_URL}/api/user/bookings?email=${encodeURIComponent(email)}`);
@@ -265,6 +280,90 @@ export default function ClientDashboard() {
                 </Paper >
 
             </Box >
+
+            {/* --- FACE ID UPSELL MODAL --- */}
+            <Dialog
+                open={showUpsell}
+                onClose={() => {
+                    setShowUpsell(false);
+                    localStorage.setItem('vanguard_upsell_seen', 'true');
+                }}
+                PaperProps={{
+                    sx: {
+                        bgcolor: 'background.paper',
+                        borderRadius: 5,
+                        backgroundImage: 'none',
+                        border: '1px solid rgba(212, 175, 55, 0.2)',
+                        overflow: 'hidden'
+                    }
+                }}
+            >
+                <Box sx={{ position: 'relative', p: 3, textAlign: 'center' }}>
+                    <IconButton
+                        size="small"
+                        onClick={() => {
+                            setShowUpsell(false);
+                            localStorage.setItem('vanguard_upsell_seen', 'true');
+                        }}
+                        sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary' }}
+                    >
+                        <Close fontSize="small" />
+                    </IconButton>
+
+                    <Box sx={{
+                        width: 64,
+                        height: 64,
+                        bgcolor: 'rgba(212, 175, 55, 0.1)',
+                        borderRadius: '50%',
+                        mx: 'auto',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        mb: 2,
+                        mt: 2
+                    }}>
+                        <Fingerprint sx={{ fontSize: 40, color: 'primary.main' }} />
+                    </Box>
+
+                    <Typography variant="h6" fontWeight="bold" gutterBottom>
+                        Faster, Safer Access
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                        Would you like to enable Face ID or Touch ID for your next login? It&apos;s more secure and faster than passwords.
+                    </Typography>
+
+                    <Stack spacing={1.5}>
+                        <Button
+                            fullWidth
+                            variant="contained"
+                            onClick={() => {
+                                setShowUpsell(false);
+                                localStorage.setItem('vanguard_upsell_seen', 'true');
+                                router.push('/client/profile');
+                            }}
+                            sx={{ borderRadius: 3, py: 1.5, fontWeight: 'bold' }}
+                        >
+                            Enable Now
+                        </Button>
+                        <Button
+                            fullWidth
+                            variant="text"
+                            onClick={() => {
+                                setShowUpsell(false);
+                                localStorage.setItem('vanguard_upsell_seen', 'true');
+                            }}
+                            sx={{ color: 'text.secondary', fontSize: '0.8rem' }}
+                        >
+                            No thanks, maybe later
+                        </Button>
+                    </Stack>
+
+                    <Typography variant="caption" sx={{ mt: 2, display: 'block', opacity: 0.5 }}>
+                        Tip: You can always find this in your Profile settings.
+                    </Typography>
+                </Box>
+            </Dialog>
+
         </ThemeProvider >
     );
 }
