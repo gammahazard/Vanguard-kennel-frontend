@@ -832,9 +832,9 @@ export default function StaffDashboard() {
                                                     variant="outlined"
                                                     color="error"
                                                     size="small"
-                                                    onClick={() => {
+                                                    onClick={async () => {
                                                         if (confirm(`Decline all ${group.bookings.length} requests?`)) {
-                                                            group.bookings.map((b: any) => handleBookingAction(b.id, 'cancelled'));
+                                                            await Promise.all(group.bookings.map((b: any) => handleBookingAction(b.id, 'cancelled')));
                                                         }
                                                     }}
                                                 >
@@ -844,8 +844,10 @@ export default function StaffDashboard() {
                                                     variant="contained"
                                                     color="success"
                                                     size="small"
-                                                    onClick={() => {
-                                                        group.bookings.map((b: any) => handleBookingAction(b.id, 'confirmed'));
+                                                    onClick={async () => {
+                                                        if (confirm(`Accept all ${group.bookings.length} requests?`)) {
+                                                            await Promise.all(group.bookings.map((b: any) => handleBookingAction(b.id, 'confirmed')));
+                                                        }
                                                     }}
                                                 >
                                                     Accept All ({group.bookings.length})
