@@ -651,15 +651,6 @@ export default function StaffDashboard() {
                         {viewMode === 'operations' && (
                             <Stack direction="row" spacing={2} sx={{ width: '100%', justifyContent: { xs: 'space-between', sm: 'flex-end' } }}>
                                 <Button
-                                    variant="outlined"
-                                    color="warning"
-                                    startIcon={<Warning />}
-                                    onClick={() => { setSelectedPet(null); setIncidentTargetId("general"); setShowIncidentModal(true); }}
-                                    sx={{ borderColor: 'rgba(234, 179, 8, 0.5)', color: '#eab308', flex: { xs: 1, sm: 'none' } }}
-                                >
-                                    Incident
-                                </Button>
-                                <Button
                                     variant="contained"
                                     startIcon={<Add />}
                                     onClick={() => setShowCheckInModal(true)}
@@ -782,7 +773,11 @@ export default function StaffDashboard() {
 
                         {isOwner && (
                             <Box sx={{ mt: 6 }}>
-                                <ServiceManager />
+                                <ServiceManager
+                                    services={services}
+                                    loading={loadingServices}
+                                    onUpdatePrice={handleUpdatePrice}
+                                />
                             </Box>
                         )}
                     </motion.div>
@@ -823,16 +818,6 @@ export default function StaffDashboard() {
                     />
                 )}
 
-                {/* --- BUSINESS VIEW --- */}
-                {viewMode === 'business' && isOwner && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                        <ServiceManager
-                            services={services}
-                            loading={loadingServices}
-                            onUpdatePrice={handleUpdatePrice}
-                        />
-                    </motion.div>
-                )}
 
                 {/* --- COMMS VIEW --- */}
                 {viewMode === 'comms' && (
