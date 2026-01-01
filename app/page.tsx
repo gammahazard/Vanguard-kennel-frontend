@@ -240,15 +240,23 @@ export default function SplashGate() {
 
                                 <Stack spacing={2} sx={{ bgcolor: 'rgba(0,0,0,0.3)', p: 3, borderRadius: 3, textAlign: 'left', mb: 3 }}>
                                     <Stack direction="row" spacing={2} alignItems="flex-start">
-                                        <Share sx={{ color: '#3B82F6', fontSize: 24 }} />
                                         <Typography variant="body2" color="#ccc">
-                                            1. Tap the <b>Share</b> button in the browser menu below.
+                                            <b>Step 1:</b> Tap the <b>three dots</b> indicated by the <b>red arrow</b>.
                                         </Typography>
                                     </Stack>
                                     <Stack direction="row" spacing={2} alignItems="flex-start">
-                                        <AddBox sx={{ color: '#fff', fontSize: 24 }} />
                                         <Typography variant="body2" color="#ccc">
-                                            2. Scroll down and select <b>Add to Home Screen</b>.
+                                            <b>Step 2:</b> Select the <b>Share</b> button.
+                                        </Typography>
+                                    </Stack>
+                                    <Stack direction="row" spacing={2} alignItems="flex-start">
+                                        <Typography variant="body2" color="#ccc">
+                                            <b>Step 3:</b> Scroll down and select <b>Add to Home Screen</b>.
+                                        </Typography>
+                                    </Stack>
+                                    <Stack direction="row" spacing={2} alignItems="flex-start">
+                                        <Typography variant="body2" color="#ccc">
+                                            <b>Step 4:</b> Simply click the <b>Add</b> button in the top right.
                                         </Typography>
                                     </Stack>
                                 </Stack>
@@ -261,18 +269,34 @@ export default function SplashGate() {
                                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                                 sx={{
                                     position: 'absolute',
-                                    bottom: 50,
-                                    right: 30,
+                                    bottom: 15,
+                                    right: 20,
                                     display: 'flex',
                                     flexDirection: 'column',
                                     alignItems: 'center',
-                                    color: '#D4AF37',
+                                    color: '#EF4444',
                                     zIndex: 10,
                                     pointerEvents: 'none'
                                 }}
                             >
-                                <Typography variant="caption" sx={{ mb: 0.5, letterSpacing: 1, opacity: 0.8, fontWeight: 'bold', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>TAP MENU</Typography>
-                                <ArrowDownward sx={{ fontSize: 48, filter: 'drop-shadow(0 0 10px rgba(212,175,55,0.8))' }} />
+                                <Typography variant="caption" sx={{ mb: 0.5, letterSpacing: 1, opacity: 0.8, fontWeight: 'bold', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>TAP DOTS</Typography>
+                                <ArrowDownward sx={{ fontSize: 48, filter: 'drop-shadow(0 0 10px rgba(239, 68, 68, 0.5))' }} />
+                            </Box>
+
+                            {/* Stylized Footer */}
+                            <Box sx={{ position: 'absolute', bottom: 30, left: 0, width: '100%', textAlign: 'center', zIndex: 1, pointerEvents: 'none' }}>
+                                <Typography
+                                    variant="caption"
+                                    sx={{
+                                        color: '#D4AF37', // Gold
+                                        fontStyle: 'italic',
+                                        letterSpacing: '0.1em',
+                                        opacity: 0.7,
+                                        fontSize: '0.65rem'
+                                    }}
+                                >
+                                    Powered by Vanguard Secure Solutions
+                                </Typography>
                             </Box>
                         </Box>
                     </Fade>
