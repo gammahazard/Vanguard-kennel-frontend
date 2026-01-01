@@ -7,7 +7,7 @@ interface BookingRequestManagerProps {
     pendingBookings: GroupedBookingRequest[];
     recentBookings: GroupedBookingRequest[];
     loading: boolean;
-    onAction: (bookings: EnrichedBooking[], action: 'confirmed' | 'declined') => void;
+    onAction: (bookings: EnrichedBooking[], action: 'confirmed' | 'declined' | 'cancelled') => void;
     onChat: (email: string) => void;
 }
 
@@ -139,7 +139,18 @@ export default function BookingRequestManager({
                                             {group.bookings.length} Services • {new Date(group.start_date).toLocaleDateString()}
                                         </Typography>
                                     </Box>
-                                    <Chip label="Confirmed" size="small" color="success" variant="outlined" />
+                                    <Stack direction="row" spacing={1}>
+                                        <Button
+                                            size="small"
+                                            variant="outlined"
+                                            color="error"
+                                            onClick={() => onAction(group.bookings, 'cancelled')}
+                                            sx={{ minWidth: 'auto', px: 1, textTransform: 'none', borderColor: 'rgba(239, 68, 68, 0.3)', color: '#ef4444' }}
+                                        >
+                                            Cancel
+                                        </Button>
+                                        <Chip label="Confirmed" size="small" color="success" variant="outlined" />
+                                    </Stack>
                                 </Stack>
                             </Paper>
                         ))}
