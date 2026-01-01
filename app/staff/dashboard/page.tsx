@@ -142,6 +142,11 @@ export default function StaffDashboard() {
     const [openAddStaff, setOpenAddStaff] = useState(false);
     const [staffList, setStaffList] = useState<User[]>([]);
     const [loadingStaff, setLoadingStaff] = useState(false);
+
+    // Business Pricing State
+    const [services, setServices] = useState<any[]>([]);
+    const [loadingServices, setLoadingServices] = useState(false);
+    const [priceEdits, setPriceEdits] = useState<{ [key: string]: string }>({});
     const [newStaff, setNewStaff] = useState({ name: "", email: "", password: "", role: "staff" });
     const [showPassword, setShowPassword] = useState(false);
     const [formError, setFormError] = useState("");
@@ -264,11 +269,37 @@ export default function StaffDashboard() {
         }
     }, []);
 
+    const fetchServices = useCallback(async () => {
+        setLoadingServices(true);
+        try {
+            const res = await authenticatedFetch(`${API_BASE_URL}/api/services`);
+            if (res.ok) setServices(await res.json());
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoadingServices(false);
+        }
+    }, []);
+
+    const handleUpdatePrice = async (id: string, newPrice: number) => {
+        try {
+            await authenticatedFetch(`${API_BASE_URL}/api/services/${id}`, {
+                method: 'PUT',
+                body: JSON.stringify({ price: newPrice })
+            });
+            fetchServices();
+            setPriceEdits(prev => { const n = { ...prev }; delete n[id]; return n; });
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
     useEffect(() => {
         const role = localStorage.getItem('vanguard_role');
         if (role === 'owner') {
             setIsOwner(true);
             fetchStaff();
+            fetchServices();
         }
         // Always fetch pets for the Ops view
         fetchGuests();
@@ -723,6 +754,17 @@ export default function StaffDashboard() {
                             fetchMessages(c.email);
                         }}
                     />
+                )}
+
+                {/* --- BUSINESS VIEW --- */}
+                {viewMode === 'business' && isOwner && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                        <ServiceManager
+                            services={services}
+                            loading={loadingServices}
+                            onUpdatePrice={handleUpdatePrice}
+                        />
+                    </motion.div>
                 )}
 
                 {/* --- COMMS VIEW --- */}

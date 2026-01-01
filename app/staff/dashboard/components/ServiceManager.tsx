@@ -7,29 +7,39 @@ import { Edit, Save, Cancel, AttachMoney, Store } from "@mui/icons-material";
 import { Service, EnrichedBooking } from "@/types"; // EnrichedBooking not needed but keeping for consistency if extended
 import { authenticatedFetch, API_BASE_URL } from "@/lib/api";
 
-export default function ServiceManager() {
-    const [services, setServices] = useState<Service[]>([]);
-    const [loading, setLoading] = useState(true);
+interface ServiceManagerProps {
+    services?: Service[];
+    loading?: boolean;
+    onUpdatePrice?: (id: string, price: number) => void;
+}
+
+export default function ServiceManager({ services: propServices, loading: propLoading, onUpdatePrice }: ServiceManagerProps) {
+    const [localServices, setLocalServices] = useState<Service[]>([]);
+    const [localLoading, setLocalLoading] = useState(true);
+
+    const services = propServices || localServices;
+    const loading = propLoading !== undefined ? propLoading : localLoading;
+
     const [editService, setEditService] = useState<Service | null>(null);
     const [formData, setFormData] = useState({ price: 0, description: "" });
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
 
     useEffect(() => {
-        fetchServices();
-    }, []);
+        if (!propServices) fetchServices();
+    }, [propServices]);
 
     const fetchServices = async () => {
-        setLoading(true);
+        setLocalLoading(true);
         try {
             const res = await authenticatedFetch(`${API_BASE_URL}/api/services`);
             if (res.ok) {
-                setServices(await res.json());
+                setLocalServices(await res.json());
             }
         } catch (e) {
             console.error(e);
         } finally {
-            setLoading(false);
+            setLocalLoading(false);
         }
     };
 
@@ -43,6 +53,18 @@ export default function ServiceManager() {
         setSaving(true);
         setError("");
 
+        if (onUpdatePrice) {
+            try {
+                await onUpdatePrice(editService.id, Number(formData.price));
+                setEditService(null);
+            } catch (e) {
+                setError("Failed to update via parent");
+            } finally {
+                setSaving(false);
+            }
+            return;
+        }
+
         try {
             const res = await authenticatedFetch(`${API_BASE_URL}/api/services/${editService.id}`, {
                 method: 'PUT',
@@ -51,14 +73,14 @@ export default function ServiceManager() {
                     description: formData.description
                 })
             });
-
             if (res.ok) {
-                setEditService(null);
                 fetchServices();
+                setEditService(null);
             } else {
                 setError("Failed to update service");
             }
         } catch (e) {
+            console.error(e);
             setError("Connection error");
         } finally {
             setSaving(false);

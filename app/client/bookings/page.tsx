@@ -321,7 +321,6 @@ export default function BookingsView() {
                                 <TextField select label="Service" fullWidth value={formData.service_type} onChange={e => setFormData({ ...formData, service_type: e.target.value })} variant="filled">
                                     <MenuItem value="Boarding">Boarding</MenuItem>
                                     <MenuItem value="Daycare">Daycare</MenuItem>
-                                    <MenuItem value="Grooming">Grooming</MenuItem>
                                 </TextField>
                                 <Stack direction="row" spacing={2}>
                                     <TextField
@@ -336,8 +335,8 @@ export default function BookingsView() {
                                             setFormData(prev => ({
                                                 ...prev,
                                                 start_date: newStart,
-                                                // Auto-clear end date if it's before new start date
-                                                end_date: prev.end_date && prev.end_date < newStart ? '' : prev.end_date
+                                                // If Daycare, lock End Date to Start Date. Otherwise, clear if invalid.
+                                                end_date: prev.service_type === 'Daycare' ? newStart : (prev.end_date && prev.end_date < newStart ? '' : prev.end_date)
                                             }));
                                         }}
                                         variant="filled"
@@ -348,16 +347,19 @@ export default function BookingsView() {
                                         label="Check-out"
                                         type="date"
                                         fullWidth
+                                        disabled={formData.service_type === 'Daycare'}
                                         InputLabelProps={{ shrink: true }}
                                         inputProps={{ min: formData.start_date || new Date().toISOString().split('T')[0] }}
                                         value={formData.end_date}
                                         onChange={e => setFormData({ ...formData, end_date: e.target.value })}
                                         variant="filled"
-                                        error={isDateFull(formData.end_date) || Boolean(formData.start_date && formData.end_date && formData.end_date < formData.start_date)}
+                                        error={isDateFull(formData.end_date) || (formData.service_type !== 'Daycare' && Boolean(formData.start_date && formData.end_date && formData.end_date <= formData.start_date))}
                                         helperText={
-                                            formData.start_date && formData.end_date && formData.end_date < formData.start_date
-                                                ? "Must be after check-in"
-                                                : isDateFull(formData.end_date) ? "Fully booked" : undefined
+                                            formData.service_type === 'Daycare'
+                                                ? "Daycare is a single-day event"
+                                                : (formData.start_date && formData.end_date && formData.end_date <= formData.start_date
+                                                    ? "Overnight stay required"
+                                                    : isDateFull(formData.end_date) ? "Fully booked" : undefined)
                                         }
                                     />
                                 </Stack>
