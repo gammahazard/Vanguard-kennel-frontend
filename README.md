@@ -35,30 +35,42 @@ We built this platform to solve a specific problem: **Managing luxury pet care w
 > This showcase emphasizes **Zero Liability Architecture** and **Transparency**. Every core business rule is enforced by a hardened Rust engine, verified by automated integration tests.
 
 ### System Hierarchy & Role Isolation
-The platform enforces strict role separation using our proprietary Access Control Engine:
+The platform enforces strict role-based access control (RBAC), isolating sensitive data into three distinct command portals:
 
 ```mermaid
 graph TD
-    %% Roles
-    User((Root User)) --> Owner[Owner Dashboard]
-    User --> Staff[Staff Portal]
-    User --> Client[Client Portal]
+    %% Role Entry
+    User((Authenticated User))
 
-    %% Owner Capabilities
-    Owner --> |Financials| Rev[Revenue & Analytics]
-    Owner --> |Security| Audit[Global Audit Logs]
-    Owner --> |Users| Management[Staff & Client Management]
+    subgraph Portals ["Vanguard Kennel Command Center"]
+        direction TB
 
-    %% Staff Capabilities
-    Staff --> |Care| Feeding[Feeding & Medication]
-    Staff --> |Operations| Bookings[Booking Confirmation]
-    Staff --> |Support| ChatStaff[Client Messenger]
+        subgraph ClientPortal ["Client Experience Portal"]
+            direction LR
+            PetProfiles[VIP Pawsports]
+            Reservation[Stay Requests]
+            Cam[Live Kennel Cams]
+            ChatClient[Guest Messenger]
+        end
 
-    %% Client Capabilities
-    Client --> |Pets| PetProfiles[VIP Pet Profiles]
-    Client --> |Bookings| Reservation[New Stay Requests]
-    Client --> |Trust| Cam[Live Kennel Cams]
-    Client --> |Support| ChatClient[Staff Messenger]
+        subgraph StaffPortal ["Staff Operations Portal"]
+            direction LR
+            Feeding[Daily Updates]
+            Bookings[Booking Approval]
+            ChatStaff[Staff Messenger]
+        end
+
+        subgraph OwnerPortal ["Executive Management Portal"]
+            direction LR
+            Rev[Revenue & Analytics]
+            Audit[Security Audit Logs]
+            StaffMgmt[Staff Administration]
+        end
+    end
+
+    User --> ClientPortal
+    User --> StaffPortal
+    User --> OwnerPortal
 
     %% Interactions
     ChatStaff <--> ChatClient
@@ -106,17 +118,18 @@ sequenceDiagram
     participant U as User
     participant F as Frontend
     participant B as Backend (Rust/Axum)
-    participant HW as Secure Enclave
+    participant HW as Hardware Enclave (Secure Element)
 
+    Note over U, HW: 🔐 Hardware-Backed Biometric Security (WebAuthn)
     U->>F: Toggle Face ID/Biometrics
     F->>B: POST /register/start (Challenge)
     B-->>F: Challenge + RP ID
     F->>HW: Invoke WebAuthn
     HW-->>U: Prompt Face/Touch ID
     U-->>HW: Authenticate
-    HW-->>F: Signed Attestation
+    HW-->>F: Signed Attestation (Public Key)
     F->>B: POST /register/finish
-    B->>B: Argon2 Verification & Storage
+    B->>B: Cryptographic Verification & Storage
     B-->>F: Success
 ```
 
