@@ -489,7 +489,7 @@ function PetCard({ pet, onEdit, onDelete }: any) {
                             fontSize: '0.65rem'
                         }}
                     >
-                        VIP PASSPORT • {pet.id.substring(0, 8).toUpperCase()}
+                        VIP BOARDING PASSPORT • {pet.id.substring(0, 8).toUpperCase()}
                     </Typography>
                 </Box>
 
@@ -524,7 +524,7 @@ function PetCard({ pet, onEdit, onDelete }: any) {
                             {pet.name[0]}
                         </Avatar>
                         <Box>
-                            <Typography variant="caption" color="primary" sx={{ fontWeight: 800, letterSpacing: 1.5, display: 'block' }}>REPUBLIC OF VANGUARD</Typography>
+                            <Typography variant="caption" color="primary" sx={{ fontWeight: 800, letterSpacing: 1.5, display: 'block' }}>VANGUARD KENNEL CLUB</Typography>
                             <Typography variant="h5" fontWeight="bold" sx={{ color: '#fff', mb: 0.5 }}>{pet.name.toUpperCase()}</Typography>
                             <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>{pet.breed}</Typography>
                         </Box>
@@ -682,7 +682,7 @@ function PetCard({ pet, onEdit, onDelete }: any) {
                                 letterSpacing: 1
                             }}
                         >
-                            P&lt;VGD{pet.name.toUpperCase()} &lt;&lt; {pet.breed.toUpperCase().replace(/\s/g, '')}
+                            P&lt;KNL{pet.name.toUpperCase()} &lt;&lt; {pet.breed.toUpperCase().replace(/\s/g, '')}
                         </Typography>
                     </Box>
                 </Box>
