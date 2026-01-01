@@ -384,7 +384,8 @@ async fn test_booking_self_conflict_fails() {
         "start_date": "2030-01-01",
         "end_date": "2030-01-05", 
         "total_price": 200.0,
-        "notes": "First Query"
+        "notes": "First Query",
+        "user_email": "ignored@test.com"
     });
 
     let req1 = Request::builder()
@@ -405,7 +406,8 @@ async fn test_booking_self_conflict_fails() {
         "start_date": "2030-01-04",
         "end_date": "2030-01-07", 
         "total_price": 150.0,
-        "notes": "Overlap Attempt"
+        "notes": "Overlap Attempt",
+        "user_email": "ignored@test.com"
     });
 
     let req2 = Request::builder()
@@ -451,7 +453,8 @@ async fn test_booking_capacity_limit_fails() {
         "start_date": "2030-05-01",
         "end_date": "2030-05-01", 
         "total_price": 50.0,
-        "notes": "Capacity Breaker"
+        "notes": "Capacity Breaker",
+        "user_email": "ignored@test.com"
     });
 
     let req = Request::builder()
