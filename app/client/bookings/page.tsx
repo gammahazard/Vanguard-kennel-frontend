@@ -53,8 +53,7 @@ export default function BookingsView() {
 
     const [agreements, setAgreements] = useState({
         cancel: false,
-        noshow: false,
-        payment: false
+        noshow: false
     });
 
     const steps = ['Select VIP', 'Dates & Service', 'Confirm'];
