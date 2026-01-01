@@ -111,8 +111,12 @@ Our digital "Pawsport" system transforms basic registration into a high-security
 
 Our integrated chat system provides direct access to kennel staff, ensuring real-time care updates and immediate peace of mind.
 
-![Concierge Guest Messenger](./docs/images/message.png)
-<p align="center"><i>Figure 3: Integrated Messenger featuring real-time staff presence, concierge care shortcuts, and persistent unread badges.</i></p>
+````carousel
+![Client View - Concierge Messenger](./docs/images/message.png)
+<!-- slide -->
+![Staff View - Dashboard Messenger](./docs/images/staffview.png)
+````
+<p align="center"><i>Figure 3: Integrated Messenger - Showing Client Concierge interface (Slide 1) and Staff Operational view (Slide 2).</i></p>
 
 *   **Real-Time Presence**: Instant visibility of staff online status via dynamic indicators.
 *   **Concierge Shortcuts**: One-tap buttons for common requests (e.g., "Status Request", "Update Feeding Notes"), streamlining communication for busy owners.
