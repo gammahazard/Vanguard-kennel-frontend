@@ -26,7 +26,7 @@ import {
     InputAdornment,
     Switch,
     Badge as MuiBadge,
-    Unstable_Grid2 as Grid,
+    Grid,
 } from "@mui/material";
 import Image from "next/image";
 import {
@@ -890,7 +890,7 @@ export default function StaffDashboard() {
                 {viewMode === 'team' && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                         <Grid container spacing={3}>
-                            <Grid xs={12} md={8}>
+                            <Grid item xs={12} md={8}>
                                 <Stack spacing={3}>
                                     {/* Staff Management */}
                                     <Paper sx={{ p: 3, borderRadius: 3, bgcolor: 'background.paper', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -933,7 +933,7 @@ export default function StaffDashboard() {
                                 </Stack>
                             </Grid>
 
-                            <Grid xs={12} md={4}>
+                            <Grid item xs={12} md={4}>
                                 <Stack spacing={3}>
                                     {/* Security Alerts */}
                                     <Paper
