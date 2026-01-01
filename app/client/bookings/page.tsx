@@ -469,11 +469,23 @@ function PastBookingCard({ booking, pets }: any) {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <Avatar src={pet?.image_url} sx={{ width: 30, height: 30, fontSize: '0.8rem' }}>{pet?.name[0]}</Avatar>
                     <Box>
-                        <Typography variant="body2" fontWeight="500">{booking.service_type}</Typography>
                         <Stack direction="row" spacing={1} alignItems="center">
+                            <Typography variant="body2" fontWeight="500">{booking.service_type}</Typography>
+                            {booking.status?.toLowerCase() === 'cancelled' && <Chip label="Cancelled" size="small" color="error" variant="outlined" sx={{ height: 16, fontSize: '0.6rem', fontWeight: 'bold' }} />}
+                            {booking.status?.toLowerCase() === 'declined' && <Chip label="Declined" size="small" color="error" variant="outlined" sx={{ height: 16, fontSize: '0.6rem', fontWeight: 'bold' }} />}
+                            {booking.status?.toLowerCase() === 'confirmed' && <Chip label="Confirmed" size="small" color="success" variant="outlined" sx={{ height: 16, fontSize: '0.6rem', fontWeight: 'bold' }} />}
+                        </Stack>
+                        <Stack spacing={0.5} mt={0.5}>
                             <Typography variant="caption" color="text.secondary">{booking.start_date}</Typography>
-                            {booking.status === 'Cancelled' && (
-                                <Chip label="Cancelled" size="small" color="error" variant="outlined" sx={{ height: 16, fontSize: '0.6rem', fontWeight: 'bold' }} />
+                            {booking.processed_by && (
+                                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', display: 'block' }}>
+                                    {booking.status?.toLowerCase() === 'cancelled' || booking.status?.toLowerCase() === 'declined' ? 'Cancelled by' : 'Processed by'}: {booking.processed_by.split('@')[0]}
+                                </Typography>
+                            )}
+                            {booking.status_note && (
+                                <Typography variant="caption" sx={{ color: '#ffb74d', fontStyle: 'italic', display: 'block' }}>
+                                    "{booking.status_note}"
+                                </Typography>
                             )}
                         </Stack>
                     </Box>

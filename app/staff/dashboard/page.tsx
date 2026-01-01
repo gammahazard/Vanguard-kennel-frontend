@@ -343,11 +343,14 @@ export default function StaffDashboard() {
         }
     };
 
-    const handleBookingAction = async (id: string, action: 'confirmed' | 'cancelled') => {
+    const handleBookingAction = async (id: string, action: 'confirmed' | 'cancelled' | 'declined') => {
+        const verb = action === 'confirmed' ? 'Accept' : (action === 'declined' ? 'Decline' : 'Cancel');
+        const note = prompt(`Optional: Enter a reason/note for this ${verb} action:`);
+
         try {
             const res = await authenticatedFetch(`${API_BASE_URL}/api/bookings/${id}`, {
                 method: 'PUT',
-                body: JSON.stringify({ status: action })
+                body: JSON.stringify({ status: action, note: note || undefined })
             });
 
             if (res.ok) {
@@ -362,8 +365,11 @@ export default function StaffDashboard() {
         }
     };
 
-    const handleBatchAction = async (bookings: EnrichedBooking[] | GroupedBookingRequest['bookings'], action: 'confirmed' | 'cancelled') => {
-        if (!confirm(`${action === 'confirmed' ? 'Accept' : 'Decline'} all ${bookings.length} requests?`)) return;
+    const handleBatchAction = async (bookings: EnrichedBooking[] | GroupedBookingRequest['bookings'], action: 'confirmed' | 'declined') => {
+        const verb = action === 'confirmed' ? 'Accept' : 'Decline';
+        const note = prompt(`Optional: Enter a bulk reason/note for ${verb}ing ${bookings.length} requests:`);
+
+        if (!confirm(`Confirm ${verb} all ${bookings.length} requests?`)) return;
 
         setLoadingBookings(true);
         const errors: string[] = [];
@@ -373,7 +379,7 @@ export default function StaffDashboard() {
                 try {
                     const res = await authenticatedFetch(`${API_BASE_URL}/api/bookings/${b.id}`, {
                         method: 'PUT',
-                        body: JSON.stringify({ status: action })
+                        body: JSON.stringify({ status: action, note: note || undefined })
                     });
                     if (!res.ok) errors.push(b.dog_name || "Unknown");
                 } catch (e) {

@@ -37,9 +37,11 @@ export interface Booking {
     service_type: string;
     start_date: string;
     end_date: string;
-    status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+    status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'declined';
     total_price: number;
     notes?: string;
+    processed_by?: string;
+    status_note?: string;
     created_at: string;
 }
 

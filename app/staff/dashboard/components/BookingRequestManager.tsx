@@ -7,7 +7,7 @@ interface BookingRequestManagerProps {
     pendingBookings: GroupedBookingRequest[];
     recentBookings: GroupedBookingRequest[];
     loading: boolean;
-    onAction: (bookings: EnrichedBooking[], action: 'confirmed' | 'cancelled') => void;
+    onAction: (bookings: EnrichedBooking[], action: 'confirmed' | 'declined') => void;
     onChat: (email: string) => void;
 }
 
@@ -94,7 +94,7 @@ export default function BookingRequestManager({
                                                 variant="outlined"
                                                 color="error"
                                                 startIcon={<Cancel />}
-                                                onClick={() => onAction(group.bookings, 'cancelled')}
+                                                onClick={() => onAction(group.bookings, 'declined')}
                                                 sx={{
                                                     borderColor: 'rgba(239, 68, 68, 0.3)',
                                                     color: '#ef4444',
