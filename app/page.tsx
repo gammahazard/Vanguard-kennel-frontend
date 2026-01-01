@@ -284,7 +284,7 @@ export default function SplashGate() {
                                         </>
                                     )}
                                     {browserType === 'other' && (
-                                        <Typography variant="body2" color="#ccc">Use your browser's menu to find "Add to Home Screen" or "Install App".</Typography>
+                                        <Typography variant="body2" color="#ccc">Use your browser&apos;s menu to find &quot;Add to Home Screen&quot; or &quot;Install App&quot;.</Typography>
                                     )}
                                 </Stack>
                             </Paper>
