@@ -16,12 +16,12 @@ It represents a high-reliability management platform developed for luxury dog ke
 
 ---
 ## 📑 Table of Contents
-*   [Our Flagship Project](https://github.com/NavRaja/kennel-platform?tab=readme-ov-file#%EF%B8%8F-our-flagship-project-vanguard-kennel-systems)
-*   [Defense-in-Depth Security](https://github.com/NavRaja/kennel-platform?tab=readme-ov-file#-defense-in-depth-security)
-*   [Key Solutions](https://github.com/NavRaja/kennel-platform?tab=readme-ov-file#key-solutions-delivered)
-*   [Validation & Testing](https://github.com/NavRaja/kennel-platform?tab=readme-ov-file#-validation--testing-v11)
-*   [Technical Structure](https://github.com/NavRaja/kennel-platform?tab=readme-ov-file#-technical-structure)
-*   [Final Automated Verification](https://github.com/NavRaja/kennel-platform?tab=readme-ov-file#7-final-automated-verification-pass)
+*   [Our Flagship Project](#%EF%B8%8F-our-flagship-project-vanguard-kennel-systems)
+*   [Defense-in-Depth Security](#-defense-in-depth-security)
+*   [Key Solutions](#key-solutions-delivered)
+*   [Validation & Testing](#-validation--testing-v11)
+*   [Technical Structure](#-technical-structure)
+*   [Final Automated Verification](#7-final-automated-verification-pass)
 
 ---
 
