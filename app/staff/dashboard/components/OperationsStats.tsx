@@ -14,7 +14,7 @@ const DEFAULT_STATS = [
     { label: "Guests In House", value: "14", color: "primary.main" },
     { label: "Check-Ins Today", value: "3", color: "text.primary" },
     { label: "Departures", value: "5", color: "text.secondary" },
-    { label: "Pending Walks", value: "8", color: "#ef4444" },
+    { label: "Pending Playtime", value: "8", color: "#ef4444" },
 ];
 
 export default function OperationsStats({ stats = DEFAULT_STATS }: OperationsStatsProps) {

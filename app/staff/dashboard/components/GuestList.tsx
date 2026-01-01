@@ -1,5 +1,5 @@
 import { Box, Paper, Typography, Chip, Stack, IconButton, Divider, Tooltip } from "@mui/material";
-import { Warning, Restaurant, DirectionsWalk, Medication, CrisisAlert, Assignment as AssignmentIcon, History } from "@mui/icons-material";
+import { Warning, Restaurant, SportsTennis, Medication, CrisisAlert, Assignment as AssignmentIcon, History } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { GuestPet } from "@/types";
 
@@ -54,7 +54,7 @@ export default function GuestList({ guests, loading, onToggleAction, onLogIncide
                             <Stack direction="row" justifyContent="space-between" spacing={1} sx={{ bgcolor: 'rgba(0,0,0,0.2)', p: 1, borderRadius: 2 }}>
                                 <Tooltip title="Breakfast/Dinner"><IconButton onClick={() => onToggleAction(guest.id, 'fed')} sx={{ color: guest.fed ? '#22c55e' : 'text.disabled', bgcolor: guest.fed ? 'rgba(34, 197, 94, 0.1)' : 'transparent' }}><Restaurant fontSize="small" /></IconButton></Tooltip>
                                 <Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
-                                <Tooltip title="Daily Walk"><IconButton onClick={() => onToggleAction(guest.id, 'walked')} sx={{ color: guest.walked ? '#3b82f6' : 'text.disabled', bgcolor: guest.walked ? 'rgba(59, 130, 246, 0.1)' : 'transparent' }}><DirectionsWalk fontSize="small" /></IconButton></Tooltip>
+                                <Tooltip title="Daily Playtime"><IconButton onClick={() => onToggleAction(guest.id, 'walked')} sx={{ color: guest.walked ? '#3b82f6' : 'text.disabled', bgcolor: guest.walked ? 'rgba(59, 130, 246, 0.1)' : 'transparent' }}><SportsTennis fontSize="small" /></IconButton></Tooltip>
                                 <Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
                                 <Tooltip title="Medication"><IconButton onClick={() => guest.meds !== null && onToggleAction(guest.id, 'meds')} disabled={guest.meds === null} sx={{ color: guest.meds ? '#a855f7' : (guest.meds === null ? 'rgba(255,255,255,0.05)' : 'text.disabled'), bgcolor: guest.meds ? 'rgba(168, 85, 247, 0.1)' : 'transparent' }}><Medication fontSize="small" /></IconButton></Tooltip>
                                 <Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
