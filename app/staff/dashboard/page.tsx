@@ -26,9 +26,9 @@ import {
     InputAdornment,
     Switch,
     Badge as MuiBadge,
-    Grid,
-
+    Unstable_Grid2 as Grid,
 } from "@mui/material";
+import Image from "next/image";
 import {
     Restaurant,
     DirectionsWalk,
@@ -854,7 +854,7 @@ export default function StaffDashboard() {
                             onGuestClick={(guest: GuestPet) => {
                                 const booking = allBookings.find(b => b.dog_id === guest.id);
                                 if (booking) {
-                                    const client = clients.find(c => c.id === booking.user_id);
+                                    const client = clients.find(c => c.email === booking.user_email);
                                     if (client) {
                                         setSelectedClient(client);
                                         setShowPetModal(true);
@@ -1540,12 +1540,17 @@ export default function StaffDashboard() {
                                 </Button>
                             </label>
                             {reportData.image_url && (
-                                <Box sx={{ mt: 2, position: 'relative' }}>
-                                    <img src={reportData.image_url.startsWith('http') ? reportData.image_url : `${API_BASE_URL}${reportData.image_url}`} alt="Preview" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8 }} />
+                                <Box sx={{ mt: 2, position: 'relative', width: '100%', height: 200 }}>
+                                    <Image
+                                        src={reportData.image_url.startsWith('http') ? reportData.image_url : `${API_BASE_URL}${reportData.image_url}`}
+                                        alt="Preview"
+                                        fill
+                                        style={{ objectFit: 'contain', borderRadius: 8 }}
+                                    />
                                     <IconButton
                                         size="small"
                                         onClick={() => setReportData({ ...reportData, image_url: "" })}
-                                        sx={{ position: 'absolute', top: 5, right: 5, bgcolor: 'rgba(0,0,0,0.5)', color: 'white' }}
+                                        sx={{ position: 'absolute', top: 5, right: 5, bgcolor: 'rgba(0,0,0,0.5)', color: 'white', zIndex: 10 }}
                                     >
                                         <Cancel />
                                     </IconButton>
