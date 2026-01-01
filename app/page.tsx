@@ -310,7 +310,7 @@ export default function SplashGate() {
                                     position: 'absolute',
                                     bottom: isChrome ? 'auto' : 15,
                                     top: isChrome ? 20 : 'auto',
-                                    right: 5,
+                                    right: 0,
                                     display: 'flex',
                                     flexDirection: 'column',
                                     alignItems: 'center',
