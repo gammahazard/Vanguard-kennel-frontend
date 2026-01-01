@@ -14,6 +14,7 @@ import {
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { API_BASE_URL } from "@/lib/config";
+import IPLocation from "@/components/ui/IPLocation";
 
 interface AuditLog {
     id: number;
@@ -238,9 +239,7 @@ export default function AuditLogPage() {
                                                 <Typography variant="caption" color="#64748b">
                                                     {new Date(log.timestamp).toLocaleDateString()}
                                                 </Typography>
-                                                <Typography variant="caption" color="#64748b" sx={{ opacity: 0.6, fontFamily: 'monospace', fontSize: '0.7rem' }}>
-                                                    {log.ip_address || "127.0.0.1"}
-                                                </Typography>
+                                                <IPLocation ip={log.ip_address || "127.0.0.1"} />
                                             </Stack>
                                         </Stack>
                                     </Paper>

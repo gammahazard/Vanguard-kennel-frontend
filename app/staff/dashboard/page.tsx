@@ -217,7 +217,7 @@ export default function StaffDashboard() {
         } finally {
             setLoadingBookings(false);
         }
-    }, []);
+    }, [groupBookings]);
 
     const fetchClients = useCallback(async () => {
         setLoadingClients(true);

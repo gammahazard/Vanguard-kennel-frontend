@@ -21,7 +21,6 @@ import {
     Dialog,
     DialogContent,
     DialogActions,
-    Close as CloseIcon
 } from "@mui/material";
 import {
     Home,
@@ -42,9 +41,9 @@ import {
     ArrowForward,
     Chat,
     Fingerprint,
-    Close,
     Add,
-    Security
+    Security,
+    Close as CloseIcon
 } from "@mui/icons-material";
 import { theme } from "@/lib/theme";
 import { useRouter } from "next/navigation";
@@ -389,7 +388,7 @@ export default function ClientDashboard() {
                         }}
                         sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary' }}
                     >
-                        <Close />
+                        <CloseIcon />
                     </IconButton>
 
                     <Box sx={{

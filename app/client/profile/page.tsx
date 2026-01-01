@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { startRegistration } from '@simplewebauthn/browser';
 import { API_BASE_URL } from "@/lib/config";
 import { sanitizeInput, sanitizePhone } from "@/lib/security";
+import IPLocation from "@/components/ui/IPLocation";
 
 import { authenticatedFetch } from "@/lib/api";
 
@@ -669,38 +670,3 @@ function SettingsItem({ icon, title, subtitle, hasSwitch, defaultChecked, onClic
     );
 }
 
-const ipLocationCache: Record<string, string> = {};
-
-function IPLocation({ ip }: { ip: string }) {
-    const [location, setLocation] = useState<string | null>(ipLocationCache[ip] || null);
-
-    useEffect(() => {
-        if (location || !ip || ip === "Unknown IP" || ip === "127.0.0.1" || ip === "localhost") return;
-
-        if (ipLocationCache[ip]) {
-            setLocation(ipLocationCache[ip]);
-            return;
-        }
-
-        const timer = setTimeout(() => {
-            fetch(`https://ipwho.is/${ip}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        const loc = `${data.city}, ${data.country_code}`;
-                        ipLocationCache[ip] = loc;
-                        setLocation(loc);
-                    }
-                })
-                .catch(err => console.error("IP Geo failed", err));
-        }, Math.random() * 200);
-
-        return () => clearTimeout(timer);
-    }, [ip, location]);
-
-    return (
-        <Typography variant="caption" sx={{ bgcolor: 'rgba(255,255,255,0.05)', px: 0.5, borderRadius: 1, fontFamily: 'monospace' }}>
-            {ip} {location && <span style={{ opacity: 0.7 }}>({location})</span>}
-        </Typography>
-    );
-}
