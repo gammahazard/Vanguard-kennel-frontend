@@ -234,7 +234,7 @@ export default function StaffDashboard() {
 
                 // 4. Set Today's Arrivals (Confirmed only)
                 const todayStr = new Date().toDateString();
-                const arrivals = confirmed.filter((b: any) => new Date(b.start_date).toDateString() === todayStr);
+                const arrivals = confirmed.filter((b: any) => new Date(b.start_date + 'T00:00:00').toDateString() === todayStr);
                 setTodaysArrivals(arrivals);
             }
         } catch (e) {

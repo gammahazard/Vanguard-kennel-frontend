@@ -66,7 +66,7 @@ export default function BookingRequestManager({
                                         {/* Middle: Order Details */}
                                         <Box sx={{ flex: 1 }}>
                                             <Typography variant="body2" color="text.secondary" mb={1}>
-                                                Requesting <strong>{group.bookings.length} Services</strong> • {new Date(group.start_date).toLocaleDateString()} - {new Date(group.end_date).toLocaleDateString()}
+                                                Requesting <strong>{group.bookings.length} Services</strong> • {new Date(group.start_date + 'T00:00:00').toLocaleDateString()} - {new Date(group.end_date + 'T00:00:00').toLocaleDateString()}
                                             </Typography>
                                             <Stack direction="row" flexWrap="wrap" gap={1}>
                                                 {group.bookings.map((booking, i) => (
@@ -136,7 +136,7 @@ export default function BookingRequestManager({
                                     <Box>
                                         <Typography variant="subtitle2" fontWeight="bold">{group.owner_name}</Typography>
                                         <Typography variant="caption" color="text.secondary">
-                                            {group.bookings.length} Services • {new Date(group.start_date).toLocaleDateString()}
+                                            {group.bookings.length} Services • {new Date(group.start_date + 'T00:00:00').toLocaleDateString()}
                                         </Typography>
                                     </Box>
                                     <Stack direction="row" spacing={1}>
