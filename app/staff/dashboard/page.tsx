@@ -54,7 +54,11 @@ import {
     CrisisAlert,
     Error as ErrorIcon,
     History,
-    Chat as ChatIcon
+    Chat as ChatIcon,
+    Fingerprint,
+    BugReport,
+    Favorite,
+    ContentCut
 } from "@mui/icons-material";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 // ...
@@ -830,6 +834,37 @@ export default function StaffDashboard() {
                                         <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 2 }}>
                                             <Typography variant="caption" color="#64748b" display="block">Temperament</Typography>
                                             <Typography color="white">{pet.temperament}</Typography>
+                                        </Paper>
+                                    </Box>
+                                    <Box sx={{ gridColumn: '1 / -1' }}>
+                                        <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 2 }}>
+                                            <Typography variant="caption" color="#64748b" display="block" mb={1}>Care & Compliance Diagnostics</Typography>
+                                            <Stack direction="row" spacing={3} justifyContent="space-around">
+                                                <Tooltip title={pet.is_microchipped ? "Microchipped" : "Not Microchipped"}>
+                                                    <Box sx={{ textAlign: 'center', opacity: pet.is_microchipped ? 1 : 0.2 }}>
+                                                        <Fingerprint sx={{ fontSize: 20, color: pet.is_microchipped ? '#4ade80' : 'inherit' }} />
+                                                        <Typography variant="caption" display="block" sx={{ fontSize: '0.6rem' }}>CHIP</Typography>
+                                                    </Box>
+                                                </Tooltip>
+                                                <Tooltip title={pet.spayed_neutered ? "Spayed/Neutered" : "Intact"}>
+                                                    <Box sx={{ textAlign: 'center', opacity: pet.spayed_neutered ? 1 : 0.2 }}>
+                                                        <ContentCut sx={{ fontSize: 20, color: pet.spayed_neutered ? '#4ade80' : 'inherit' }} />
+                                                        <Typography variant="caption" display="block" sx={{ fontSize: '0.6rem' }}>FIXED</Typography>
+                                                    </Box>
+                                                </Tooltip>
+                                                <Tooltip title={pet.flea_tick_prevention ? "Flea/Tick Compliant" : "No Flea/Tick Prevention"}>
+                                                    <Box sx={{ textAlign: 'center', opacity: pet.flea_tick_prevention ? 1 : 0.2 }}>
+                                                        <BugReport sx={{ fontSize: 20, color: pet.flea_tick_prevention ? '#4ade80' : 'inherit' }} />
+                                                        <Typography variant="caption" display="block" sx={{ fontSize: '0.6rem' }}>FLEA</Typography>
+                                                    </Box>
+                                                </Tooltip>
+                                                <Tooltip title={pet.heartworm_prevention ? "Heartworm Compliant" : "No Heartworm Prevention"}>
+                                                    <Box sx={{ textAlign: 'center', opacity: pet.heartworm_prevention ? 1 : 0.2 }}>
+                                                        <Favorite sx={{ fontSize: 20, color: pet.heartworm_prevention ? '#4ade80' : 'inherit' }} />
+                                                        <Typography variant="caption" display="block" sx={{ fontSize: '0.6rem' }}>HEART</Typography>
+                                                    </Box>
+                                                </Tooltip>
+                                            </Stack>
                                         </Paper>
                                     </Box>
                                     <Box sx={{ gridColumn: '1 / -1' }}>

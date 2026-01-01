@@ -14,17 +14,16 @@ import { theme } from "@/lib/theme";
 import { API_BASE_URL } from "@/lib/config";
 import { useRouter } from "next/navigation";
 
+import { authenticatedFetch } from "@/lib/api";
+
 export default function NotificationsView() {
     const router = useRouter();
     const [notifications, setNotifications] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     const fetchNotifications = async () => {
-        const email = localStorage.getItem('vanguard_email');
-        if (!email) return;
-
         try {
-            const res = await fetch(`${API_BASE_URL}/api/notifications?email=${encodeURIComponent(email)}`);
+            const res = await authenticatedFetch(`/api/notifications`);
             if (res.ok) {
                 const data = await res.json();
                 setNotifications(data);
@@ -38,7 +37,7 @@ export default function NotificationsView() {
 
     const markAsRead = async (id: string) => {
         try {
-            const res = await fetch(`${API_BASE_URL}/api/notifications/${id}/read`, { method: 'PUT' });
+            const res = await authenticatedFetch(`/api/notifications/${id}/read`, { method: 'PUT' });
             if (res.ok) {
                 setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: 1 } : n));
             }

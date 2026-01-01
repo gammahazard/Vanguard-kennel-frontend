@@ -7,12 +7,13 @@ import {
     Fab, Avatar, Grid, IconButton, Button,
     CircularProgress, Snackbar, Alert, Dialog, DialogTitle,
     DialogContent, DialogActions, TextField, MenuItem, Divider,
-    DialogContentText, Skeleton
+    DialogContentText, Skeleton, Switch, FormControlLabel
 } from "@mui/material";
 import {
     Home, Pets, CalendarMonth, ModeEdit, Close, Warning, Notes,
     Add, Scale, Info, MedicalServices, Chat, Person, ArrowForward,
-    DeleteForever, CheckCircle
+    DeleteForever, CheckCircle, Fingerprint, BugReport, Favorite,
+    ContentCut, Visibility, History
 } from "@mui/icons-material";
 import { theme } from "@/lib/theme";
 import { API_BASE_URL } from "@/lib/config";
@@ -22,7 +23,6 @@ import { useRouter } from "next/navigation";
 import { authenticatedFetch } from "@/lib/api";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { VaccinationUpload } from "@/components/ui/VaccinationUpload";
-import { Visibility } from "@mui/icons-material";
 
 export default function PetsView() {
     const router = useRouter();
@@ -50,7 +50,11 @@ export default function PetsView() {
         vet_name: "",
         vet_phone: "",
         image_url: "",
-        vaccination_records: ""
+        vaccination_records: "",
+        is_microchipped: false,
+        flea_tick_prevention: false,
+        heartworm_prevention: false,
+        spayed_neutered: false
     });
     const [customTemp, setCustomTemp] = useState("");
 
@@ -105,7 +109,7 @@ export default function PetsView() {
             if (res.ok) {
                 setSuccess(`${formData.name} is now a Vanguard VIP! 🍾`);
                 setOpenAdd(false);
-                setFormData({ name: "", breed: "", age: "", weight: "", temperament: "Friendly", allergies: "", notes: "", vet_name: "", vet_phone: "", image_url: "", vaccination_records: "" });
+                setFormData({ name: "", breed: "", age: "", weight: "", temperament: "Friendly", allergies: "", notes: "", vet_name: "", vet_phone: "", image_url: "", vaccination_records: "", is_microchipped: false, flea_tick_prevention: false, heartworm_prevention: false, spayed_neutered: false });
                 fetchPets();
             } else {
                 const errorData = await res.json();
@@ -151,7 +155,11 @@ export default function PetsView() {
                     vet_name: "",
                     vet_phone: "",
                     image_url: "",
-                    vaccination_records: ""
+                    vaccination_records: "",
+                    is_microchipped: false,
+                    flea_tick_prevention: false,
+                    heartworm_prevention: false,
+                    spayed_neutered: false
                 });
                 setCustomTemp("");
                 fetchPets();
@@ -171,7 +179,7 @@ export default function PetsView() {
         setSubmitting(true);
         const email = localStorage.getItem('vanguard_email');
         try {
-            const res = await fetch(`${API_BASE_URL}/api/pets/${petToDelete.id}?email=${encodeURIComponent(email || "")}`, {
+            const res = await authenticatedFetch(`/api/pets/${petToDelete.id}`, {
                 method: 'DELETE'
             });
 
@@ -204,7 +212,11 @@ export default function PetsView() {
             vet_name: pet.vet_name || "",
             vet_phone: pet.vet_phone || "",
             image_url: pet.image_url || "",
-            vaccination_records: pet.vaccination_records || ""
+            vaccination_records: pet.vaccination_records || "",
+            is_microchipped: pet.is_microchipped || false,
+            flea_tick_prevention: pet.flea_tick_prevention || false,
+            heartworm_prevention: pet.heartworm_prevention || false,
+            spayed_neutered: pet.spayed_neutered || false
         });
         setCustomTemp(pet.temperament && !['Friendly', 'Relaxed', 'Energetic', 'Protective', 'Anxious'].includes(pet.temperament) ? pet.temperament : "");
         if (pet.temperament && !['Friendly', 'Relaxed', 'Energetic', 'Protective', 'Anxious'].includes(pet.temperament)) {
@@ -226,7 +238,11 @@ export default function PetsView() {
             vet_name: "",
             vet_phone: "",
             image_url: "",
-            vaccination_records: ""
+            vaccination_records: "",
+            is_microchipped: false,
+            flea_tick_prevention: false,
+            heartworm_prevention: false,
+            spayed_neutered: false
         });
         setCustomTemp("");
         setOpenAdd(true);
@@ -348,6 +364,33 @@ export default function PetsView() {
                                 />
                             )}
                             <TextField label="Allergies" fullWidth value={formData.allergies} onChange={e => setFormData({ ...formData, allergies: sanitizeInput(e.target.value, 60) })} variant="filled" placeholder="N/A" />
+
+                            <Divider sx={{ my: 1, opacity: 0.1 }} />
+                            <Typography variant="caption" color="primary" fontWeight="bold">CARE COMPLIANCE & DIAGNOSTICS</Typography>
+                            <Box sx={{
+                                display: 'grid',
+                                gridTemplateColumns: '1fr 1fr',
+                                gap: 1,
+                                mt: 1
+                            }}>
+                                <FormControlLabel
+                                    control={<Switch size="small" checked={formData.is_microchipped} onChange={e => setFormData({ ...formData, is_microchipped: e.target.checked })} />}
+                                    label={<Typography variant="caption">Microchipped</Typography>}
+                                />
+                                <FormControlLabel
+                                    control={<Switch size="small" checked={formData.spayed_neutered} onChange={e => setFormData({ ...formData, spayed_neutered: e.target.checked })} />}
+                                    label={<Typography variant="caption">Spayed/Neutered</Typography>}
+                                />
+                                <FormControlLabel
+                                    control={<Switch size="small" checked={formData.flea_tick_prevention} onChange={e => setFormData({ ...formData, flea_tick_prevention: e.target.checked })} />}
+                                    label={<Typography variant="caption">Flea/Tick Prevent.</Typography>}
+                                />
+                                <FormControlLabel
+                                    control={<Switch size="small" checked={formData.heartworm_prevention} onChange={e => setFormData({ ...formData, heartworm_prevention: e.target.checked })} />}
+                                    label={<Typography variant="caption">Heartworm Prev.</Typography>}
+                                />
+                            </Box>
+
                             <TextField label="Medical Notes" fullWidth multiline rows={2} value={formData.notes} onChange={e => setFormData({ ...formData, notes: sanitizeInput(e.target.value, 500) })} variant="filled" placeholder="Medications, behavioral notes..." />
                             <Divider sx={{ my: 1, opacity: 0.1 }} />
                             <Typography variant="caption" color="primary" fontWeight="bold">EMERGENCY VETERINARY INFO</Typography>
@@ -555,6 +598,26 @@ function PetCard({ pet, onEdit, onDelete }: any) {
                             <Typography variant="caption" color="text.secondary">{pet.vet_phone || "No phone provided"}</Typography>
                         </Box>
                     )}
+
+                    {/* COMPLIANCE ICONS */}
+                    <Stack direction="row" spacing={3} sx={{ mt: 2, p: 1, px: 2, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.02)' }} justifyContent="space-around">
+                        <Box sx={{ textAlign: 'center', opacity: pet.is_microchipped ? 1 : 0.2 }}>
+                            <Fingerprint sx={{ fontSize: 18, color: pet.is_microchipped ? '#4ade80' : 'inherit' }} />
+                            <Typography variant="caption" display="block" sx={{ fontSize: '0.5rem', fontWeight: 'bold' }}>CHIP</Typography>
+                        </Box>
+                        <Box sx={{ textAlign: 'center', opacity: pet.spayed_neutered ? 1 : 0.2 }}>
+                            <ContentCut sx={{ fontSize: 18, color: pet.spayed_neutered ? '#4ade80' : 'inherit' }} />
+                            <Typography variant="caption" display="block" sx={{ fontSize: '0.5rem', fontWeight: 'bold' }}>FIXED</Typography>
+                        </Box>
+                        <Box sx={{ textAlign: 'center', opacity: pet.flea_tick_prevention ? 1 : 0.2 }}>
+                            <BugReport sx={{ fontSize: 18, color: pet.flea_tick_prevention ? '#4ade80' : 'inherit' }} />
+                            <Typography variant="caption" display="block" sx={{ fontSize: '0.5rem', fontWeight: 'bold' }}>FLEA</Typography>
+                        </Box>
+                        <Box sx={{ textAlign: 'center', opacity: pet.heartworm_prevention ? 1 : 0.2 }}>
+                            <Favorite sx={{ fontSize: 18, color: pet.heartworm_prevention ? '#4ade80' : 'inherit' }} />
+                            <Typography variant="caption" display="block" sx={{ fontSize: '0.5rem', fontWeight: 'bold' }}>HEART</Typography>
+                        </Box>
+                    </Stack>
 
                     {pet.vaccination_records && (
                         <Button
