@@ -1045,6 +1045,15 @@ export default function StaffDashboard() {
                                         >
                                             Log Incident
                                         </Button>
+                                        <Button
+                                            fullWidth
+                                            variant="outlined"
+                                            startIcon={<History />}
+                                            onClick={() => { setSelectedPet(pet); setShowPetModal(false); handleViewHistory(pet); }}
+                                            sx={{ mt: 1, borderRadius: 2, borderColor: 'rgba(255,255,255,0.2)', color: 'text.secondary', '&:hover': { borderColor: '#D4AF37', color: '#D4AF37' } }}
+                                        >
+                                            View History
+                                        </Button>
                                         {pet.vaccination_records && (
                                             <Button
                                                 fullWidth
