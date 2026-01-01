@@ -4,7 +4,7 @@
 
 ![Status](https://img.shields.io/badge/Status-Verified--Audit-gold?style=for-the-badge)
 ![Tech Stack](https://img.shields.io/badge/Stack-Rust--NextJS--SQLite-blue?style=for-the-badge)
-![Security](https://img.shields.io/badge/Mission%20Critical-8/8%20Tests%20Passing-green?style=for-the-badge)
+![Security](https://img.shields.io/badge/Mission%20Critical-10/10%20Tests%20Passing-green?style=for-the-badge)
 ![Deployment](https://img.shields.io/badge/Infrastructure-Linode--Vercel-black?style=for-the-badge&logo=vercel)
 
 ![TS](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
@@ -22,7 +22,7 @@ It represents a high-reliability management platform developed for luxury dog ke
 *   [🪪 VIP Pawsports](#-vip-pawsports)
 *   [💬 Concierge Guest Messenger](#-concierge-guest-messenger)
 *   [🔒 Security Architecture](#-security-architecture)
-*   [🧪 Validation & Audit (PASS 8/8)](#-validation--audit-pass-88)
+*   [🧪 Validation & Audit (PASS 10/10)](#-validation--audit-pass-1010)
 *   [📝 Smart Booking System](#-smart-booking-system)
 *   [🏗️ Technical Structure](#-technical-structure)
 
@@ -156,11 +156,11 @@ sequenceDiagram
 
 ---
 
-## 🧪 Validation & Audit (PASS 8/8)
+## 🧪 Validation & Audit (PASS 10/10)
 
 We don't just claim security—we prove it. Our full integration suite is available for public audit in [`/tests/backend_integration_tests.rs.txt`](./tests/backend_integration_tests.rs.txt).
 
-### 8/8 Critical Scenarios Passing
+### 10/10 Critical Scenarios Passing
 1.  ✅ **`test_create_booking_idor_fails`**: Confirmed IDOR protection (Clients cannot guess other users' pet IDs).
 2.  ✅ **`test_boarding_requires_overnight`**: Enforced legal boarding policies.
 3.  ✅ **`test_booking_31_day_limit`**: Capped duration for operational safety.
@@ -169,12 +169,14 @@ We don't just claim security—we prove it. Our full integration suite is availa
 6.  ✅ **`test_security_injection_safe`**: **SQL Injection Protection** (Verified via malicious Chaos Payloads).
 7.  ✅ **`test_rate_limiting_enforcement`**: **DDoS Resistance** (Verified via stress-test).
 8.  ✅ **`test_create_booking_valid_boarding`**: Happy path verification.
+9.  ✅ **`test_booking_self_conflict_fails`**: **Overlap Protection** (Prevents double-booking dates).
+10. ✅ **`test_booking_capacity_limit_fails`**: **Capacity Enforcement** (Strict 20-dog limit verified).
 
 > [!TIP]
 > **Why this matters**: Most platforms skip these "hidden" security tests. Vanguard builds them into the core deployment pipeline to ensure your data stays safe as the app scales.
 
 ![Automated Verification Pass](./docs/images/test-results.png)
-<p align="center"><i>Figure 5: Full integration suite execution - 8/8 Critical Scenarios Verified.</i></p>
+<p align="center"><i>Figure 5: Full integration suite execution - 10/10 Critical Scenarios Verified.</i></p>
 
 ---
 
