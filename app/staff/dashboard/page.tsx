@@ -380,10 +380,15 @@ export default function StaffDashboard() {
                     severity: incidentSeverity
                 })
             });
-            setMessage({ text: "Alert logged successfully!", severity: "success", open: true });
-            setShowIncidentModal(false);
-            setIncidentText("");
-            fetchGuests();
+
+            if (res.ok) {
+                setMessage({ text: "Alert logged successfully!", severity: "success", open: true });
+                setShowIncidentModal(false);
+                setIncidentText("");
+                fetchGuests();
+            } else {
+                setMessage({ text: "Failed to log alert. Please try again.", severity: "error", open: true });
+            }
         } catch (e) {
             console.error("Incident log failed", e);
         }
