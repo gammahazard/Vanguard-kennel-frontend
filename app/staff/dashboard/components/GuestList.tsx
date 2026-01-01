@@ -1,5 +1,5 @@
 import { Box, Paper, Typography, Chip, Stack, IconButton, Divider, Tooltip } from "@mui/material";
-import { Warning, Restaurant, DirectionsWalk, Medication, CrisisAlert } from "@mui/icons-material";
+import { Warning, Restaurant, DirectionsWalk, Medication, CrisisAlert, Assignment as AssignmentIcon } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { GuestPet } from "@/types";
 
@@ -8,9 +8,10 @@ interface GuestListProps {
     loading: boolean;
     onToggleAction: (id: string, action: 'fed' | 'walked' | 'meds') => void;
     onLogIncident: (pet: GuestPet) => void;
+    onPostReport: (pet: GuestPet) => void;
 }
 
-export default function GuestList({ guests, loading, onToggleAction, onLogIncident }: GuestListProps) {
+export default function GuestList({ guests, loading, onToggleAction, onLogIncident, onPostReport }: GuestListProps) {
     return (
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' }, gap: 3 }}>
             {loading ? (
@@ -57,6 +58,8 @@ export default function GuestList({ guests, loading, onToggleAction, onLogIncide
                                 <Tooltip title="Medication"><IconButton onClick={() => guest.meds !== null && onToggleAction(guest.id, 'meds')} disabled={guest.meds === null} sx={{ color: guest.meds ? '#a855f7' : (guest.meds === null ? 'rgba(255,255,255,0.05)' : 'text.disabled'), bgcolor: guest.meds ? 'rgba(168, 85, 247, 0.1)' : 'transparent' }}><Medication fontSize="small" /></IconButton></Tooltip>
                                 <Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
                                 <Tooltip title="Log Care Alert"><IconButton onClick={() => onLogIncident(guest)} sx={{ color: '#ef4444', '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.1)' } }}><CrisisAlert fontSize="small" /></IconButton></Tooltip>
+                                <Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+                                <Tooltip title="Daily Update"><IconButton onClick={() => onPostReport(guest)} sx={{ color: '#D4AF37', '&:hover': { bgcolor: 'rgba(212, 175, 55, 0.1)' } }}><AssignmentIcon fontSize="small" /></IconButton></Tooltip>
                             </Stack>
                         </Box>
                     </Paper>

@@ -190,6 +190,41 @@ export default function MessengerView() {
 
                 {/* Input Area */}
                 <Box sx={{ p: 2, pb: 11, borderTop: '1px solid rgba(255,255,255,0.05)', bgcolor: 'rgba(5,6,8,0.5)' }}>
+                    <Stack direction="row" spacing={1} sx={{ mb: 2, overflowX: 'auto', '::-webkit-scrollbar': { display: 'none' } }}>
+                        <IconButton
+                            onClick={() => {
+                                setNewMessage("Can I get a quick status update on my pet? 🐾");
+                                setTimeout(handleSendMessage, 100);
+                            }}
+                            sx={{
+                                bgcolor: 'rgba(212, 175, 55, 0.1)',
+                                border: '1px solid rgba(212, 175, 55, 0.3)',
+                                borderRadius: 2,
+                                px: 1.5,
+                                py: 1,
+                                height: 'auto',
+                                width: 'auto'
+                            }}
+                        >
+                            <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 'bold' }}>[Status Request]</Typography>
+                        </IconButton>
+                        <IconButton
+                            onClick={() => {
+                                setNewMessage("I'd like to update the feeding notes for my upcoming booking.");
+                            }}
+                            sx={{
+                                bgcolor: 'rgba(255, 255, 255, 0.05)',
+                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                borderRadius: 2,
+                                px: 1.5,
+                                py: 1,
+                                height: 'auto',
+                                width: 'auto'
+                            }}
+                        >
+                            <Typography variant="caption" sx={{ color: 'white', fontWeight: 'bold' }}>[Update Feeding Notes]</Typography>
+                        </IconButton>
+                    </Stack>
                     <Stack direction="row" spacing={1}>
                         <TextField
                             fullWidth

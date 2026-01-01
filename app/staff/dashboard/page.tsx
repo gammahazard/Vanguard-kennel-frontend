@@ -152,6 +152,18 @@ export default function StaffDashboard() {
     const [formError, setFormError] = useState("");
     const [formSuccess, setFormSuccess] = useState("");
     const [showSettingsDialog, setShowSettingsDialog] = useState(false);
+    const [showReportModal, setShowReportModal] = useState(false);
+    const [reportData, setReportData] = useState({
+        booking_id: "",
+        mood: "Happy",
+        activity: "Playing",
+        notes: "",
+        ate_breakfast: "Yes",
+        ate_dinner: "Pending",
+        playtime_status: "Energetic",
+        image_url: ""
+    });
+    const [submittingReport, setSubmittingReport] = useState(false);
 
     const groupBookings = useCallback((bookings: EnrichedBooking[]): GroupedBookingRequest[] => {
         return Object.values(bookings.reduce((acc: any, booking: EnrichedBooking) => {
@@ -498,6 +510,60 @@ export default function StaffDashboard() {
         }));
     };
 
+    const handleOpenReport = async (pet: GuestPet) => {
+        // find active booking for this pet
+        try {
+            const res = await authenticatedFetch(`${API_BASE_URL}/api/staff/bookings`);
+            if (res.ok) {
+                const bookings = await res.json();
+                const active = bookings.find((b: any) =>
+                    b.dog_id === pet.id &&
+                    b.status.toLowerCase() === 'confirmed'
+                );
+
+                if (active) {
+                    setReportData(prev => ({ ...prev, booking_id: active.id }));
+                    setSelectedPet(pet);
+                    setShowReportModal(true);
+                } else {
+                    setMessage({ text: "No active confirmed booking found for this pet.", severity: "warning", open: true });
+                }
+            }
+        } catch (e) {
+            console.error("Failed to find booking", e);
+        }
+    };
+
+    const handleSubmitReport = async () => {
+        setSubmittingReport(true);
+        try {
+            const res = await authenticatedFetch(`${API_BASE_URL}/api/reports`, {
+                method: 'POST',
+                body: JSON.stringify(reportData)
+            });
+            if (res.ok) {
+                setMessage({ text: "Daily Report pushed to client! 🐾", severity: "success", open: true });
+                setShowReportModal(false);
+                setReportData({
+                    booking_id: "",
+                    mood: "Happy",
+                    activity: "Playing",
+                    notes: "",
+                    ate_breakfast: "Yes",
+                    ate_dinner: "Pending",
+                    playtime_status: "Energetic",
+                    image_url: ""
+                });
+            } else {
+                setMessage({ text: "Failed to post report", severity: "error", open: true });
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setSubmittingReport(false);
+        }
+    };
+
     return (
         <Box sx={{ p: 4, bgcolor: 'background.default', minHeight: '100vh' }}>
             <Container maxWidth="xl">
@@ -615,6 +681,7 @@ export default function StaffDashboard() {
                             loading={loadingGuests}
                             onToggleAction={toggleAction}
                             onLogIncident={(pet) => { setSelectedPet(pet); setShowIncidentModal(true); }}
+                            onPostReport={handleOpenReport}
                         />
                     </motion.div>
                 )}
@@ -1198,6 +1265,109 @@ export default function StaffDashboard() {
                 </Dialog>
 
             </Container>
+
+            {/* Daily Report Dialog */}
+            <Dialog
+                open={showReportModal}
+                onClose={() => setShowReportModal(false)}
+                PaperProps={{ sx: { bgcolor: '#1e293b', backgroundImage: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, minWidth: 400 } }}
+            >
+                <DialogTitle sx={{ color: 'white', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <AssignmentIcon sx={{ color: '#D4AF37' }} /> Daily VIP Update: {selectedPet?.name}
+                </DialogTitle>
+                <DialogContent>
+                    <Stack spacing={2} sx={{ mt: 1 }}>
+                        <Stack direction="row" spacing={2}>
+                            <TextField
+                                select
+                                label="Mood"
+                                fullWidth
+                                variant="filled"
+                                value={reportData.mood}
+                                onChange={e => setReportData({ ...reportData, mood: e.target.value })}
+                            >
+                                <MenuItem value="Happy">Happy 😊</MenuItem>
+                                <MenuItem value="Energetic">Energetic ⚡</MenuItem>
+                                <MenuItem value="Relaxed">Relaxed 😴</MenuItem>
+                                <MenuItem value="Shy">Shy 🥺</MenuItem>
+                            </TextField>
+                            <TextField
+                                select
+                                label="Activity"
+                                fullWidth
+                                variant="filled"
+                                value={reportData.activity}
+                                onChange={e => setReportData({ ...reportData, activity: e.target.value })}
+                            >
+                                <MenuItem value="Playing">Playing</MenuItem>
+                                <MenuItem value="Walking">Walking</MenuItem>
+                                <MenuItem value="Swimming">Swimming</MenuItem>
+                                <MenuItem value="Resting">Resting</MenuItem>
+                            </TextField>
+                        </Stack>
+
+                        <Stack direction="row" spacing={2}>
+                            <TextField
+                                select
+                                label="Breakfast"
+                                fullWidth
+                                variant="filled"
+                                value={reportData.ate_breakfast}
+                                onChange={e => setReportData({ ...reportData, ate_breakfast: e.target.value })}
+                            >
+                                <MenuItem value="Yes">Yes</MenuItem>
+                                <MenuItem value="Partial">Partial</MenuItem>
+                                <MenuItem value="No">No</MenuItem>
+                            </TextField>
+                            <TextField
+                                select
+                                label="Dinner"
+                                fullWidth
+                                variant="filled"
+                                value={reportData.ate_dinner}
+                                onChange={e => setReportData({ ...reportData, ate_dinner: e.target.value })}
+                            >
+                                <MenuItem value="Pending">Pending</MenuItem>
+                                <MenuItem value="Yes">Yes</MenuItem>
+                                <MenuItem value="Partial">Partial</MenuItem>
+                                <MenuItem value="No">No</MenuItem>
+                            </TextField>
+                        </Stack>
+
+                        <TextField
+                            label="Photo URL (Moment)"
+                            fullWidth
+                            variant="filled"
+                            placeholder="https://..."
+                            value={reportData.image_url}
+                            onChange={e => setReportData({ ...reportData, image_url: e.target.value })}
+                            helperText="Paste a URL for a VIP photo"
+                        />
+
+                        <TextField
+                            label="Notes for Owner"
+                            fullWidth
+                            multiline
+                            rows={3}
+                            variant="filled"
+                            value={reportData.notes}
+                            onChange={e => setReportData({ ...reportData, notes: e.target.value })}
+                            placeholder="How was their day? Any specifics?"
+                        />
+                    </Stack>
+                </DialogContent>
+                <DialogActions sx={{ p: 3 }}>
+                    <Button onClick={() => setShowReportModal(false)} sx={{ color: 'text.secondary' }}>Cancel</Button>
+                    <Button
+                        variant="contained"
+                        onClick={handleSubmitReport}
+                        disabled={submittingReport}
+                        sx={{ bgcolor: '#D4AF37', color: 'black', '&:hover': { bgcolor: '#b5932b' }, fontWeight: 'bold' }}
+                    >
+                        {submittingReport ? <CircularProgress size={24} /> : "Push to Client"}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }

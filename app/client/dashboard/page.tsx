@@ -58,14 +58,14 @@ export default function ClientDashboard() {
     const [navValue, setNavValue] = useState(0);
     const [balance, setBalance] = useState(0);
     const [selectedCamera, setSelectedCamera] = useState<string | null>(null);
+    const [weather, setWeather] = useState({ temp: 72, condition: "Sunny", icon: "☀️" });
     const [nextStay, setNextStay] = useState<Booking | null>(null);
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(true);
     const [showUpsell, setShowUpsell] = useState(false);
     const [dontShowAgain, setDontShowAgain] = useState(false);
     const [currentEmail, setCurrentEmail] = useState<string | null>(null);
-
-    const [latestReport, setLatestReport] = useState<DailyReport | null>(null);
+    const [allReports, setAllReports] = useState<DailyReport[]>([]);
 
     useEffect(() => {
         const storedName = typeof window !== 'undefined' ? localStorage.getItem('vanguard_user') : null;
@@ -105,13 +105,14 @@ export default function ClientDashboard() {
                 if (upcoming.length > 0) {
                     setNextStay(upcoming[0]);
 
-                    const reportRes = await authenticatedFetch(`/api/reports/${upcoming[0].id}`);
-                    if (reportRes.ok) {
-                        const reports = await reportRes.json();
-                        if (reports.length > 0) {
-                            setLatestReport(reports[0]);
-                        }
-                    }
+                    // Fetch reports for ALL upcoming stays (multi-dog support)
+                    const reportPromises = upcoming.map((b: Booking) => authenticatedFetch(`/api/reports/${b.id}`));
+                    const reportResponses = await Promise.all(reportPromises);
+                    const reportsData = await Promise.all(reportResponses.filter(r => r.ok).map(r => r.json()));
+                    const flattened = reportsData.flat().sort((a: DailyReport, b: DailyReport) =>
+                        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                    );
+                    setAllReports(flattened);
                 }
             }
 
@@ -166,56 +167,94 @@ export default function ClientDashboard() {
                 <Container maxWidth="sm" sx={{ pt: 3, position: 'relative', zIndex: 1 }}>
                     <Stack spacing={3}>
 
-                        {latestReport && (
+                        {/* --- WEATHER & STATUS --- */}
+                        <Paper sx={{
+                            p: 2.5,
+                            borderRadius: 4,
+                            bgcolor: 'background.paper',
+                            border: '1px solid rgba(255,255,255,0.05)',
+                            background: 'linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 100%)'
+                        }}>
+                            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                <Box>
+                                    <Stack direction="row" spacing={1} alignItems="center">
+                                        <Typography variant="h3" fontWeight="bold" sx={{ fontSize: '2.2rem' }}>{weather.temp}°F</Typography>
+                                        <Typography variant="h5" sx={{ opacity: 0.5 }}>{weather.icon}</Typography>
+                                    </Stack>
+                                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, letterSpacing: '0.05em' }}>
+                                        LAKESHORE, ON • {weather.condition.toUpperCase()}
+                                    </Typography>
+                                </Box>
+                                <Stack alignItems="flex-end">
+                                    <Stack direction="row" alignItems="center" spacing={1} sx={{ bgcolor: 'rgba(74, 222, 128, 0.1)', borderRadius: 2, px: 1.5, py: 0.5 }}>
+                                        <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#4ade80', boxShadow: '0 0 8px #4ade80' }} />
+                                        <Typography variant="caption" sx={{ fontWeight: 700, color: '#4ade80', fontSize: '0.65rem' }}>FACILITY ACTIVE</Typography>
+                                    </Stack>
+                                    {allReports.length > 1 && (
+                                        <Chip
+                                            label={`${new Set(allReports.map(r => r.booking_id)).size} VIPs ON SITE`}
+                                            size="small"
+                                            sx={{ mt: 1, height: 18, fontSize: '0.6rem', bgcolor: 'rgba(212, 175, 55, 0.1)', color: 'primary.main', border: '1px solid rgba(212, 175, 55, 0.2)' }}
+                                        />
+                                    )}
+                                    <Typography variant="caption" sx={{ mt: 0.5, opacity: 0.5, fontSize: '0.6rem' }}>STAFF ON SITE</Typography>
+                                </Stack>
+                            </Stack>
+                        </Paper>
+
+                        {allReports.length > 0 ? (
                             <Box>
                                 <Typography variant="overline" color="primary" sx={{ fontWeight: 700, letterSpacing: '0.1em', pl: 1, display: 'block', mb: 1 }}>
-                                    Latest Update 📸
+                                    Living Feed: Recent Moments 📸
                                 </Typography>
-                                <Paper sx={{
-                                    p: 0,
-                                    borderRadius: 4,
-                                    bgcolor: 'background.paper',
-                                    border: '1px solid rgba(212, 175, 55, 0.3)',
-                                    overflow: 'hidden'
-                                }}>
-                                    {latestReport.image_url && (
-                                        <Box sx={{ position: 'relative', height: 200, bgcolor: 'black' }}>
-                                            <Box
-                                                component="img"
-                                                src={`${API_BASE_URL}${latestReport.image_url}`}
-                                                alt="Pet Update"
-                                                sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                            />
-                                            <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '60%', background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)' }} />
-                                            <Chip
-                                                label={latestReport.mood}
-                                                color="primary"
-                                                size="small"
-                                                sx={{ position: 'absolute', bottom: 16, left: 16, fontWeight: 'bold' }}
-                                            />
-                                            <Typography variant="caption" sx={{ position: 'absolute', bottom: 16, right: 16, color: 'rgba(255,255,255,0.8)' }}>
-                                                {new Date(latestReport.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </Typography>
-                                        </Box>
-                                    )}
-                                    <Box sx={{ p: 2 }}>
-                                        <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
-                                            <Chip label={latestReport.activity} size="small" variant="outlined" sx={{ borderColor: 'rgba(255,255,255,0.2)' }} />
-                                        </Stack>
-                                        {latestReport.notes && (
-                                            <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                                                &quot;{latestReport.notes}&quot;
-                                            </Typography>
-                                        )}
-                                    </Box>
-                                </Paper>
+                                <Stack direction="row" spacing={2} sx={{ overflowX: 'auto', pb: 1, mx: -2, px: 2, '::-webkit-scrollbar': { display: 'none' } }}>
+                                    {allReports.map((report, idx) => (
+                                        <Paper key={idx} sx={{
+                                            minWidth: 280,
+                                            maxWidth: 280,
+                                            p: 0,
+                                            borderRadius: 4,
+                                            bgcolor: 'background.paper',
+                                            border: '1px solid rgba(212, 175, 55, 0.3)',
+                                            overflow: 'hidden'
+                                        }}>
+                                            {report.image_url && (
+                                                <Box sx={{ position: 'relative', height: 160, bgcolor: 'black' }}>
+                                                    <Box
+                                                        component="img"
+                                                        src={report.image_url.startsWith('http') ? report.image_url : `${API_BASE_URL}${report.image_url}`}
+                                                        alt="Pet Update"
+                                                        sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                    />
+                                                    <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '60%', background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)' }} />
+                                                    <Chip
+                                                        label={report.mood}
+                                                        color="primary"
+                                                        size="small"
+                                                        sx={{ position: 'absolute', bottom: 12, left: 12, fontWeight: 'bold', height: 20, fontSize: '0.65rem' }}
+                                                    />
+                                                </Box>
+                                            )}
+                                            <Box sx={{ p: 2 }}>
+                                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                                                    {new Date(report.created_at).toLocaleDateString()} • {new Date(report.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </Typography>
+                                                <Chip label={report.activity} size="small" variant="outlined" sx={{ mb: 1, height: 20, fontSize: '0.65rem', borderColor: 'rgba(255,255,255,0.2)' }} />
+                                                {report.notes && (
+                                                    <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', fontSize: '0.8rem' }}>
+                                                        &quot;{report.notes}&quot;
+                                                    </Typography>
+                                                )}
+                                            </Box>
+                                        </Paper>
+                                    ))}
+                                </Stack>
                             </Box>
+                        ) : (
+                            <Paper sx={{ p: 3, textAlign: 'center', borderRadius: 4, bgcolor: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                                <Typography variant="body2" color="text.secondary">No updates yet. Check back once your VIP stay begins!</Typography>
+                            </Paper>
                         )}
-
-                        <Stack direction="row" alignItems="center" spacing={1} sx={{ bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 2, p: 1, pl: 2, width: 'fit-content' }}>
-                            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#4ade80', boxShadow: '0 0 10px #4ade80' }} />
-                            <Typography variant="caption" sx={{ fontWeight: 600 }}>Guest is Active</Typography>
-                        </Stack>
 
                         <Box>
                             <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: '0.1em', pl: 1 }}>
@@ -257,26 +296,26 @@ export default function ClientDashboard() {
 
                         <Box>
                             <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: '0.1em', pl: 1 }}>
-                                Today&apos;s Highlights
+                                Current Care Status
                             </Typography>
                             <Stack direction="row" spacing={2} sx={{ overflowX: 'auto', pb: 1, mx: -2, px: 2, mt: 1, '::-webkit-scrollbar': { display: 'none' } }}>
                                 <HighlightCard
                                     icon={<Restaurant sx={{ color: '#4ade80' }} />}
                                     time="MORNING"
                                     title="Breakfast"
-                                    desc={latestReport?.ate_breakfast || "Scheduled"}
+                                    desc={allReports[0]?.ate_breakfast || "Scheduled"}
                                 />
                                 <HighlightCard
                                     icon={<SportsBaseball sx={{ color: '#60a5fa' }} />}
                                     time="ACTIVITY"
                                     title="Playtime"
-                                    desc={latestReport?.playtime_status || "In Progress"}
+                                    desc={allReports[0]?.playtime_status || "In Progress"}
                                 />
                                 <HighlightCard
                                     icon={<Restaurant sx={{ color: '#facc15' }} />}
                                     time="EVENING"
                                     title="Dinner"
-                                    desc={latestReport?.ate_dinner || "Waitlist"}
+                                    desc={allReports[0]?.ate_dinner || "Scheduled"}
                                 />
                             </Stack>
                         </Box>
