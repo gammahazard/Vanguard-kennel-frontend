@@ -21,9 +21,14 @@ export default function CreateReportCard({ params }: { params: { dogId: string }
     const [activity, setActivity] = useState("Played Fetch");
     const [notes, setNotes] = useState("");
     const [imageUrl, setImageUrl] = useState<string | null>(null);
+    const [ateBreakfast, setAteBreakfast] = useState("Pending");
+    const [ateDinner, setAteDinner] = useState("Pending");
+    const [playtimeStatus, setPlaytimeStatus] = useState("Pending");
 
     const moods = ["Happy", "Energetic", "Shy", "Cuddly", "Anxious"];
     const activities = ["Played Fetch", "Nap Time", "Group Play", "Puzzler", "Snack Time"];
+    const mealStatuses = ["Ate 100%", "Ate 75%", "Ate 50%", "Ate 25%", "Skipped", "Pending"];
+    const playtimeStatuses = ["Full Group", "Individual", "Relaxed", "Pending"];
 
     const handleSubmit = async () => {
         setLoading(true);
@@ -40,7 +45,10 @@ export default function CreateReportCard({ params }: { params: { dogId: string }
                     mood,
                     activity,
                     image_url: imageUrl,
-                    notes
+                    notes,
+                    ate_breakfast: ateBreakfast,
+                    ate_dinner: ateDinner,
+                    playtime_status: playtimeStatus
                 })
             });
 
@@ -135,6 +143,85 @@ export default function CreateReportCard({ params }: { params: { dogId: string }
                                         fontWeight: 'bold',
                                         border: '1px solid',
                                         borderColor: activity === a ? '#10b981' : 'rgba(255,255,255,0.1)',
+                                    }}
+                                />
+                            ))}
+                        </Stack>
+                    </Box>
+
+                    {/* Meal Tracking */}
+                    <Box>
+                        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+                            <Restaurant sx={{ color: 'primary.main' }} />
+                            <Typography variant="h6" fontWeight="bold" color="text.primary">
+                                4. Meal Compliance 🥣
+                            </Typography>
+                        </Stack>
+                        <Stack spacing={3}>
+                            <Box>
+                                <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>BREAKFAST STATUS</Typography>
+                                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                                    {mealStatuses.map(s => (
+                                        <Chip
+                                            key={s}
+                                            label={s}
+                                            clickable
+                                            onClick={() => setAteBreakfast(s)}
+                                            sx={{
+                                                bgcolor: ateBreakfast === s ? 'rgba(52, 211, 153, 0.2)' : 'rgba(255,255,255,0.05)',
+                                                color: ateBreakfast === s ? '#34d399' : 'text.secondary',
+                                                border: '1px solid',
+                                                borderColor: ateBreakfast === s ? '#10b981' : 'rgba(255,255,255,0.1)',
+                                                fontSize: '0.75rem'
+                                            }}
+                                        />
+                                    ))}
+                                </Stack>
+                            </Box>
+                            <Box>
+                                <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>DINNER STATUS</Typography>
+                                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                                    {mealStatuses.map(s => (
+                                        <Chip
+                                            key={s}
+                                            label={s}
+                                            clickable
+                                            onClick={() => setAteDinner(s)}
+                                            sx={{
+                                                bgcolor: ateDinner === s ? 'rgba(52, 211, 153, 0.2)' : 'rgba(255,255,255,0.05)',
+                                                color: ateDinner === s ? '#34d399' : '#94a3b8',
+                                                border: '1px solid',
+                                                borderColor: ateDinner === s ? '#10b981' : 'rgba(255,255,255,0.1)',
+                                                fontSize: '0.75rem'
+                                            }}
+                                        />
+                                    ))}
+                                </Stack>
+                            </Box>
+                        </Stack>
+                    </Box>
+
+                    {/* Playtime Detail */}
+                    <Box>
+                        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+                            <SportsBaseball sx={{ color: 'primary.main' }} />
+                            <Typography variant="h6" fontWeight="bold" color="text.primary">
+                                5. Playtime Quality 🎾
+                            </Typography>
+                        </Stack>
+                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                            {playtimeStatuses.map(s => (
+                                <Chip
+                                    key={s}
+                                    label={s}
+                                    clickable
+                                    onClick={() => setPlaytimeStatus(s)}
+                                    sx={{
+                                        bgcolor: playtimeStatus === s ? 'rgba(96, 165, 250, 0.2)' : 'rgba(255,255,255,0.05)',
+                                        color: playtimeStatus === s ? '#60a5fa' : '#94a3b8',
+                                        border: '1px solid',
+                                        borderColor: playtimeStatus === s ? '#3b82f6' : 'rgba(255,255,255,0.1)',
+                                        fontSize: '0.75rem'
                                     }}
                                 />
                             ))}

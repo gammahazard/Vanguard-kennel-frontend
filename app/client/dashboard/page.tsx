@@ -224,7 +224,7 @@ export default function ClientDashboard() {
                                 <CamCard name="Camera 01 - Executive Wing" />
                                 <CamCard name="Camera 02 - Main Play Area" />
                                 <CamCard name="Camera 03 - Outdoor Run" />
-                                <CamCard name="Camera 04 - Grooming Suite" />
+                                <CamCard name="Camera 04 - Nap Suite" />
                             </Stack>
                         </Box>
 
@@ -258,21 +258,21 @@ export default function ClientDashboard() {
                             <Stack direction="row" spacing={2} sx={{ overflowX: 'auto', pb: 1, mx: -2, px: 2, mt: 1, '::-webkit-scrollbar': { display: 'none' } }}>
                                 <HighlightCard
                                     icon={<Restaurant sx={{ color: '#4ade80' }} />}
-                                    time="08:30 AM"
+                                    time="MORNING"
                                     title="Breakfast"
-                                    desc="Ate 100%"
+                                    desc={latestReport?.ate_breakfast || "Scheduled"}
                                 />
                                 <HighlightCard
                                     icon={<SportsBaseball sx={{ color: '#60a5fa' }} />}
-                                    time="11:15 AM"
+                                    time="ACTIVITY"
                                     title="Playtime"
-                                    desc="Group Play"
+                                    desc={latestReport?.playtime_status || "In Progress"}
                                 />
                                 <HighlightCard
-                                    icon={<Bedtime sx={{ color: '#a78bfa' }} />}
-                                    time="Grooming"
-                                    title="Ready!"
-                                    desc="Next Appointment"
+                                    icon={<Restaurant sx={{ color: '#facc15' }} />}
+                                    time="EVENING"
+                                    title="Dinner"
+                                    desc={latestReport?.ate_dinner || "Waitlist"}
                                 />
                             </Stack>
                         </Box>

@@ -13,7 +13,7 @@ import {
     Home, Pets, CalendarMonth, ModeEdit, Close, Warning, Notes,
     Add, Scale, Info, MedicalServices, Chat, Person, ArrowForward,
     DeleteForever, CheckCircle, Fingerprint, BugReport, Favorite,
-    ContentCut, Visibility, History
+    ContentCut, Visibility, History, Restaurant
 } from "@mui/icons-material";
 import { theme } from "@/lib/theme";
 import { API_BASE_URL } from "@/lib/config";
@@ -54,7 +54,9 @@ export default function PetsView() {
         is_microchipped: false,
         flea_tick_prevention: false,
         heartworm_prevention: false,
-        spayed_neutered: false
+        spayed_neutered: false,
+        feeding_amount: "",
+        feeding_frequency: ""
     });
     const [customTemp, setCustomTemp] = useState("");
 
@@ -109,7 +111,7 @@ export default function PetsView() {
             if (res.ok) {
                 setSuccess(`${formData.name} is now a Vanguard VIP! 🍾`);
                 setOpenAdd(false);
-                setFormData({ name: "", breed: "", age: "", weight: "", temperament: "Friendly", allergies: "", notes: "", vet_name: "", vet_phone: "", image_url: "", vaccination_records: "", is_microchipped: false, flea_tick_prevention: false, heartworm_prevention: false, spayed_neutered: false });
+                setFormData({ name: "", breed: "", age: "", weight: "", temperament: "Friendly", allergies: "", notes: "", vet_name: "", vet_phone: "", image_url: "", vaccination_records: "", is_microchipped: false, flea_tick_prevention: false, heartworm_prevention: false, spayed_neutered: false, feeding_amount: "", feeding_frequency: "" });
                 fetchPets();
             } else {
                 const errorData = await res.json();
@@ -159,7 +161,9 @@ export default function PetsView() {
                     is_microchipped: false,
                     flea_tick_prevention: false,
                     heartworm_prevention: false,
-                    spayed_neutered: false
+                    spayed_neutered: false,
+                    feeding_amount: "",
+                    feeding_frequency: ""
                 });
                 setCustomTemp("");
                 fetchPets();
@@ -216,7 +220,9 @@ export default function PetsView() {
             is_microchipped: pet.is_microchipped || false,
             flea_tick_prevention: pet.flea_tick_prevention || false,
             heartworm_prevention: pet.heartworm_prevention || false,
-            spayed_neutered: pet.spayed_neutered || false
+            spayed_neutered: pet.spayed_neutered || false,
+            feeding_amount: pet.feeding_amount || "",
+            feeding_frequency: pet.feeding_frequency || ""
         });
         setCustomTemp(pet.temperament && !['Friendly', 'Relaxed', 'Energetic', 'Protective', 'Anxious'].includes(pet.temperament) ? pet.temperament : "");
         if (pet.temperament && !['Friendly', 'Relaxed', 'Energetic', 'Protective', 'Anxious'].includes(pet.temperament)) {
@@ -242,7 +248,9 @@ export default function PetsView() {
             is_microchipped: false,
             flea_tick_prevention: false,
             heartworm_prevention: false,
-            spayed_neutered: false
+            spayed_neutered: false,
+            feeding_amount: "",
+            feeding_frequency: ""
         });
         setCustomTemp("");
         setOpenAdd(true);
@@ -391,6 +399,13 @@ export default function PetsView() {
                                 />
                             </Box>
 
+                            <Divider sx={{ my: 1, opacity: 0.1 }} />
+                            <Typography variant="caption" color="primary" fontWeight="bold">FEEDING & NUTRITION</Typography>
+                            <Stack direction="row" spacing={2}>
+                                <TextField label="Feeding Amount" fullWidth value={formData.feeding_amount} onChange={e => setFormData({ ...formData, feeding_amount: sanitizeInput(e.target.value, 40) })} variant="filled" placeholder="e.g. 2 cups" />
+                                <TextField label="Frequency" fullWidth value={formData.feeding_frequency} onChange={e => setFormData({ ...formData, feeding_frequency: sanitizeInput(e.target.value, 40) })} variant="filled" placeholder="e.g. 2x daily" />
+                            </Stack>
+
                             <TextField label="Medical Notes" fullWidth multiline rows={2} value={formData.notes} onChange={e => setFormData({ ...formData, notes: sanitizeInput(e.target.value, 500) })} variant="filled" placeholder="Medications, behavioral notes..." />
                             <Divider sx={{ my: 1, opacity: 0.1 }} />
                             <Typography variant="caption" color="primary" fontWeight="bold">EMERGENCY VETERINARY INFO</Typography>
@@ -528,6 +543,25 @@ function PetCard({ pet, onEdit, onDelete }: any) {
                         <Grid size={{ xs: 4 }} style={{ display: 'block' }}>
                             <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>CLASS</Typography>
                             <Typography variant="body1" fontWeight="bold" sx={{ color: 'primary.main' }}>VIP</Typography>
+                        </Grid>
+                        <Grid size={{ xs: 12 }}>
+                            <Box sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 2,
+                                p: 1.5,
+                                borderRadius: 2,
+                                bgcolor: 'rgba(255,255,255,0.03)',
+                                border: '1px solid rgba(255,255,255,0.05)'
+                            }}>
+                                <Restaurant sx={{ color: 'primary.main', fontSize: 18 }} />
+                                <Box>
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.65rem' }}>PERSONALIZED FEEDING</Typography>
+                                    <Typography variant="body2" fontWeight="bold">
+                                        {pet.feeding_amount || 'Not Specified'} • {pet.feeding_frequency || 'As Needed'}
+                                    </Typography>
+                                </Box>
+                            </Box>
                         </Grid>
                     </Grid>
 

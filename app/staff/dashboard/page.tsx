@@ -868,6 +868,14 @@ export default function StaffDashboard() {
                                         </Paper>
                                     </Box>
                                     <Box sx={{ gridColumn: '1 / -1' }}>
+                                        <Paper sx={{ p: 2, bgcolor: 'rgba(212, 175, 55, 0.05)', borderRadius: 2, border: '1px solid rgba(212, 175, 55, 0.2)' }}>
+                                            <Typography variant="caption" color="primary" display="block" sx={{ fontWeight: 'bold', mb: 0.5 }}>Feeding Protocol</Typography>
+                                            <Typography color="white" fontWeight="bold">
+                                                {pet.feeding_amount || 'Not Specified'} • {pet.feeding_frequency || 'As Needed'}
+                                            </Typography>
+                                        </Paper>
+                                    </Box>
+                                    <Box sx={{ gridColumn: '1 / -1' }}>
                                         <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 2 }}>
                                             <Typography variant="caption" color="#64748b" display="block">Medical Notes & Allergies</Typography>
                                             <Typography color="white">{pet.allergies || 'No known allergies'}</Typography>

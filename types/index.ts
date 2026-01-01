@@ -20,6 +20,8 @@ export interface Pet {
     vet_name?: string;
     vet_phone?: string;
     vaccination_records?: string;
+    feeding_amount?: string;
+    feeding_frequency?: string;
 }
 
 export interface UserWithPets extends User {
@@ -123,5 +125,8 @@ export interface DailyReport {
     mood: string;
     activity: string;
     notes?: string;
+    ate_breakfast?: string;
+    ate_dinner?: string;
+    playtime_status?: string;
     created_at: string;
 }
