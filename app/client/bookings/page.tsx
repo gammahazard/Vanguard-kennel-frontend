@@ -484,7 +484,7 @@ function PastBookingCard({ booking, pets }: any) {
                             )}
                             {booking.status_note && (
                                 <Typography variant="caption" sx={{ color: '#ffb74d', fontStyle: 'italic', display: 'block' }}>
-                                    "{booking.status_note}"
+                                    &quot;{booking.status_note}&quot;
                                 </Typography>
                             )}
                         </Stack>
