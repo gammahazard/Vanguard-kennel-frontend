@@ -140,16 +140,22 @@ export default function BookingRequestManager({
                                         </Typography>
                                     </Box>
                                     <Stack direction="row" spacing={1}>
-                                        <Button
-                                            size="small"
-                                            variant="outlined"
-                                            color="error"
-                                            onClick={() => onAction(group.bookings, 'cancelled')}
-                                            sx={{ minWidth: 'auto', px: 1, textTransform: 'none', borderColor: 'rgba(239, 68, 68, 0.3)', color: '#ef4444' }}
-                                        >
-                                            Cancel
-                                        </Button>
-                                        <Chip label="Confirmed" size="small" color="success" variant="outlined" />
+                                        {group.bookings.some((b: any) => b.status === "Checked In") ? (
+                                            <Chip label="Checked In" size="small" color="info" variant="filled" />
+                                        ) : (
+                                            <>
+                                                <Button
+                                                    size="small"
+                                                    variant="outlined"
+                                                    color="error"
+                                                    onClick={() => onAction(group.bookings, 'cancelled')}
+                                                    sx={{ minWidth: 'auto', px: 1, textTransform: 'none', borderColor: 'rgba(239, 68, 68, 0.3)', color: '#ef4444' }}
+                                                >
+                                                    Cancel
+                                                </Button>
+                                                <Chip label="Confirmed" size="small" color="success" variant="outlined" />
+                                            </>
+                                        )}
                                     </Stack>
                                 </Stack>
                             </Paper>

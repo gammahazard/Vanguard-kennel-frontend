@@ -60,6 +60,7 @@ import {
     Favorite,
     ContentCut
 } from "@mui/icons-material";
+import BusinessDashboard from './components/BusinessDashboard';
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 // ...
 import { motion, AnimatePresence } from "framer-motion";
@@ -82,6 +83,7 @@ export default function StaffDashboard() {
     const [pendingBookings, setPendingBookings] = useState<GroupedBookingRequest[]>([]);
     const [recentBookings, setRecentBookings] = useState<GroupedBookingRequest[]>([]);
     const [todaysArrivals, setTodaysArrivals] = useState<EnrichedBooking[]>([]);
+    const [allBookings, setAllBookings] = useState<EnrichedBooking[]>([]);
     const [clients, setClients] = useState<UserWithPets[]>([]);
     const [loadingBookings, setLoadingBookings] = useState(false);
     const [loadingClients, setLoadingClients] = useState(false);
@@ -225,6 +227,7 @@ export default function StaffDashboard() {
 
             if (res.ok) {
                 const data = await res.json();
+                setAllBookings(data);
 
                 // 1. Separate Pending vs Confirmed
                 const pending = data.filter((b: any) => b.status?.toLowerCase() === 'pending');
@@ -530,17 +533,19 @@ export default function StaffDashboard() {
 
     const handleCheckIn = async (booking: EnrichedBooking) => {
         try {
-            // Update booking status to 'completed' or a new 'active' status if we had one.
-            // For now, we'll use 'confirmed' as checked in since that's how Ops view currently shows them.
-            // But we'll fire a success message to show it "worked".
-            setMessage({ text: `${booking.dog_name || 'VIP'} checked in successfully!`, severity: "success", open: true });
+            const res = await authenticatedFetch(`${API_BASE_URL}/api/bookings/${booking.id}`, {
+                method: 'PUT',
+                body: JSON.stringify({ status: 'Checked In' })
+            });
 
-            // In a real flow, we'd update the booking status in the backend
-            // await authenticatedFetch(`${API_BASE_URL}/api/bookings/${booking.id}`, { method: 'PUT', body: JSON.stringify({ status: 'active' }) });
-
-            setShowCheckInModal(false);
-            fetchGuests();
-            fetchPendingBookings();
+            if (res.ok) {
+                setMessage({ text: `${booking.dog_name || 'VIP'} checked in successfully!`, severity: "success", open: true });
+                setShowCheckInModal(false);
+                fetchGuests();
+                fetchPendingBookings();
+            } else {
+                setMessage({ text: "Check-in failed", severity: "error", open: true });
+            }
         } catch (e) {
             setMessage({ text: "Check-in failed", severity: "error", open: true });
         }
@@ -748,6 +753,8 @@ export default function StaffDashboard() {
                 {viewMode === 'business' && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                         <Stack spacing={3}>
+                            {/* Financial Dashboard */}
+                            <BusinessDashboard bookings={allBookings} />
 
                             {/* Left Column: Real Stats */}
                             <Stack spacing={3}>
