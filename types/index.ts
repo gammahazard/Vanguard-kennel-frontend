@@ -132,3 +132,12 @@ export interface DailyReport {
     playtime_status?: string;
     created_at: string;
 }
+
+export interface Incident {
+    id: string;
+    booking_id: string;
+    pet_id: string;
+    content: string;
+    severity: 'Low' | 'Medium' | 'High' | 'Critical';
+    timestamp: string;
+}

@@ -69,7 +69,7 @@ import OperationsStats from './components/OperationsStats';
 import ServiceManager from './components/ServiceManager';
 import GuestList from './components/GuestList';
 import ClientDirectory from './components/ClientDirectory';
-import { GuestPet, UserWithPets, GroupedBookingRequest, EnrichedBooking, Message, User, Pet, Booking } from '@/types';
+import { GuestPet, UserWithPets, GroupedBookingRequest, EnrichedBooking, Message, User, Pet, Booking, Incident } from '@/types';
 
 export default function StaffDashboard() {
     const [guests, setGuests] = useState<GuestPet[]>([]);
@@ -131,6 +131,9 @@ export default function StaffDashboard() {
     const [incidentText, setIncidentText] = useState("");
     const [incidentSeverity, setIncidentSeverity] = useState("Warning");
     const [incidentTargetId, setIncidentTargetId] = useState<string>("general");
+    const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [incidentHistory, setIncidentHistory] = useState<Incident[]>([]);
+    const [historyLoading, setHistoryLoading] = useState(false);
 
     // Messaging States
     const [activeChat, setActiveChat] = useState<UserWithPets | null>(null);
@@ -534,6 +537,25 @@ export default function StaffDashboard() {
         }
     };
 
+    const handleViewHistory = async (pet: GuestPet) => {
+        setSelectedPet(pet);
+        setHistoryLoading(true);
+        setShowHistoryModal(true);
+        try {
+            const res = await authenticatedFetch(`${API_BASE_URL}/api/incidents/${pet.id}`);
+            if (res.ok) {
+                setIncidentHistory(await res.json());
+            } else {
+                setIncidentHistory([]);
+            }
+        } catch (e) {
+            console.error("Failed to fetch history", e);
+            setMessage({ text: "Failed to load history", severity: "error", open: true });
+        } finally {
+            setHistoryLoading(false);
+        }
+    };
+
     const handleSubmitReport = async () => {
         setSubmittingReport(true);
         try {
@@ -673,6 +695,7 @@ export default function StaffDashboard() {
                             onToggleAction={toggleAction}
                             onLogIncident={(pet) => { setSelectedPet(pet); setShowIncidentModal(true); }}
                             onPostReport={handleOpenReport}
+                            onViewHistory={handleViewHistory}
                         />
                     </motion.div>
                 )}
@@ -1351,6 +1374,66 @@ export default function StaffDashboard() {
                     >
                         {submittingReport ? <CircularProgress size={24} /> : "Push to Client"}
                     </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* INCIDENT HISTORY MODAL */}
+            <Dialog
+                open={showHistoryModal}
+                onClose={() => setShowHistoryModal(false)}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    sx: { borderRadius: 3, bgcolor: '#1e293b', border: '1px solid rgba(255,255,255,0.1)' }
+                }}
+            >
+                <DialogTitle sx={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                    <Stack direction="row" alignItems="center" spacing={2}>
+                        <History />
+                        <Box>
+                            <Typography variant="h6">Incident History</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                {selectedPet?.name}
+                            </Typography>
+                        </Box>
+                    </Stack>
+                </DialogTitle>
+                <DialogContent sx={{ pt: 3 }}>
+                    {historyLoading ? (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                            <CircularProgress sx={{ color: '#D4AF37' }} />
+                        </Box>
+                    ) : incidentHistory.length === 0 ? (
+                        <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
+                            <CheckCircle sx={{ fontSize: 40, mb: 2, color: '#22c55e', opacity: 0.5 }} />
+                            <Typography>No incidents recorded for this guest.</Typography>
+                        </Box>
+                    ) : (
+                        <Stack spacing={2}>
+                            {incidentHistory.map((inc) => (
+                                <Paper key={inc.id} sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.02)', borderRadius: 2 }}>
+                                    <Stack direction="row" justifyContent="space-between" mb={1}>
+                                        <Chip
+                                            label={inc.severity}
+                                            size="small"
+                                            sx={{
+                                                bgcolor: inc.severity === 'Critical' ? 'rgba(239, 68, 68, 0.2)' : inc.severity === 'High' ? 'rgba(249, 115, 22, 0.2)' : 'rgba(234, 179, 8, 0.2)',
+                                                color: inc.severity === 'Critical' ? '#ef4444' : inc.severity === 'High' ? '#f97316' : '#eab308',
+                                                fontWeight: 'bold'
+                                            }}
+                                        />
+                                        <Typography variant="caption" color="text.secondary">
+                                            {new Date(inc.timestamp).toLocaleString()}
+                                        </Typography>
+                                    </Stack>
+                                    <Typography variant="body1">{inc.content}</Typography>
+                                </Paper>
+                            ))}
+                        </Stack>
+                    )}
+                </DialogContent>
+                <DialogActions sx={{ p: 2, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                    <Button onClick={() => setShowHistoryModal(false)} sx={{ color: 'text.secondary' }}>Close</Button>
                 </DialogActions>
             </Dialog>
         </Box>
