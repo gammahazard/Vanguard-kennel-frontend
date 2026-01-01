@@ -376,7 +376,7 @@ export default function StaffDashboard() {
     const handleLogIncident = async () => {
         if (!incidentText.trim()) return;
         try {
-            await authenticatedFetch(`${API_BASE_URL}/api/incidents`, {
+            const res = await authenticatedFetch(`${API_BASE_URL}/api/incidents`, {
                 method: 'POST',
                 body: JSON.stringify({
                     id: Math.random().toString(36).substr(2, 9),
