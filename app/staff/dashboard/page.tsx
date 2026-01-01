@@ -849,6 +849,27 @@ export default function StaffDashboard() {
                                         >
                                             Log Incident
                                         </Button>
+                                        {pet.vaccination_records && (
+                                            <Button
+                                                fullWidth
+                                                variant="outlined"
+                                                startIcon={<Visibility />}
+                                                sx={{ mt: 1, borderRadius: 2, borderColor: '#D4AF37', color: '#D4AF37' }}
+                                                onClick={() => {
+                                                    const token = localStorage.getItem('vanguard_token');
+                                                    fetch(`${API_BASE_URL}${pet.vaccination_records}`, {
+                                                        headers: { 'Authorization': `Bearer ${token}` }
+                                                    })
+                                                        .then(res => res.blob())
+                                                        .then(blob => {
+                                                            const url = window.URL.createObjectURL(blob);
+                                                            window.open(url);
+                                                        });
+                                                }}
+                                            >
+                                                View Vaccination Record
+                                            </Button>
+                                        )}
                                     </Box>
                                 </Box>
                                 {i < (selectedClient?.pets?.length || 0) - 1 && <Divider sx={{ my: 4, borderColor: 'rgba(255,255,255,0.05)' }} />}

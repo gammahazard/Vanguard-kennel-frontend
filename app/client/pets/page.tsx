@@ -12,7 +12,7 @@ import {
 import {
     Home, Pets, CalendarMonth, ModeEdit, Close, Warning, Notes,
     Add, Scale, Info, MedicalServices, Chat, Person, ArrowForward,
-    DeleteForever
+    DeleteForever, CheckCircle
 } from "@mui/icons-material";
 import { theme } from "@/lib/theme";
 import { API_BASE_URL } from "@/lib/config";
@@ -21,6 +21,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authenticatedFetch } from "@/lib/api";
 import { ImageUpload } from "@/components/ui/ImageUpload";
+import { VaccinationUpload } from "@/components/ui/VaccinationUpload";
+import { Visibility } from "@mui/icons-material";
 
 export default function PetsView() {
     const router = useRouter();
@@ -47,7 +49,8 @@ export default function PetsView() {
         notes: "",
         vet_name: "",
         vet_phone: "",
-        image_url: ""
+        image_url: "",
+        vaccination_records: ""
     });
     const [customTemp, setCustomTemp] = useState("");
 
@@ -102,7 +105,7 @@ export default function PetsView() {
             if (res.ok) {
                 setSuccess(`${formData.name} is now a Vanguard VIP! 🍾`);
                 setOpenAdd(false);
-                setFormData({ name: "", breed: "", age: "", weight: "", temperament: "Friendly", allergies: "", notes: "", vet_name: "", vet_phone: "", image_url: "" });
+                setFormData({ name: "", breed: "", age: "", weight: "", temperament: "Friendly", allergies: "", notes: "", vet_name: "", vet_phone: "", image_url: "", vaccination_records: "" });
                 fetchPets();
             } else {
                 const errorData = await res.json();
@@ -147,7 +150,8 @@ export default function PetsView() {
                     notes: "",
                     vet_name: "",
                     vet_phone: "",
-                    image_url: ""
+                    image_url: "",
+                    vaccination_records: ""
                 });
                 setCustomTemp("");
                 fetchPets();
@@ -199,7 +203,8 @@ export default function PetsView() {
             notes: pet.notes || "",
             vet_name: pet.vet_name || "",
             vet_phone: pet.vet_phone || "",
-            image_url: pet.image_url || ""
+            image_url: pet.image_url || "",
+            vaccination_records: pet.vaccination_records || ""
         });
         setCustomTemp(pet.temperament && !['Friendly', 'Relaxed', 'Energetic', 'Protective', 'Anxious'].includes(pet.temperament) ? pet.temperament : "");
         if (pet.temperament && !['Friendly', 'Relaxed', 'Energetic', 'Protective', 'Anxious'].includes(pet.temperament)) {
@@ -220,7 +225,8 @@ export default function PetsView() {
             notes: "",
             vet_name: "",
             vet_phone: "",
-            image_url: ""
+            image_url: "",
+            vaccination_records: ""
         });
         setCustomTemp("");
         setOpenAdd(true);
@@ -303,6 +309,10 @@ export default function PetsView() {
                             <ImageUpload
                                 initialUrl={formData.image_url}
                                 onUploadSuccess={(url) => setFormData(prev => ({ ...prev, image_url: url }))}
+                            />
+                            <VaccinationUpload
+                                initialUrl={formData.vaccination_records}
+                                onUploadSuccess={(url) => setFormData(prev => ({ ...prev, vaccination_records: url }))}
                             />
                             <TextField label="VIP Name" fullWidth value={formData.name} onChange={e => setFormData({ ...formData, name: sanitizeInput(e.target.value, 32) })} variant="filled" />
                             <TextField label="Breed" fullWidth value={formData.breed} onChange={e => setFormData({ ...formData, breed: sanitizeInput(e.target.value, 40) })} variant="filled" />
@@ -496,10 +506,28 @@ function PetCard({ pet, onEdit, onDelete }: any) {
                             {pet.notes && (
                                 <Chip
                                     icon={<Notes sx={{ fontSize: '0.8rem !important' }} />}
-                                    label="MEDICAL DATA PROVIDED"
+                                    label="MEDICAL DATA"
                                     size="small"
                                     variant="outlined"
                                     sx={{ borderRadius: 1, fontSize: '0.6rem', color: '#60a5fa', borderColor: 'rgba(96, 165, 250, 0.3)', fontWeight: 'bold' }}
+                                />
+                            )}
+                            {pet.vaccination_records && (
+                                <Chip
+                                    icon={<CheckCircle sx={{ fontSize: '0.8rem !important' }} />}
+                                    label="VAX VERIFIED"
+                                    size="small"
+                                    variant="outlined"
+                                    sx={{ borderRadius: 1, fontSize: '0.6rem', color: '#4ade80', borderColor: 'rgba(74, 222, 128, 0.3)', fontWeight: 'bold' }}
+                                />
+                            )}
+                            {!pet.vaccination_records && (
+                                <Chip
+                                    icon={<MedicalServices sx={{ fontSize: '0.8rem !important' }} />}
+                                    label="VAX MISSING"
+                                    size="small"
+                                    variant="outlined"
+                                    sx={{ borderRadius: 1, fontSize: '0.6rem', color: '#fb923c', borderColor: 'rgba(251, 146, 60, 0.3)', fontWeight: 'bold' }}
                                 />
                             )}
                         </Stack>
@@ -526,6 +554,28 @@ function PetCard({ pet, onEdit, onDelete }: any) {
                             <Typography variant="body2" fontWeight="bold" sx={{ fontSize: '0.8rem' }}>{pet.vet_name || "NOT LISTED"}</Typography>
                             <Typography variant="caption" color="text.secondary">{pet.vet_phone || "No phone provided"}</Typography>
                         </Box>
+                    )}
+
+                    {pet.vaccination_records && (
+                        <Button
+                            fullWidth
+                            size="small"
+                            startIcon={<Visibility />}
+                            sx={{ mt: 2, bgcolor: 'rgba(255,255,255,0.05)', color: 'primary.main', borderRadius: 2, py: 1 }}
+                            onClick={() => {
+                                const token = localStorage.getItem('vanguard_token');
+                                fetch(`${API_BASE_URL}${pet.vaccination_records}`, {
+                                    headers: { 'Authorization': `Bearer ${token}` }
+                                })
+                                    .then(res => res.blob())
+                                    .then(blob => {
+                                        const url = window.URL.createObjectURL(blob);
+                                        window.open(url);
+                                    });
+                            }}
+                        >
+                            View Vaccination Records
+                        </Button>
                     )}
 
                     <Box sx={{ mt: 2, pt: 1, borderTop: '1px dashed rgba(255,255,255,0.05)' }}>
