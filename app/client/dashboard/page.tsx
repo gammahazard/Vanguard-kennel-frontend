@@ -466,24 +466,67 @@ function HighlightCard({ icon, time, title, desc }: { icon: any, time: string, t
 }
 
 function CamCard({ name }: { name: string }) {
+    // Randomize slightly to avoid all videos syncing perfectly if we had multiple sources, 
+    // but mainly here we just render the video.
     return (
         <Paper sx={{
             minWidth: 280, position: 'relative', overflow: 'hidden', borderRadius: 4,
-            border: '1px solid rgba(255,255,255,0.1)', aspectRatio: '16/9', bgcolor: '#0f172a', flexShrink: 0
+            border: '1px solid rgba(255,255,255,0.1)', aspectRatio: '16/9', bgcolor: '#000', flexShrink: 0
         }}>
-            <Box sx={{ position: 'absolute', top: 12, left: 12, zIndex: 2, display: 'flex', alignItems: 'center', gap: 1, bgcolor: 'rgba(0, 0, 0, 0.6)', px: 1.2, py: 0.4, borderRadius: 1, backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#ef4444', boxShadow: '0 0 8px #ef4444' }} />
-                <Typography variant="caption" fontWeight="bold" sx={{ color: '#ef4444', fontSize: '0.65rem', letterSpacing: 1 }}>OFFLINE</Typography>
+            {/* LIVE Badge */}
+            <Box sx={{
+                position: 'absolute', top: 12, left: 12, zIndex: 2, display: 'flex', alignItems: 'center', gap: 1,
+                bgcolor: 'rgba(220, 38, 38, 0.9)', px: 1.2, py: 0.4, borderRadius: 1,
+                backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.2)',
+                boxShadow: '0 0 15px rgba(220, 38, 38, 0.5)'
+            }}>
+                <Box sx={{
+                    width: 8, height: 8, borderRadius: '50%', bgcolor: '#fff',
+                    animation: 'pulse 1.5s infinite',
+                    '@keyframes pulse': {
+                        '0%': { opacity: 1 },
+                        '50%': { opacity: 0.4 },
+                        '100%': { opacity: 1 }
+                    }
+                }} />
+                <Typography variant="caption" fontWeight="bold" sx={{ color: '#fff', fontSize: '0.7rem', letterSpacing: 1 }}>
+                    LIVE
+                </Typography>
             </Box>
-            <Box sx={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: 0.3 }}>
-                <Videocam sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
-                <Typography variant="caption" fontFamily="monospace" color="text.secondary">NO SIGNAL</Typography>
+
+            {/* Video Feed */}
+            <Box sx={{ width: '100%', height: '100%', position: 'relative' }}>
+                <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }}
+                    poster="https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" // Fallback image
+                >
+                    <source src="https://videos.pexels.com/video-files/5532785/5532785-sd_640_360_25fps.mp4" type="video/mp4" />
+                    Your browser does not support the video tag.
+                </video>
+
+                {/* Scanline Overlay for "CCTV" effect */}
+                <Box sx={{
+                    position: 'absolute', inset: 0,
+                    background: 'linear-gradient(to bottom, rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%)',
+                    backgroundSize: '100% 4px',
+                    pointerEvents: 'none',
+                    zIndex: 1
+                }} />
             </Box>
-            <Box sx={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.5) 50%)', backgroundSize: '100% 4px', opacity: 0.2, pointerEvents: 'none' }} />
-            <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, p: 2, background: 'linear-gradient(to top, rgba(0,0,0,0.9), transparent)' }}>
+
+            {/* Camera Info Overlay */}
+            <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, p: 2, background: 'linear-gradient(to top, rgba(0,0,0,0.9), transparent)', zIndex: 2 }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center">
-                    <Typography variant="caption" sx={{ fontWeight: 500, opacity: 0.9 }}>{name}</Typography>
-                    <Typography variant="caption" fontFamily="monospace" sx={{ opacity: 0.5, fontSize: '0.6rem' }}>CAM-{Math.floor(Math.random() * 99)}</Typography>
+                    <Typography variant="caption" sx={{ fontWeight: 500, opacity: 0.9, color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                        {name}
+                    </Typography>
+                    <Typography variant="caption" fontFamily="monospace" sx={{ opacity: 0.7, fontSize: '0.7rem', color: 'rgba(255,255,255,0.7)' }}>
+                        REC • {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </Typography>
                 </Stack>
             </Box>
         </Paper>
