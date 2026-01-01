@@ -100,13 +100,21 @@ export default function BookingsView() {
             const start = new Date(formData.start_date);
             const end = new Date(formData.end_date);
             const diffTime = Math.abs(end.getTime() - start.getTime());
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // Inclusive
+
+            // Logic Fix: Boarding is Per Night (diff), Daycare is Per Day (Inclusive +1)
+            let units = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (formData.service_type === 'Daycare') {
+                units += 1; // Inclusive for Daycare
+            } else {
+                // Boarding: Ensure at least 1 night
+                units = units < 1 ? 1 : units;
+            }
 
             // Dynamic Pricing from Backend
             const service = services.find(s => s.name === formData.service_type);
             const dailyRate = service ? service.price : 0;
 
-            let total = diffDays * dailyRate * (formData.dog_ids.length || 1);
+            let total = units * dailyRate * (formData.dog_ids.length || 1);
             setFormData(prev => ({ ...prev, total_price: total }));
         }
     }, [formData.start_date, formData.end_date, formData.service_type, formData.dog_ids, services]);
@@ -347,7 +355,10 @@ export default function BookingsView() {
                                     {formData.start_date && formData.end_date && (
                                         <Box sx={{ mt: 1, display: 'flex', justifyContent: 'flex-start' }}>
                                             <Chip
-                                                label={`Stay Duration: ${Math.ceil(Math.abs(new Date(formData.end_date).getTime() - new Date(formData.start_date).getTime()) / (1000 * 60 * 60 * 24)) + 1} Days`}
+                                                label={`Duration: ${formData.service_type === 'Daycare'
+                                                        ? Math.ceil(Math.abs(new Date(formData.end_date).getTime() - new Date(formData.start_date).getTime()) / (1000 * 60 * 60 * 24)) + 1 + " Day(s)"
+                                                        : Math.max(1, Math.ceil(Math.abs(new Date(formData.end_date).getTime() - new Date(formData.start_date).getTime()) / (1000 * 60 * 60 * 24))) + " Night(s)"
+                                                    }`}
                                                 color="primary"
                                                 variant="outlined"
                                                 size="small"
