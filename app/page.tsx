@@ -49,7 +49,7 @@ const theme = createTheme({
 export default function SplashGate() {
     const [showInstall, setShowInstall] = useState(false);
     const [isPWA, setIsPWA] = useState(false);
-    const [isChrome, setIsChrome] = useState(false);
+    const [browserType, setBrowserType] = useState<'chrome-ios' | 'safari-ios' | 'firefox' | 'desktop-chrome' | 'other'>('other');
 
     useEffect(() => {
         // Check PWA Support
@@ -58,11 +58,24 @@ export default function SplashGate() {
             setIsPWA(isStandalone);
         };
 
-        // Check Browser Type (Chrome on iOS)
+        // Enhanced Browser Detection
         const checkBrowser = () => {
-            const ua = window.navigator.userAgent;
-            const isIOSChrome = /CriOS/i.test(ua);
-            setIsChrome(isIOSChrome);
+            const ua = window.navigator.userAgent.toLowerCase();
+            const isMobile = /iphone|ipad|ipod|android/i.test(ua);
+
+            if (!isMobile) {
+                if (ua.includes('firefox')) setBrowserType('firefox');
+                else setBrowserType('desktop-chrome'); // Default to desktop chrome instructions for most
+                return;
+            }
+
+            if (/crios/i.test(ua)) {
+                setBrowserType('chrome-ios');
+            } else if (/safari/i.test(ua) && !/chrome/i.test(ua)) {
+                setBrowserType('safari-ios');
+            } else {
+                setBrowserType('other');
+            }
         };
 
         checkPWA();
@@ -71,296 +84,163 @@ export default function SplashGate() {
         return () => window.removeEventListener('resize', checkPWA);
     }, []);
 
-    // ... (Modal Logic remains same)
+    // ... (Modal Logic)
     const handleOpen = () => setShowInstall(true);
     const handleClose = () => setShowInstall(false);
 
     return (
         <ThemeProvider theme={theme}>
-            {/* ... (Layout remains same until Modal content) ... */}
+            {/* ... (Layout remains same) ... */}
             <CssBaseline />
-            <Box
-                sx={{
-                    minHeight: '100dvh',
-                    width: '100%',
-                    bgcolor: 'background.default',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    p: 3,
-                    overflow: 'hidden',
-                    position: 'relative'
-                }}
+            {/* ... (Background & Header code same) ... */}
+
+            {/* ... (Inside Modal Content) ... */}
+            <Modal
+                open={showInstall}
+                onClose={handleClose}
+                closeAfterTransition
+                sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)' }}
             >
-                {/* Background Glow */}
-                <Box sx={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    width: '600px',
-                    height: '600px',
-                    borderRadius: '50%',
-                    bgcolor: 'rgba(212, 175, 55, 0.05)',
-                    filter: 'blur(100px)',
-                    zIndex: 0,
-                    pointerEvents: 'none'
-                }} />
-
-                <Stack spacing={8} alignItems="center" zIndex={1} sx={{ width: '100%', maxWidth: 400 }}>
-
-                    {/* Header */}
-                    <Stack spacing={1} alignItems="center" textAlign="center">
-                        <Typography
-                            variant="h2"
-                            component="h1"
+                <Fade in={showInstall}>
+                    <Box sx={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', outline: 'none' }} onClick={handleClose}>
+                        <Paper
+                            elevation={24}
+                            onClick={(e) => e.stopPropagation()}
                             sx={{
-                                fontWeight: 800,
-                                letterSpacing: '0.2em',
-                                color: '#fff',
-                                textTransform: 'uppercase',
-                                fontSize: { xs: '2rem', md: '3rem' }
+                                bgcolor: '#15161A',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                borderRadius: 4,
+                                p: 4,
+                                width: '90%',
+                                maxWidth: 400,
+                                textAlign: 'center',
+                                outline: 'none',
+                                position: 'relative',
+                                zIndex: 2
                             }}
                         >
-                            LakeShore Kennels
-                        </Typography>
-                        <Stack spacing={0.5}>
-                            <Typography
-                                variant="subtitle2"
-                                sx={{
-                                    color: '#D4AF37',
-                                    letterSpacing: '0.4em',
-                                    fontWeight: 700,
-                                    textTransform: 'uppercase',
-                                    opacity: 0.8,
-                                    fontSize: '0.7rem'
-                                }}
+                            <Box sx={{ width: 60, height: 60, borderRadius: '50%', bgcolor: 'rgba(212,175,55,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 3 }}>
+                                <Smartphone sx={{ color: '#D4AF37', fontSize: 30 }} />
+                            </Box>
+
+                            <Typography variant="h5" sx={{ color: '#fff', fontWeight: 700, mb: 1 }}>
+                                Install Application
+                            </Typography>
+
+                            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 4 }}>
+                                {browserType.includes('desktop') ? "Install on your PC/Mac for best performance." : "For security reasons, this app runs best from your home screen."}
+                            </Typography>
+
+                            <Stack spacing={2} sx={{ bgcolor: 'rgba(0,0,0,0.3)', p: 3, borderRadius: 3, textAlign: 'left', mb: 3 }}>
+                                {browserType === 'desktop-chrome' && (
+                                    <>
+                                        <Stack direction="row" spacing={2}><Typography variant="body2" color="#ccc"><b>Step 1:</b> Look for the <b>Install</b> icon (⊕ or Computer) in the right side of the URL bar.</Typography></Stack>
+                                        <Stack direction="row" spacing={2}><Typography variant="body2" color="#ccc"><b>Step 2:</b> Click <b>Install</b> to add to your desktop.</Typography></Stack>
+                                    </>
+                                )}
+                                {browserType === 'firefox' && (
+                                    <>
+                                        <Stack direction="row" spacing={2}><Typography variant="body2" color="#ccc"><b>Step 1:</b> Look for the <b>Install</b> icon in the right side of the address bar.</Typography></Stack>
+                                        <Stack direction="row" spacing={2}><Typography variant="body2" color="#ccc"><b>Step 2:</b> If missing, this might not be supported on Firefox Desktop yet.</Typography></Stack>
+                                    </>
+                                )}
+                                {browserType === 'safari-ios' && (
+                                    <>
+                                        <Stack direction="row" spacing={2}><Typography variant="body2" color="#ccc"><b>Step 1:</b> Tap the <b>Share Button</b> (Rectangle with Arrow) at the bottom center.</Typography></Stack>
+                                        <Stack direction="row" spacing={2}><Typography variant="body2" color="#ccc"><b>Step 2:</b> Scroll down and tap <b>Add to Home Screen</b>.</Typography></Stack>
+                                        <Stack direction="row" spacing={2}><Typography variant="body2" color="#ccc"><b>Step 3:</b> Tap <b>Add</b> in the top right.</Typography></Stack>
+                                    </>
+                                )}
+                                {browserType === 'chrome-ios' && (
+                                    <>
+                                        <Stack direction="row" spacing={2}><Typography variant="body2" color="#ccc"><b>Step 1:</b> Tap the <b>Share Button</b> in the address bar (Top Right).</Typography></Stack>
+                                        <Stack direction="row" spacing={2}><Typography variant="body2" color="#ccc"><b>Step 2:</b> Scroll down and tap <b>Add to Home Screen</b>.</Typography></Stack>
+                                    </>
+                                )}
+                                {browserType === 'other' && (
+                                    <Typography variant="body2" color="#ccc">Use your browser's menu to find "Add to Home Screen" or "Install App".</Typography>
+                                )}
+                            </Stack>
+                        </Paper>
+
+                        {/* Dynamic Arrows */}
+
+                        {/* Desktop: Point to Top Right URL Bar */}
+                        {(browserType === 'desktop-chrome' || browserType === 'firefox') && (
+                            <Box
+                                component={motion.div}
+                                sx={{ position: 'absolute', top: 20, right: 40, color: '#EF4444', zIndex: 10, pointerEvents: 'none' }}
+                                animate={{ x: [0, 10, 0] }}
+                                transition={{ duration: 1.5, repeat: Infinity }}
                             >
-                                Premium Kennel Services
-                            </Typography>
-                            <Typography
-                                variant="caption"
-                                sx={{
-                                    color: 'grey.500',
-                                    letterSpacing: '0.1em',
-                                    textTransform: 'uppercase',
-                                    fontSize: '0.55rem',
-                                    pt: 1
-                                }}
+                                <ArrowUpward sx={{ fontSize: 48, transform: 'rotate(45deg)', filter: 'drop-shadow(0 0 10px rgba(239, 68, 68, 0.5))' }} />
+                                <Typography variant="caption" sx={{ display: 'block', fontWeight: 'bold', textShadow: '0 2px 4px black' }}>CLICK HERE</Typography>
+                            </Box>
+                        )}
+
+                        {/* Safari iOS: Point to Bottom Center */}
+                        {browserType === 'safari-ios' && (
+                            <Box
+                                component={motion.div}
+                                sx={{ position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)', color: '#EF4444', zIndex: 100, pointerEvents: 'none', textAlign: 'center' }}
+                                animate={{ y: [0, 10, 0] }}
+                                transition={{ duration: 1.5, repeat: Infinity }}
                             >
-                                Powered by Vanguard Secure Solutions
-                            </Typography>
-                        </Stack>
-                    </Stack>
+                                <Typography variant="caption" sx={{ display: 'block', fontWeight: 'bold', textShadow: '0 2px 4px black', mb: 0.5 }}>TAP SHARE</Typography>
+                                <ArrowDownward sx={{ fontSize: 48, filter: 'drop-shadow(0 0 10px rgba(239, 68, 68, 0.5))' }} />
+                            </Box>
+                        )}
 
-                    {/* Content Switch */}
-                    {!isPWA ? (
-                        /* --- BROWSER MODE: INSTALL PROMPT --- */
-                        <Stack spacing={4} width="100%" alignItems="center">
-                            <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center', fontWeight: 300, maxWidth: '280px' }}>
-                                For the premium experience, please install the application to your device.
-                            </Typography>
-
-                            <Button
-                                onClick={handleOpen}
-                                variant="contained"
-                                startIcon={<Download />}
-                                fullWidth
-                                sx={{
-                                    py: 2,
-                                    background: 'linear-gradient(45deg, #D4AF37 30%, #AA8C2C 90%)',
-                                    color: '#000',
-                                    boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)',
-                                    '&:hover': {
-                                        background: 'linear-gradient(45deg, #E5C158 30%, #B89D3D 90%)',
-                                        boxShadow: '0 0 30px rgba(212, 175, 55, 0.5)',
-                                    }
-                                }}
+                        {/* Chrome iOS: Point to Top Right */}
+                        {browserType === 'chrome-ios' && (
+                            <Box
+                                component={motion.div}
+                                sx={{ position: 'fixed', top: 20, right: 20, color: '#EF4444', zIndex: 100, pointerEvents: 'none', textAlign: 'center' }}
+                                animate={{ y: [0, -10, 0] }}
+                                transition={{ duration: 1.5, repeat: Infinity }}
                             >
-                                Install App
-                            </Button>
-                        </Stack>
-                    ) : (
-                        /* --- PWA MODE: UNIFIED ACCESS --- */
-                        <Stack spacing={3} width="100%">
-                            <Typography variant="overline" sx={{ color: 'text.secondary', textAlign: 'center', letterSpacing: '0.2em' }}>
-                                Secure Gateway
-                            </Typography>
+                                <ArrowUpward sx={{ fontSize: 48, filter: 'drop-shadow(0 0 10px rgba(239, 68, 68, 0.5))' }} />
+                                <Typography variant="caption" sx={{ display: 'block', fontWeight: 'bold', textShadow: '0 2px 4px black', mt: 0.5 }}>TAP HERE</Typography>
+                            </Box>
+                        )}
 
-                            <Link href="/client/login" passHref style={{ width: '100%', textDecoration: 'none' }}>
-                                <Button
-                                    variant="contained"
-                                    fullWidth
-                                    startIcon={<Login />}
-                                    sx={{
-                                        py: 2,
-                                        background: 'linear-gradient(45deg, #D4AF37 30%, #AA8C2C 90%)',
-                                        color: '#000',
-                                        fontSize: '1rem'
-                                    }}
-                                >
-                                    Access Portal
-                                </Button>
-                            </Link>
+                    </Box>
+                </Fade>
+            </Modal>
 
-                        </Stack>
-                    )}
-
-                </Stack>
-
-                {/* --- MUI Modal --- */}
-                <Modal
-                    open={showInstall}
-                    onClose={handleClose}
-                    closeAfterTransition
+            {/* --- GLOBAL BRANDING FOOTER --- */}
+            <Box
+                sx={{
+                    position: 'absolute',
+                    bottom: { xs: 20, md: 40 },
+                    left: 0,
+                    width: '100%',
+                    textAlign: 'center',
+                    zIndex: 5,
+                    pointerEvents: 'none'
+                }}
+            >
+                <Typography
+                    variant="caption"
                     sx={{
+                        color: '#D4AF37',
+                        fontWeight: 700,
+                        letterSpacing: '0.2em',
+                        opacity: 0.6,
+                        textTransform: 'uppercase',
+                        fontSize: '0.65rem',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        backdropFilter: 'blur(8px)'
+                        gap: 1
                     }}
                 >
-                    <Fade in={showInstall}>
-                        <Box sx={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', outline: 'none' }} onClick={handleClose}>
-                            <Paper
-                                elevation={24}
-                                onClick={(e) => e.stopPropagation()}
-                                sx={{
-                                    bgcolor: '#15161A',
-                                    border: '1px solid rgba(255,255,255,0.1)',
-                                    borderRadius: 4,
-                                    p: 4,
-                                    width: '90%',
-                                    maxWidth: 400,
-                                    textAlign: 'center',
-                                    outline: 'none',
-                                    position: 'relative',
-                                    zIndex: 2
-                                }}
-                            >
-                                <Box sx={{ width: 60, height: 60, borderRadius: '50%', bgcolor: 'rgba(212,175,55,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 3 }}>
-                                    <Smartphone sx={{ color: '#D4AF37', fontSize: 30 }} />
-                                </Box>
-
-                                <Typography variant="h5" sx={{ color: '#fff', fontWeight: 700, mb: 1 }}>
-                                    Install Application
-                                </Typography>
-
-                                <Typography variant="body2" sx={{ color: 'text.secondary', mb: 4 }}>
-                                    For security reasons, this app runs best from your home screen.
-                                </Typography>
-
-                                <Stack spacing={2} sx={{ bgcolor: 'rgba(0,0,0,0.3)', p: 3, borderRadius: 3, textAlign: 'left', mb: 3 }}>
-                                    {isChrome ? (
-                                        <>
-                                            <Stack direction="row" spacing={2} alignItems="flex-start">
-                                                <Typography variant="body2" color="#ccc">
-                                                    <b>Step 1:</b> Tap the <b>square</b> indicated by the <b>red arrow</b>.
-                                                </Typography>
-                                            </Stack>
-                                            <Stack direction="row" spacing={2} alignItems="flex-start">
-                                                <Typography variant="body2" color="#ccc">
-                                                    <b>Step 2:</b> Select the <b>More</b> option.
-                                                </Typography>
-                                            </Stack>
-                                            <Stack direction="row" spacing={2} alignItems="flex-start">
-                                                <Typography variant="body2" color="#ccc">
-                                                    <b>Step 3:</b> Select <b>Add to Home Screen</b>.
-                                                </Typography>
-                                            </Stack>
-                                            <Stack direction="row" spacing={2} alignItems="flex-start">
-                                                <Typography variant="body2" color="#ccc">
-                                                    <b>Step 4:</b> Click the <b>Add</b> button in the top right.
-                                                </Typography>
-                                            </Stack>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Stack direction="row" spacing={2} alignItems="flex-start">
-                                                <Typography variant="body2" color="#ccc">
-                                                    <b>Step 1:</b> Tap the <b>three dots</b> indicated by the <b>red arrow</b>.
-                                                </Typography>
-                                            </Stack>
-                                            <Stack direction="row" spacing={2} alignItems="flex-start">
-                                                <Typography variant="body2" color="#ccc">
-                                                    <b>Step 2:</b> Select the <b>Share</b> button.
-                                                </Typography>
-                                            </Stack>
-                                            <Stack direction="row" spacing={2} alignItems="flex-start">
-                                                <Typography variant="body2" color="#ccc">
-                                                    <b>Step 3:</b> Scroll down and select <b>Add to Home Screen</b>.
-                                                </Typography>
-                                            </Stack>
-                                            <Stack direction="row" spacing={2} alignItems="flex-start">
-                                                <Typography variant="body2" color="#ccc">
-                                                    <b>Step 4:</b> Click the <b>Add</b> button in the top right.
-                                                </Typography>
-                                            </Stack>
-                                        </>
-                                    )}
-                                </Stack>
-                            </Paper>
-
-                            {/* Animated Arrow - Dynamic Position */}
-                            <Box
-                                component={motion.div}
-                                animate={isChrome ? { y: [0, -10, 0] } : { y: [0, 10, 0] }}
-                                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                                sx={{
-                                    position: 'absolute',
-                                    bottom: isChrome ? 'auto' : 15,
-                                    top: isChrome ? 20 : 'auto',
-                                    right: '-7.5px',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    color: '#EF4444',
-                                    zIndex: 10,
-                                    pointerEvents: 'none'
-                                }}
-                            >
-                                {!isChrome && <Typography variant="caption" sx={{ fontSize: '0.55rem', mb: 0.5, letterSpacing: 1, opacity: 0.8, fontWeight: 'bold', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>TAP DOTS</Typography>}
-                                {isChrome ? <ArrowUpward sx={{ fontSize: 48, filter: 'drop-shadow(0 0 10px rgba(239, 68, 68, 0.5))' }} /> : <ArrowDownward sx={{ fontSize: 48, filter: 'drop-shadow(0 0 10px rgba(239, 68, 68, 0.5))' }} />}
-                                {isChrome && <Typography variant="caption" sx={{ fontSize: '0.55rem', mt: 0.5, letterSpacing: 1, opacity: 0.8, fontWeight: 'bold', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>TAP SQUARE</Typography>}
-                            </Box>
-
-                        </Box>
-                    </Fade>
-                </Modal>
-
-                {/* --- GLOBAL BRANDING FOOTER --- */}
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        bottom: { xs: 20, md: 40 },
-                        left: 0,
-                        width: '100%',
-                        textAlign: 'center',
-                        zIndex: 5,
-                        pointerEvents: 'none'
-                    }}
-                >
-                    <Typography
-                        variant="caption"
-                        sx={{
-                            color: '#D4AF37',
-                            fontWeight: 700,
-                            letterSpacing: '0.2em',
-                            opacity: 0.6,
-                            textTransform: 'uppercase',
-                            fontSize: '0.65rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: 1
-                        }}
-                    >
-                        <Security sx={{ fontSize: 14 }} /> Powered by Vanguard Secure Solutions
-                    </Typography>
-                    <Box sx={{ width: 40, height: 1, bgcolor: 'rgba(212, 175, 55, 0.3)', mx: 'auto', mt: 1, borderRadius: 1 }} />
-                </Box>
-
+                    <Security sx={{ fontSize: 14 }} /> Powered by Vanguard Secure Solutions
+                </Typography>
+                <Box sx={{ width: 40, height: 1, bgcolor: 'rgba(212, 175, 55, 0.3)', mx: 'auto', mt: 1, borderRadius: 1 }} />
             </Box>
+
+        </Box>
         </ThemeProvider >
     );
 }
