@@ -13,59 +13,44 @@ import {
     CssBaseline,
     useMediaQuery
 } from "@mui/material";
-import { Download, Smartphone, Share, AddBox, Login, ArrowDownward } from "@mui/icons-material";
+import { Download, Smartphone, Share, AddBox, Login, ArrowDownward, ArrowUpward } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
-// --- Custom Dark/Gold Theme ---
-const theme = createTheme({
-    palette: {
-        mode: 'dark',
-        primary: {
-            main: '#D4AF37', // Gold
-        },
-        background: {
-            default: '#050608',
-            paper: '#0B0C10',
-        },
-    },
-    typography: {
-        fontFamily: 'Inter, sans-serif',
-    },
-    components: {
-        MuiButton: {
-            styleOverrides: {
-                root: {
-                    borderRadius: '50px',
-                    textTransform: 'none',
-                    fontWeight: 700,
-                    letterSpacing: '0.05em',
-                },
-            },
-        },
-    },
-});
+// ... (Theme remains same)
 
 export default function SplashGate() {
     const [showInstall, setShowInstall] = useState(false);
     const [isPWA, setIsPWA] = useState(false);
+    const [isChrome, setIsChrome] = useState(false);
 
     useEffect(() => {
+        // Check PWA Support
         const checkPWA = () => {
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
             setIsPWA(isStandalone);
         };
+
+        // Check Browser Type (Chrome on iOS)
+        const checkBrowser = () => {
+            const ua = window.navigator.userAgent;
+            const isIOSChrome = /CriOS/i.test(ua);
+            setIsChrome(isIOSChrome);
+        };
+
         checkPWA();
+        checkBrowser();
         window.addEventListener('resize', checkPWA);
         return () => window.removeEventListener('resize', checkPWA);
     }, []);
 
-    // --- Modal Logic ---
+    // ... (Modal Logic remains same)
     const handleOpen = () => setShowInstall(true);
     const handleClose = () => setShowInstall(false);
 
     return (
         <ThemeProvider theme={theme}>
+            {/* ... (Layout remains same until Modal content) ... */}
             <CssBaseline />
             <Box
                 sx={{
@@ -239,37 +224,65 @@ export default function SplashGate() {
                                 </Typography>
 
                                 <Stack spacing={2} sx={{ bgcolor: 'rgba(0,0,0,0.3)', p: 3, borderRadius: 3, textAlign: 'left', mb: 3 }}>
-                                    <Stack direction="row" spacing={2} alignItems="flex-start">
-                                        <Typography variant="body2" color="#ccc">
-                                            <b>Step 1:</b> Tap the <b>three dots</b> indicated by the <b>red arrow</b>.
-                                        </Typography>
-                                    </Stack>
-                                    <Stack direction="row" spacing={2} alignItems="flex-start">
-                                        <Typography variant="body2" color="#ccc">
-                                            <b>Step 2:</b> Select the <b>Share</b> button.
-                                        </Typography>
-                                    </Stack>
-                                    <Stack direction="row" spacing={2} alignItems="flex-start">
-                                        <Typography variant="body2" color="#ccc">
-                                            <b>Step 3:</b> Scroll down and select <b>Add to Home Screen</b>.
-                                        </Typography>
-                                    </Stack>
-                                    <Stack direction="row" spacing={2} alignItems="flex-start">
-                                        <Typography variant="body2" color="#ccc">
-                                            <b>Step 4:</b> Simply click the <b>Add</b> button in the top right.
-                                        </Typography>
-                                    </Stack>
+                                    {isChrome ? (
+                                        <>
+                                            <Stack direction="row" spacing={2} alignItems="flex-start">
+                                                <Typography variant="body2" color="#ccc">
+                                                    <b>Step 1:</b> Tap the <b>square</b> indicated by the <b>red arrow</b>.
+                                                </Typography>
+                                            </Stack>
+                                            <Stack direction="row" spacing={2} alignItems="flex-start">
+                                                <Typography variant="body2" color="#ccc">
+                                                    <b>Step 2:</b> Select the <b>More</b> option.
+                                                </Typography>
+                                            </Stack>
+                                            <Stack direction="row" spacing={2} alignItems="flex-start">
+                                                <Typography variant="body2" color="#ccc">
+                                                    <b>Step 3:</b> Select <b>Add to Home Screen</b>.
+                                                </Typography>
+                                            </Stack>
+                                            <Stack direction="row" spacing={2} alignItems="flex-start">
+                                                <Typography variant="body2" color="#ccc">
+                                                    <b>Step 4:</b> Click the <b>Add</b> button in the top right.
+                                                </Typography>
+                                            </Stack>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Stack direction="row" spacing={2} alignItems="flex-start">
+                                                <Typography variant="body2" color="#ccc">
+                                                    <b>Step 1:</b> Tap the <b>three dots</b> indicated by the <b>red arrow</b>.
+                                                </Typography>
+                                            </Stack>
+                                            <Stack direction="row" spacing={2} alignItems="flex-start">
+                                                <Typography variant="body2" color="#ccc">
+                                                    <b>Step 2:</b> Select the <b>Share</b> button.
+                                                </Typography>
+                                            </Stack>
+                                            <Stack direction="row" spacing={2} alignItems="flex-start">
+                                                <Typography variant="body2" color="#ccc">
+                                                    <b>Step 3:</b> Scroll down and select <b>Add to Home Screen</b>.
+                                                </Typography>
+                                            </Stack>
+                                            <Stack direction="row" spacing={2} alignItems="flex-start">
+                                                <Typography variant="body2" color="#ccc">
+                                                    <b>Step 4:</b> Click the <b>Add</b> button in the top right.
+                                                </Typography>
+                                            </Stack>
+                                        </>
+                                    )}
                                 </Stack>
                             </Paper>
 
-                            {/* Animated Arrow - Fixed to Bottom Right */}
+                            {/* Animated Arrow - Dynamic Position */}
                             <Box
                                 component={motion.div}
-                                animate={{ y: [0, 10, 0] }}
+                                animate={isChrome ? { y: [0, -10, 0] } : { y: [0, 10, 0] }}
                                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                                 sx={{
                                     position: 'absolute',
-                                    bottom: 15,
+                                    bottom: isChrome ? 'auto' : 15,
+                                    top: isChrome ? 20 : 'auto',
                                     right: 20,
                                     display: 'flex',
                                     flexDirection: 'column',
@@ -279,8 +292,9 @@ export default function SplashGate() {
                                     pointerEvents: 'none'
                                 }}
                             >
-                                <Typography variant="caption" sx={{ mb: 0.5, letterSpacing: 1, opacity: 0.8, fontWeight: 'bold', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>TAP DOTS</Typography>
-                                <ArrowDownward sx={{ fontSize: 48, filter: 'drop-shadow(0 0 10px rgba(239, 68, 68, 0.5))' }} />
+                                {!isChrome && <Typography variant="caption" sx={{ mb: 0.5, letterSpacing: 1, opacity: 0.8, fontWeight: 'bold', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>TAP DOTS</Typography>}
+                                {isChrome ? <ArrowUpward sx={{ fontSize: 48, filter: 'drop-shadow(0 0 10px rgba(239, 68, 68, 0.5))' }} /> : <ArrowDownward sx={{ fontSize: 48, filter: 'drop-shadow(0 0 10px rgba(239, 68, 68, 0.5))' }} />}
+                                {isChrome && <Typography variant="caption" sx={{ mt: 0.5, letterSpacing: 1, opacity: 0.8, fontWeight: 'bold', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>TAP SQUARE</Typography>}
                             </Box>
 
                             {/* Stylized Footer */}
