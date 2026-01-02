@@ -67,8 +67,9 @@ export default function WalletView() {
                 // Filter for "Paid" bookings (is_paid = true)
                 // We exclude "Pending" even if is_paid is true (unlikely) to avoid clutter
                 // We include Cancelled/No Shows if they were paid (fees)
+                // We include Cancelled/No Shows if they were paid (fees) OR if they are unpaid debts
                 const paid = bookings
-                    .filter(b => b.is_paid)
+                    .filter(b => b.is_paid || (b.total_price > 0 && b.status !== 'Pending'))
                     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
                 setPaidBookings(paid);
             }
@@ -596,14 +597,30 @@ export default function WalletView() {
     );
 }
 
-function HistoryItem({ title, date, amount, isPositive }: any) {
+function HistoryItem({ title, date, amount, isPositive, onClick }: any) {
     return (
-        <Paper variant="outlined" sx={{ p: 2, borderRadius: 3, bgcolor: 'transparent', borderColor: 'rgba(255,255,255,0.05)' }}>
+        <Paper
+            onClick={onClick}
+            sx={{
+                p: 2,
+                borderRadius: 3,
+                bgcolor: 'rgba(255,255,255,0.02)',
+                border: '1px solid rgba(255,255,255,0.05)',
+                cursor: onClick ? 'pointer' : 'default',
+                transition: 'all 0.2s',
+                '&:hover': onClick ? { bgcolor: 'rgba(255,255,255,0.05)', transform: 'translateY(-2px)' } : {}
+            }}
+        >
             <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Box>
-                    <Typography variant="body2" fontWeight="bold">{title}</Typography>
-                    <Typography variant="caption" sx={{ opacity: 0.5 }}>{date}</Typography>
-                </Box>
+                <Stack direction="row" spacing={2} alignItems="center">
+                    <Avatar sx={{ bgcolor: isPositive ? 'rgba(74, 222, 128, 0.1)' : 'rgba(255,255,255,0.05)', color: isPositive ? '#4ade80' : 'inherit' }}>
+                        {isPositive ? <Add /> : <AccountBalanceWallet />}
+                    </Avatar>
+                    <Box>
+                        <Typography variant="body2" fontWeight="bold">{title}</Typography>
+                        <Typography variant="caption" color="text.secondary">{date}</Typography>
+                    </Box>
+                </Stack>
                 <Typography variant="body2" fontWeight="900" sx={{ color: isPositive ? '#4ade80' : 'inherit' }}>
                     {amount}
                 </Typography>

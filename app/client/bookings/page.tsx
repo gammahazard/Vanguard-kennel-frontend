@@ -491,7 +491,7 @@ export default function BookingsView() {
                     <DialogContent sx={{ pt: 4, textAlign: 'center', bgcolor: '#1A1B1F' }}>
                         <Dangerous color="error" sx={{ fontSize: 54, mb: 2 }} />
                         <Typography variant="h6" fontWeight="bold">Cancel Reservation?</Typography>
-                        {bookingToCancel?.status === 'Confirmed' ? (
+                        {['confirmed', 'checked in'].includes((bookingToCancel?.status || '').toLowerCase()) ? (
                             <Alert severity="warning" sx={{ mt: 2, textAlign: 'left', bgcolor: 'rgba(255,152,0,0.1)', color: '#ff9800' }}>
                                 <Typography variant="body2" fontWeight="bold">
                                     As your booking has been confirmed and we have reserved a spot, cancelling will incur a $45 fee.
