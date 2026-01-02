@@ -187,6 +187,7 @@ export default function WalletView() {
 
     const cryptoAssets = [
         { name: "USDC", full: "USD Coin", price: "$1.00", balance: "0.00", address: "0x742d...44e" },
+    ];
 
     return (
         <>
@@ -645,102 +646,101 @@ export default function WalletView() {
                                     </Box>
                                 )}
                             </AnimatePresence>
-                        </AnimatePresence>
-                </Box>
-            </Dialog>
+                        </Box>
+                    </Dialog>
 
-            <Snackbar
-                open={feedback.open}
-                autoHideDuration={6000}
-                onClose={() => setFeedback({ ...feedback, open: false })}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-            >
-                <Alert onClose={() => setFeedback({ ...feedback, open: false })} severity={feedback.severity} sx={{ width: '100%' }}>
-                    {feedback.text}
-                </Alert>
-            </Snackbar>
-
-            {/* Payment Confirmation Dialog */}
-            <Dialog
-                open={!!paymentToConfirm}
-                onClose={() => setPaymentToConfirm(null)}
-                PaperProps={{ sx: { bgcolor: '#1A1B1F', borderRadius: 4, minWidth: 320, p: 3 } }}
-            >
-                <Typography variant="h6" fontWeight="bold" textAlign="center" mb={2}>Confirm Payment</Typography>
-
-                <Typography variant="body2" color="text.secondary" textAlign="center" mb={3}>
-                    You are about to pay <span style={{ color: 'white', fontWeight: 'bold' }}>${paymentToConfirm?.total_price.toFixed(2)}</span> to {
-                        ['cancelled', 'no-show', 'no show'].includes((paymentToConfirm?.status || '').toLowerCase())
-                            ? "settle outstanding balances due to no show/cancelling a confirmed booking."
-                            : "pay for a confirmed booking."
-                    }
-                </Typography>
-
-                <Stack spacing={2}>
-                    <Button
-                        variant="contained"
-                        fullWidth
-                        onClick={executePayment}
-                        sx={{ bgcolor: '#D4AF37', color: 'black', fontWeight: 'bold' }}
+                    <Snackbar
+                        open={feedback.open}
+                        autoHideDuration={6000}
+                        onClose={() => setFeedback({ ...feedback, open: false })}
+                        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
                     >
-                        Confirm Payment
-                    </Button>
-                    <Button
-                        fullWidth
-                        onClick={() => setPaymentToConfirm(null)}
-                        sx={{ color: 'white', opacity: 0.7 }}
+                        <Alert onClose={() => setFeedback({ ...feedback, open: false })} severity={feedback.severity} sx={{ width: '100%' }}>
+                            {feedback.text}
+                        </Alert>
+                    </Snackbar>
+
+                    {/* Payment Confirmation Dialog */}
+                    <Dialog
+                        open={!!paymentToConfirm}
+                        onClose={() => setPaymentToConfirm(null)}
+                        PaperProps={{ sx: { bgcolor: '#1A1B1F', borderRadius: 4, minWidth: 320, p: 3 } }}
                     >
-                        Cancel
-                    </Button>
-                </Stack>
-            </Dialog>
+                        <Typography variant="h6" fontWeight="bold" textAlign="center" mb={2}>Confirm Payment</Typography>
 
-            {/* Transaction Detail Modal */}
-            <Dialog
-                open={!!selectedTx}
-                onClose={() => setSelectedTx(null)}
-                PaperProps={{ sx: { bgcolor: '#1A1B1F', borderRadius: 4, minWidth: 320 } }}
-            >
-                <Box sx={{ p: 3, textAlign: 'center' }}>
-                    <Avatar sx={{ width: 60, height: 60, mx: 'auto', mb: 2, bgcolor: selectedTx?.isPositive ? 'rgba(74, 222, 128, 0.1)' : 'rgba(239, 68, 68, 0.1)' }}>
-                        {selectedTx?.isPositive ? <Add sx={{ color: '#4ade80' }} /> : <AccountBalanceWallet sx={{ color: '#ef4444' }} />}
-                    </Avatar>
-                    <Typography variant="h6" fontWeight="bold">{selectedTx?.title}</Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ mb: 3, display: 'block' }}>{selectedTx?.date}</Typography>
+                        <Typography variant="body2" color="text.secondary" textAlign="center" mb={3}>
+                            You are about to pay <span style={{ color: 'white', fontWeight: 'bold' }}>${paymentToConfirm?.total_price.toFixed(2)}</span> to {
+                                ['cancelled', 'no-show', 'no show'].includes((paymentToConfirm?.status || '').toLowerCase())
+                                    ? "settle outstanding balances due to no show/cancelling a confirmed booking."
+                                    : "pay for a confirmed booking."
+                            }
+                        </Typography>
 
-                    <Typography variant="h4" fontWeight="900" sx={{ mb: 1, color: selectedTx?.isPositive ? '#4ade80' : 'white' }}>
-                        {selectedTx?.amount}
-                    </Typography>
-                    {selectedTx?.details && (
-                        <Chip label={selectedTx.details} sx={{ mb: 3, bgcolor: 'rgba(255,255,255,0.05)' }} />
-                    )}
+                        <Stack spacing={2}>
+                            <Button
+                                variant="contained"
+                                fullWidth
+                                onClick={executePayment}
+                                sx={{ bgcolor: '#D4AF37', color: 'black', fontWeight: 'bold' }}
+                            >
+                                Confirm Payment
+                            </Button>
+                            <Button
+                                fullWidth
+                                onClick={() => setPaymentToConfirm(null)}
+                                sx={{ color: 'white', opacity: 0.7 }}
+                            >
+                                Cancel
+                            </Button>
+                        </Stack>
+                    </Dialog>
 
-                    {selectedTx?.booking && (
-                        <Paper variant="outlined" sx={{ p: 2, textAlign: 'left', bgcolor: 'rgba(0,0,0,0.2)', mb: 3 }}>
-                            <Typography variant="caption" color="text.secondary" fontWeight="bold">BOOKING DETAILS</Typography>
-                            <Stack direction="row" justifyContent="space-between" sx={{ mt: 1 }}>
-                                <Typography variant="body2">Service:</Typography>
-                                <Typography variant="body2" fontWeight="bold">{selectedTx.booking.service_type}</Typography>
-                            </Stack>
-                            <Stack direction="row" justifyContent="space-between" sx={{ mt: 1 }}>
-                                <Typography variant="body2">Status:</Typography>
-                                <Chip label={selectedTx.booking.status} size="small" color={selectedTx.booking.status.toLowerCase() === 'cancelled' ? 'error' : 'default'} sx={{ height: 20, fontSize: '0.7rem' }} />
-                            </Stack>
-                            {!selectedTx.booking.is_paid && (
-                                <Alert severity="warning" icon={false} sx={{ mt: 2, py: 0 }}>
-                                    <Typography variant="caption" color="warning.main" fontWeight="bold">Payment Pending</Typography>
-                                </Alert>
+                    {/* Transaction Detail Modal */}
+                    <Dialog
+                        open={!!selectedTx}
+                        onClose={() => setSelectedTx(null)}
+                        PaperProps={{ sx: { bgcolor: '#1A1B1F', borderRadius: 4, minWidth: 320 } }}
+                    >
+                        <Box sx={{ p: 3, textAlign: 'center' }}>
+                            <Avatar sx={{ width: 60, height: 60, mx: 'auto', mb: 2, bgcolor: selectedTx?.isPositive ? 'rgba(74, 222, 128, 0.1)' : 'rgba(239, 68, 68, 0.1)' }}>
+                                {selectedTx?.isPositive ? <Add sx={{ color: '#4ade80' }} /> : <AccountBalanceWallet sx={{ color: '#ef4444' }} />}
+                            </Avatar>
+                            <Typography variant="h6" fontWeight="bold">{selectedTx?.title}</Typography>
+                            <Typography variant="caption" color="text.secondary" sx={{ mb: 3, display: 'block' }}>{selectedTx?.date}</Typography>
+
+                            <Typography variant="h4" fontWeight="900" sx={{ mb: 1, color: selectedTx?.isPositive ? '#4ade80' : 'white' }}>
+                                {selectedTx?.amount}
+                            </Typography>
+                            {selectedTx?.details && (
+                                <Chip label={selectedTx.details} sx={{ mb: 3, bgcolor: 'rgba(255,255,255,0.05)' }} />
                             )}
-                        </Paper>
-                    )}
 
-                    <Button fullWidth variant="contained" onClick={() => setSelectedTx(null)} sx={{ bgcolor: 'white', color: 'black' }}>
-                        Close Receipt
-                    </Button>
-                </Box>
-            </Dialog>
-        </Box >
-        </ThemeProvider >
+                            {selectedTx?.booking && (
+                                <Paper variant="outlined" sx={{ p: 2, textAlign: 'left', bgcolor: 'rgba(0,0,0,0.2)', mb: 3 }}>
+                                    <Typography variant="caption" color="text.secondary" fontWeight="bold">BOOKING DETAILS</Typography>
+                                    <Stack direction="row" justifyContent="space-between" sx={{ mt: 1 }}>
+                                        <Typography variant="body2">Service:</Typography>
+                                        <Typography variant="body2" fontWeight="bold">{selectedTx.booking.service_type}</Typography>
+                                    </Stack>
+                                    <Stack direction="row" justifyContent="space-between" sx={{ mt: 1 }}>
+                                        <Typography variant="body2">Status:</Typography>
+                                        <Chip label={selectedTx.booking.status} size="small" color={selectedTx.booking.status.toLowerCase() === 'cancelled' ? 'error' : 'default'} sx={{ height: 20, fontSize: '0.7rem' }} />
+                                    </Stack>
+                                    {!selectedTx.booking.is_paid && (
+                                        <Alert severity="warning" icon={false} sx={{ mt: 2, py: 0 }}>
+                                            <Typography variant="caption" color="warning.main" fontWeight="bold">Payment Pending</Typography>
+                                        </Alert>
+                                    )}
+                                </Paper>
+                            )}
+
+                            <Button fullWidth variant="contained" onClick={() => setSelectedTx(null)} sx={{ bgcolor: 'white', color: 'black' }}>
+                                Close Receipt
+                            </Button>
+                        </Box>
+                    </Dialog>
+                </Box >
+            </ThemeProvider >
         </>
     );
 }
