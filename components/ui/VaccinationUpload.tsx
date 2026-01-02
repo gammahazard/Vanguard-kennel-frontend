@@ -123,7 +123,7 @@ export function VaccinationUpload({ initialUrl, onUploadSuccess, label = "Vaccin
                     type="file"
                     hidden
                     ref={fileInputRef}
-                    accept=".pdf,image/*"
+                    accept="image/*,.pdf"
                     onChange={handleFileSelect}
                 />
 
