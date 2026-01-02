@@ -76,6 +76,7 @@ Security is enforced in Rust, not JS.
 *   **Client Guard**: Isolation. Users can only fetch *their own* data.
     *   **Strict IDOR Protection**: `create_booking_handler` verifies that every referenced `dog_id` belongs to the authenticated `user_email` before processing.
     *   **Date Validation**: Server enforces logical time flow (End > Start) and max 30-day duration.
+*   **Secure File Proxy**: Vaccination records and pet photos are served via `/api/files/secure/`. The backend verifies the requester either owns the pet or has staff privileges before streaming the file, preventing direct indexing of sensitive documents.
 
 ---
 

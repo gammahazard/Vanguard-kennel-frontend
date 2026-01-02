@@ -89,10 +89,50 @@ export default function ClientDashboard() {
         subtotal?: number;
     } | null>(null);
 
+    const updateWeather = () => {
+        // Dynamic Weather Logic based on LAKESHORE, ON (EST Time)
+        const now = new Date();
+        const hour = parseInt(new Intl.DateTimeFormat('en-US', {
+            hour: 'numeric',
+            hour12: false,
+            timeZone: 'America/New_York'
+        }).format(now));
+
+        let condition = "Clear";
+        let icon = "🌙";
+        let temp = 62;
+
+        if (hour >= 6 && hour < 11) {
+            condition = "Morning Sun";
+            icon = "🌅";
+            temp = 68;
+        } else if (hour >= 11 && hour < 17) {
+            condition = "Sunny";
+            icon = "☀️";
+            temp = 78;
+        } else if (hour >= 17 && hour < 21) {
+            condition = "Partly Cloudy";
+            icon = "⛅";
+            temp = 72;
+        } else {
+            condition = "Clear Night";
+            icon = "🌙";
+            temp = 62;
+        }
+
+        setWeather({ temp, condition, icon });
+    };
+
     useEffect(() => {
         const storedName = typeof window !== 'undefined' ? localStorage.getItem('vanguard_user') : null;
         if (storedName) setUserName(storedName);
+
+        updateWeather();
         fetchDashboardData();
+
+        // Update weather every hour
+        const interval = setInterval(updateWeather, 3600000);
+        return () => clearInterval(interval);
     }, []);
 
     const fetchDashboardData = async () => {
