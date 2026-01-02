@@ -595,6 +595,25 @@ export default function StaffDashboard() {
         }
     };
 
+    const handleMarkPaid = async (booking: EnrichedBooking) => {
+        try {
+            const res = await authenticatedFetch(`${API_BASE_URL}/api/bookings/${booking.id}/payment`, {
+                method: 'PUT',
+                body: JSON.stringify({ is_paid: true })
+            });
+
+            if (res.ok) {
+                setMessage({ text: "Payment confirmed!", severity: "success", open: true });
+                // Refresh data to update the UI
+                fetchPendingBookings();
+            } else {
+                setMessage({ text: "Failed to mark paid", severity: "error", open: true });
+            }
+        } catch (e) {
+            setMessage({ text: "Failed to mark paid", severity: "error", open: true });
+        }
+    };
+
     const toggleAction = (id: string, action: 'fed' | 'walked' | 'meds') => {
         setGuests(guests.map(g => {
             if (g.id === id) {
@@ -632,7 +651,7 @@ export default function StaffDashboard() {
                 const bookings = await res.json();
                 const active = bookings.find((b: any) =>
                     b.dog_id === pet.id &&
-                    b.status.toLowerCase() === 'confirmed'
+                    (b.status.toLowerCase() === 'confirmed' || b.status.toLowerCase() === 'checked in')
                 );
 
                 if (active) {
@@ -1322,24 +1341,49 @@ export default function StaffDashboard() {
                         </Typography>
                         <Stack spacing={2} sx={{ mt: 2 }}>
                             {todaysArrivals.length === 0 ? (
-                                <Alert severity="info">No arrivals scheduled for today.</Alert>
+                                <Alert severity="info" sx={{ borderRadius: 2 }}>No arrivals scheduled for today.</Alert>
                             ) : todaysArrivals.map((arrival, i) => (
-                                <Paper key={i} sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid rgba(0,0,0,0.05)' }}>
+                                <Paper key={i} sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 3 }}>
                                     <Stack direction="row" spacing={2} alignItems="center">
-                                        <Avatar sx={{ bgcolor: '#3b82f6' }}>{arrival.user_email[0].toUpperCase()}</Avatar>
+                                        <Avatar sx={{ bgcolor: 'rgba(212, 175, 55, 0.1)', color: '#D4AF37' }}>{arrival.dog_name?.[0]?.toUpperCase() || 'D'}</Avatar>
                                         <Box>
-                                            <Typography variant="body2" fontWeight="bold">{arrival.dog_name || 'Dog'}</Typography>
-                                            <Typography variant="caption" color="text.secondary">{arrival.service_type}</Typography>
+                                            <Typography variant="body2" fontWeight="bold" color="white">{arrival.dog_name || 'VIP'}</Typography>
+                                            <Typography variant="caption" color="text.secondary" display="block">{arrival.service_type}</Typography>
+                                            {arrival.is_paid ? (
+                                                <Chip label="Paid" size="small" sx={{ height: 18, fontSize: '0.6rem', bgcolor: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', fontWeight: 'bold' }} />
+                                            ) : (
+                                                <Chip label="Awaiting Payment" size="small" sx={{ height: 18, fontSize: '0.6rem', bgcolor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', fontWeight: 'bold' }} />
+                                            )}
                                         </Box>
                                     </Stack>
-                                    <Button
-                                        variant="contained"
-                                        size="small"
-                                        onClick={() => handleCheckIn(arrival)}
-                                        sx={{ bgcolor: '#22c55e', '&:hover': { bgcolor: '#16a34a' } }}
-                                    >
-                                        Check In
-                                    </Button>
+                                    <Stack direction="row" spacing={1}>
+                                        {isOwner && !arrival.is_paid && (
+                                            <Button
+                                                variant="outlined"
+                                                size="small"
+                                                color="warning"
+                                                onClick={() => handleMarkPaid(arrival)}
+                                                sx={{ fontSize: '0.65rem', borderRadius: 1.5 }}
+                                            >
+                                                Force Paid
+                                            </Button>
+                                        )}
+                                        <Button
+                                            variant="contained"
+                                            size="small"
+                                            disabled={!arrival.is_paid}
+                                            onClick={() => handleCheckIn(arrival)}
+                                            sx={{
+                                                bgcolor: '#22c55e',
+                                                '&:hover': { bgcolor: '#16a34a' },
+                                                borderRadius: 1.5,
+                                                fontWeight: 'bold',
+                                                '&.Mui-disabled': { bgcolor: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.2)' }
+                                            }}
+                                        >
+                                            Check In
+                                        </Button>
+                                    </Stack>
                                 </Paper>
                             ))}
                         </Stack>

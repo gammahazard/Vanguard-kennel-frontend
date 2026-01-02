@@ -21,6 +21,10 @@ import {
     Dialog,
     DialogContent,
     DialogActions,
+    Divider,
+    Snackbar,
+    Alert,
+    CircularProgress,
 } from "@mui/material";
 import {
     Home,
@@ -66,7 +70,12 @@ export default function ClientDashboard() {
     const [showUpsell, setShowUpsell] = useState(false);
     const [dontShowAgain, setDontShowAgain] = useState(false);
     const [currentEmail, setCurrentEmail] = useState<string | null>(null);
+    const [walletBalance, setWalletBalance] = useState(0);
     const [allReports, setAllReports] = useState<DailyReport[]>([]);
+    const [unpaidBookings, setUnpaidBookings] = useState<Booking[]>([]);
+    const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+    const [paying, setPaying] = useState(false);
+    const [paymentFeedback, setPaymentFeedback] = useState({ open: false, text: "", severity: "success" as "success" | "error" });
 
     useEffect(() => {
         const storedName = typeof window !== 'undefined' ? localStorage.getItem('vanguard_user') : null;
@@ -91,9 +100,13 @@ export default function ClientDashboard() {
             if (res.ok) {
                 const bookings = await res.json();
 
-                const total = bookings
-                    .filter((b: Booking) => b.status?.toLowerCase() === "confirmed")
-                    .reduce((sum: number, b: Booking) => sum + b.total_price, 0);
+                const unpaid = bookings.filter((b: Booking) => {
+                    const s = b.status?.toLowerCase();
+                    return (s === "confirmed" || s === "checked in") && !b.is_paid;
+                });
+                setUnpaidBookings(unpaid);
+
+                const total = unpaid.reduce((sum: number, b: Booking) => sum + b.total_price, 0);
                 setBalance(total);
 
                 const upcoming = bookings
@@ -117,6 +130,12 @@ export default function ClientDashboard() {
                 }
             }
 
+            const profileRes = await authenticatedFetch(`/api/user/profile`);
+            if (profileRes.ok) {
+                const profile = await profileRes.json();
+                setWalletBalance(profile.balance || 0);
+            }
+
             const notifRes = await authenticatedFetch(`/api/notifications`);
             if (notifRes.ok) {
                 const notifs = await notifRes.json();
@@ -136,6 +155,29 @@ export default function ClientDashboard() {
             console.error("Home fetch failed", err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handlePayBooking = async (bookingId: string) => {
+        setPaying(true);
+        try {
+            const res = await authenticatedFetch(`/api/wallet/pay`, {
+                method: 'POST',
+                body: JSON.stringify({ booking_id: bookingId })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setPaymentFeedback({ open: true, text: data.message || "Payment Successful!", severity: "success" });
+                fetchDashboardData();
+            } else {
+                const err = await res.json();
+                setPaymentFeedback({ open: true, text: err.error || "Payment Failed", severity: "error" });
+            }
+        } catch (e) {
+            setPaymentFeedback({ open: true, text: "Connection error", severity: "error" });
+        } finally {
+            setPaying(false);
         }
     };
 
@@ -354,12 +396,25 @@ export default function ClientDashboard() {
                                     <Typography variant="h4" sx={{ fontWeight: 700 }}>${balance.toFixed(2)}</Typography>
                                 </Stack>
                                 <Button
-                                    variant="outlined"
+                                    variant={balance > 0 ? "contained" : "outlined"}
                                     size="small"
-                                    endIcon={<ArrowForward />}
-                                    sx={{ borderRadius: 2, borderColor: 'rgba(212, 175, 55, 0.3)' }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowPaymentDialog(true);
+                                    }}
+                                    endIcon={balance > 0 ? <CreditCard /> : <ArrowForward />}
+                                    sx={{
+                                        borderRadius: 2,
+                                        borderColor: 'rgba(212, 175, 55, 0.3)',
+                                        bgcolor: balance > 0 ? 'primary.main' : 'transparent',
+                                        color: balance > 0 ? 'background.default' : 'inherit',
+                                        fontWeight: 'bold',
+                                        '&:hover': {
+                                            bgcolor: balance > 0 ? '#b5932b' : 'rgba(212, 175, 55, 0.1)'
+                                        }
+                                    }}
                                 >
-                                    Details
+                                    {balance > 0 ? "Pay Now" : "Details"}
                                 </Button>
                             </Stack>
                         </Paper>
@@ -380,9 +435,12 @@ export default function ClientDashboard() {
                                 <Typography variant="overline" color="primary" sx={{ fontWeight: 700, letterSpacing: '0.1em' }}>
                                     Available Capital
                                 </Typography>
-                                <Typography variant="h5" sx={{ fontWeight: 700 }}>$25,000.00</Typography>
+                                <Typography variant="h5" sx={{ fontWeight: 700 }}>${walletBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</Typography>
                             </Box>
-                            <IconButton sx={{ bgcolor: 'rgba(212, 175, 55, 0.1)', color: 'primary.main' }}>
+                            <IconButton
+                                sx={{ bgcolor: 'rgba(212, 175, 55, 0.1)', color: 'primary.main' }}
+                                onClick={() => router.push('/client/wallet')}
+                            >
                                 <Add />
                             </IconButton>
                         </Paper>
@@ -536,6 +594,114 @@ export default function ClientDashboard() {
                     </Stack>
                 </Box>
             </Dialog>
+
+            {/* --- PAYMENT DIALOG --- */}
+            <Dialog
+                open={showPaymentDialog}
+                onClose={() => setShowPaymentDialog(false)}
+                PaperProps={{
+                    sx: {
+                        bgcolor: 'background.paper',
+                        borderRadius: 5,
+                        backgroundImage: 'none',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        minWidth: { xs: '90%', sm: 400 }
+                    }
+                }}
+            >
+                <DialogContent>
+                    <Stack spacing={3} sx={{ py: 2 }}>
+                        <Box sx={{ textAlign: 'center' }}>
+                            <Stack direction="row" justifyContent="center" sx={{ mb: 2 }}>
+                                <Box sx={{ p: 2, borderRadius: '50%', bgcolor: 'rgba(212, 175, 55, 0.1)' }}>
+                                    <Wallet sx={{ color: 'primary.main', fontSize: 32 }} />
+                                </Box>
+                            </Stack>
+                            <Typography variant="h6" fontWeight="bold">Settle Outstanding Stays</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Use your ${walletBalance.toLocaleString()} available capital to clear your account.
+                            </Typography>
+                        </Box>
+
+                        <Divider sx={{ opacity: 0.1 }} />
+
+                        <Stack spacing={2}>
+                            {unpaidBookings.length > 0 ? (
+                                unpaidBookings.map((b) => (
+                                    <Paper
+                                        key={b.id}
+                                        variant="outlined"
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: 3,
+                                            bgcolor: 'rgba(255,255,255,0.02)',
+                                            borderColor: 'rgba(255,255,255,0.1)',
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center'
+                                        }}
+                                    >
+                                        <Box>
+                                            <Typography variant="subtitle2" fontWeight="bold">{b.service_type}</Typography>
+                                            <Typography variant="caption" color="text.secondary" display="block">
+                                                {new Date(b.start_date).toLocaleDateString()}
+                                            </Typography>
+                                        </Box>
+                                        <Stack direction="row" spacing={2} alignItems="center">
+                                            <Typography variant="body2" fontWeight="bold">${b.total_price.toFixed(2)}</Typography>
+                                            <Button
+                                                variant="contained"
+                                                size="small"
+                                                disabled={paying || walletBalance < b.total_price}
+                                                onClick={() => handlePayBooking(b.id)}
+                                                sx={{
+                                                    bgcolor: 'primary.main',
+                                                    color: 'background.default',
+                                                    fontWeight: 'bold',
+                                                    borderRadius: 1.5,
+                                                    '&:hover': { bgcolor: '#b5932b' }
+                                                }}
+                                            >
+                                                {paying ? <CircularProgress size={16} color="inherit" /> : "Pay"}
+                                            </Button>
+                                        </Stack>
+                                    </Paper>
+                                ))
+                            ) : (
+                                <Alert severity="success" sx={{ borderRadius: 3 }}>
+                                    All your stays are currently settled!
+                                </Alert>
+                            )}
+                        </Stack>
+
+                        {walletBalance < balance && balance > 0 && (
+                            <Alert severity="warning" sx={{ borderRadius: 3 }}>
+                                <Typography variant="caption" fontWeight="bold">
+                                    Insufficient funds to pay all stays. Please top up your wallet.
+                                </Typography>
+                            </Alert>
+                        )}
+                    </Stack>
+                </DialogContent>
+                <DialogActions sx={{ px: 3, pb: 2 }}>
+                    <Button onClick={() => setShowPaymentDialog(false)} sx={{ color: 'text.secondary' }}>Close</Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* --- FEEDBACK SNACKBAR --- */}
+            <Snackbar
+                open={paymentFeedback.open}
+                autoHideDuration={6000}
+                onClose={() => setPaymentFeedback({ ...paymentFeedback, open: false })}
+            >
+                <Alert
+                    onClose={() => setPaymentFeedback({ ...paymentFeedback, open: false })}
+                    severity={paymentFeedback.severity}
+                    sx={{ width: '100%', borderRadius: 3, fontWeight: 'bold' }}
+                >
+                    {paymentFeedback.text}
+                </Alert>
+            </Snackbar>
 
         </ThemeProvider>
     );

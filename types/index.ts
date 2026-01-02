@@ -43,6 +43,7 @@ export interface Booking {
     processed_by?: string;
     status_note?: string;
     created_at: string;
+    is_paid: boolean;
 }
 
 export interface EnrichedBooking extends Booking {

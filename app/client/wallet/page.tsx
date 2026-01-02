@@ -17,24 +17,53 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { theme } from "@/lib/theme";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { API_BASE_URL, authenticatedFetch } from "@/lib/api";
 
 export default function WalletView() {
     const router = useRouter();
-    const [balance, setBalance] = useState(25000.00);
+    const [balance, setBalance] = useState(0);
+    const [loading, setLoading] = useState(true);
     const [showApplePay, setShowApplePay] = useState(false);
     const [selectedCoin, setSelectedCoin] = useState<any>(null);
     const [step, setStep] = useState(0); // 0: init, 1: authenticating, 2: success
     const [feedback, setFeedback] = useState({ open: false, text: "", severity: "info" as "info" | "success" | "error" | "warning" });
 
-    const handleApplePay = () => {
+    useEffect(() => {
+        fetchProfile();
+    }, []);
+
+    const fetchProfile = async () => {
+        try {
+            const res = await authenticatedFetch(`${API_BASE_URL}/api/user/profile`);
+            if (res.ok) {
+                const data = await res.json();
+                setBalance(data.balance);
+            }
+        } catch (e) {
+            console.error("Failed to fetch wallet balance", e);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleApplePay = async () => {
         setShowApplePay(true);
         setStep(1);
-        setTimeout(() => setStep(2), 2500); // Simulate biometric auth
+
+        // Mocking a fund addition to the backend
+        setTimeout(async () => {
+            setStep(2);
+            // In a real mock world, we'd have a POST /api/wallet/deposit
+            // For now, we'll just simulate the UI and maybe the user can reload
+            // But let's keep it simple as it's a mock.
+        }, 2500);
     };
 
     const handleClose = () => {
         if (step === 2) {
-            setBalance(prev => prev + 50.00);
+            // refresh
+            fetchProfile();
         }
         setShowApplePay(false);
         setStep(0);
