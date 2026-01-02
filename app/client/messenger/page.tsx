@@ -15,6 +15,7 @@ import { API_BASE_URL } from "@/lib/config";
 import { useRouter } from "next/navigation";
 
 import { authenticatedFetch } from "@/lib/api";
+import { formatDateTimeEST } from "@/lib/dateUtils";
 
 export default function MessengerView() {
     const router = useRouter();
@@ -206,7 +207,7 @@ export default function MessengerView() {
                                         <Typography variant="body2">{msg.content}</Typography>
                                     </Paper>
                                     <Typography variant="caption" sx={{ mt: 0.5, display: 'block', textAlign: isMe ? 'right' : 'left', opacity: 0.5 }}>
-                                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        {formatDateTimeEST(msg.timestamp)}
                                     </Typography>
                                 </Box>
                             );

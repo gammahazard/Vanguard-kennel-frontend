@@ -448,7 +448,7 @@ export default function BookingsView() {
                                         <Stack direction="row" spacing={2} alignItems="start">
                                             <input type="checkbox" id="policy-noshow" style={{ marginTop: 4 }} onChange={e => setAgreements(p => ({ ...p, noshow: e.target.checked }))} />
                                             <label htmlFor="policy-noshow" style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)', cursor: 'pointer' }}>
-                                                I confirm I will attend my slot. Uncommunicated absences risk suspension.
+                                                No-shows incur a $20 fee and potential account suspension.
                                             </label>
                                         </Stack>
                                     </Stack>

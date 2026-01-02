@@ -47,7 +47,8 @@ import {
     Fingerprint,
     Add,
     Security,
-    Close as CloseIcon
+    Close as CloseIcon,
+    Check as CheckIcon
 } from "@mui/icons-material";
 import { theme } from "@/lib/theme";
 import { useRouter } from "next/navigation";
@@ -55,6 +56,7 @@ import { API_BASE_URL } from "@/lib/config";
 import { Booking, DailyReport, Notification } from "@/types";
 
 import { authenticatedFetch } from "@/lib/api";
+import { formatDateTimeEST, formatTimeEST } from "@/lib/dateUtils";
 
 export default function ClientDashboard() {
     const router = useRouter();
@@ -290,7 +292,7 @@ export default function ClientDashboard() {
                                             )}
                                             <Box sx={{ p: 2 }}>
                                                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
-                                                    {new Date(report.created_at).toLocaleDateString()} • {new Date(report.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    {formatDateTimeEST(report.created_at)}
                                                 </Typography>
                                                 <Chip label={report.activity} size="small" variant="outlined" sx={{ mb: 1, height: 20, fontSize: '0.65rem', borderColor: 'rgba(255,255,255,0.2)' }} />
                                                 {report.notes && (
@@ -342,6 +344,32 @@ export default function ClientDashboard() {
                                         <Typography variant="body1" fontWeight="bold">
                                             {nextStay.service_type} stay starts in {Math.ceil((new Date(nextStay.start_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days!
                                         </Typography>
+
+                                        {/* Status Indicators */}
+                                        <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                                            {nextStay.is_paid ? (
+                                                <Stack spacing={0.5}>
+                                                    <Chip
+                                                        icon={<CheckIcon sx={{ fontSize: 16 }} />}
+                                                        label="PAID"
+                                                        color="success"
+                                                        size="small"
+                                                        sx={{ fontWeight: 'bold', borderRadius: 1.5, height: 24, width: 'fit-content' }}
+                                                    />
+                                                    <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                        <CheckIcon sx={{ fontSize: 12, color: 'success.main' }} />
+                                                        Booking confirmed & paid. Reserved for {new Date(nextStay.start_date).toLocaleDateString()} - {new Date(nextStay.end_date).toLocaleDateString()}.
+                                                    </Typography>
+                                                </Stack>
+                                            ) : (
+                                                <Chip
+                                                    label="PAYMENT DUE"
+                                                    color="error"
+                                                    size="small"
+                                                    sx={{ fontWeight: 'bold', borderRadius: 1.5, height: 24, animation: 'pulse 2s infinite' }}
+                                                />
+                                            )}
+                                        </Stack>
                                     </Box>
                                 </Stack>
                             </Paper>
@@ -627,46 +655,65 @@ export default function ClientDashboard() {
 
                         <Stack spacing={2}>
                             {unpaidBookings.length > 0 ? (
-                                unpaidBookings.map((b) => (
-                                    <Paper
-                                        key={b.id}
-                                        variant="outlined"
-                                        sx={{
-                                            p: 2,
-                                            borderRadius: 3,
-                                            bgcolor: 'rgba(255,255,255,0.02)',
-                                            borderColor: 'rgba(255,255,255,0.1)',
-                                            display: 'flex',
-                                            justifyContent: 'space-between',
-                                            alignItems: 'center'
-                                        }}
-                                    >
-                                        <Box>
-                                            <Typography variant="subtitle2" fontWeight="bold">{b.service_type}</Typography>
-                                            <Typography variant="caption" color="text.secondary" display="block">
-                                                {new Date(b.start_date).toLocaleDateString()}
-                                            </Typography>
-                                        </Box>
-                                        <Stack direction="row" spacing={2} alignItems="center">
-                                            <Typography variant="body2" fontWeight="bold">${b.total_price.toFixed(2)}</Typography>
+                                unpaidBookings.map((b) => {
+                                    const nights = Math.ceil((new Date(b.end_date).getTime() - new Date(b.start_date).getTime()) / (1000 * 60 * 60 * 24));
+                                    const tax = b.total_price * 0.13;
+                                    const grandTotal = b.total_price + tax;
+
+                                    return (
+                                        <Paper
+                                            key={b.id}
+                                            variant="outlined"
+                                            sx={{
+                                                p: 2,
+                                                borderRadius: 3,
+                                                bgcolor: 'rgba(255,255,255,0.02)',
+                                                borderColor: 'rgba(255,255,255,0.1)',
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center'
+                                            }}
+                                        >
+                                            <Box>
+                                                <Stack direction="row" alignItems="center" spacing={1}>
+                                                    <Typography variant="subtitle2" fontWeight="bold" sx={{ color: 'primary.main' }}>
+                                                        {b.dog_name || "Pet"}
+                                                    </Typography>
+                                                    <Chip label={b.service_type} size="small" sx={{ height: 20, fontSize: '0.65rem', bgcolor: 'rgba(255,255,255,0.1)' }} />
+                                                </Stack>
+
+                                                <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                                                    {new Date(b.start_date).toLocaleDateString()} - {new Date(b.end_date).toLocaleDateString()} • <strong>{nights} Nights</strong>
+                                                </Typography>
+
+                                                <Stack direction="row" spacing={2} sx={{ mt: 1, opacity: 0.8 }}>
+                                                    <Typography variant="caption">Subtotal: ${b.total_price.toFixed(2)}</Typography>
+                                                    <Typography variant="caption">HST (13%): ${tax.toFixed(2)}</Typography>
+                                                </Stack>
+                                                <Typography variant="body2" fontWeight="bold" sx={{ mt: 0.5 }}>
+                                                    Total Due: ${grandTotal.toFixed(2)}
+                                                </Typography>
+                                            </Box>
+
                                             <Button
                                                 variant="contained"
                                                 size="small"
-                                                disabled={paying || walletBalance < b.total_price}
+                                                disabled={paying || walletBalance < grandTotal}
                                                 onClick={() => handlePayBooking(b.id)}
                                                 sx={{
                                                     bgcolor: 'primary.main',
                                                     color: 'background.default',
                                                     fontWeight: 'bold',
                                                     borderRadius: 1.5,
+                                                    minWidth: 100,
                                                     '&:hover': { bgcolor: '#b5932b' }
                                                 }}
                                             >
-                                                {paying ? <CircularProgress size={16} color="inherit" /> : "Pay"}
+                                                {paying ? <CircularProgress size={16} color="inherit" /> : `Pay $${grandTotal.toFixed(2)}`}
                                             </Button>
-                                        </Stack>
-                                    </Paper>
-                                ))
+                                        </Paper>
+                                    );
+                                })
                             ) : (
                                 <Alert severity="success" sx={{ borderRadius: 3 }}>
                                     All your stays are currently settled!
@@ -786,7 +833,7 @@ function CamCard({ name, onClick }: { name: string, onClick?: () => void }) {
                         {name}
                     </Typography>
                     <Typography variant="caption" fontFamily="monospace" sx={{ opacity: 0.7, fontSize: '0.7rem', color: 'rgba(255,255,255,0.7)' }}>
-                        REC • {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        REC • {formatTimeEST(new Date())}
                     </Typography>
                 </Stack>
             </Box>

@@ -132,14 +132,14 @@ export default function BookingRequestManager({
                     <Stack spacing={2} sx={{ opacity: 0.8 }}>
                         {recentBookings.map((group) => (
                             <Paper key={group.id} sx={{ p: 2, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.03)' }}>
-                                <Stack direction="row" alignItems="center" justifyContent="space-between">
+                                <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between" spacing={2}>
                                     <Box>
                                         <Typography variant="subtitle2" fontWeight="bold">{group.owner_name}</Typography>
                                         <Typography variant="caption" color="text.secondary">
                                             {group.bookings.length} Services • {new Date(group.start_date + 'T00:00:00').toLocaleDateString()}
                                         </Typography>
                                     </Box>
-                                    <Stack direction="row" spacing={1}>
+                                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: { xs: 1, sm: 0 } }}>
                                         {group.bookings.some((b: any) => b.status === "Checked In") ? (
                                             <Chip label="Checked In" size="small" color="info" variant="filled" />
                                         ) : group.bookings.some((b: any) => b.status === "No Show") ? (
@@ -153,11 +153,12 @@ export default function BookingRequestManager({
                                                     onClick={() => onAction(group.bookings, 'No Show')}
                                                     sx={{
                                                         minWidth: 'auto',
-                                                        px: 1,
+                                                        px: 1.5,
                                                         textTransform: 'none',
-                                                        borderColor: 'rgba(245, 158, 11, 0.3)',
+                                                        borderColor: 'rgba(245, 158, 11, 0.5)',
                                                         color: '#f59e0b',
-                                                        mr: 1
+                                                        fontWeight: 'bold',
+                                                        '&:hover': { bgcolor: 'rgba(245, 158, 11, 0.1)' }
                                                     }}
                                                 >
                                                     No Show
@@ -167,11 +168,26 @@ export default function BookingRequestManager({
                                                     variant="outlined"
                                                     color="error"
                                                     onClick={() => onAction(group.bookings, 'cancelled')}
-                                                    sx={{ minWidth: 'auto', px: 1, textTransform: 'none', borderColor: 'rgba(239, 68, 68, 0.3)', color: '#ef4444' }}
+                                                    sx={{
+                                                        minWidth: 'auto',
+                                                        px: 1.5,
+                                                        textTransform: 'none',
+                                                        borderColor: 'rgba(239, 68, 68, 0.5)',
+                                                        color: '#ef4444',
+                                                        fontWeight: 'bold',
+                                                        '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.1)' }
+                                                    }}
                                                 >
                                                     Cancel
                                                 </Button>
-                                                <Chip label="Confirmed" size="small" color="success" variant="outlined" sx={{ ml: 1 }} />
+                                                <Chip
+                                                    icon={<CheckCircle sx={{ fontSize: '16px !important' }} />}
+                                                    label="Confirmed"
+                                                    size="small"
+                                                    color="success"
+                                                    variant="filled"
+                                                    sx={{ ml: 1, fontWeight: 'bold' }}
+                                                />
                                             </>
                                         )}
                                     </Stack>

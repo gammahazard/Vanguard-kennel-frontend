@@ -44,6 +44,7 @@ export interface Booking {
     status_note?: string;
     created_at: string;
     is_paid: boolean;
+    dog_name?: string;
 }
 
 export interface EnrichedBooking extends Booking {
