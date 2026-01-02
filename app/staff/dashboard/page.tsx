@@ -501,8 +501,8 @@ export default function StaffDashboard() {
         }
     };
 
-    const handleBatchAction = async (bookings: EnrichedBooking[] | GroupedBookingRequest['bookings'], action: 'confirmed' | 'declined' | 'cancelled') => {
-        const verb = action === 'confirmed' ? 'Accept' : (action === 'declined' ? 'Decline' : 'Cancel');
+    const handleBatchAction = async (bookings: EnrichedBooking[] | GroupedBookingRequest['bookings'], action: 'confirmed' | 'declined' | 'cancelled' | 'No Show') => {
+        const verb = action === 'confirmed' ? 'Accept' : (action === 'declined' ? 'Decline' : (action === 'cancelled' ? 'Cancel' : 'Mark No Show'));
         const note = prompt(`Optional: Enter a bulk reason/note for ${verb}ing ${bookings.length} requests:`);
 
         if (!confirm(`Confirm ${verb} all ${bookings.length} requests?`)) return;
