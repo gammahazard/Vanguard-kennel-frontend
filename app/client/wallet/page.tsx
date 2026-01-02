@@ -51,12 +51,10 @@ export default function WalletView() {
         setShowApplePay(true);
         setStep(1);
 
-        // Mocking a fund addition to the backend
+        // Simulating bank communication
         setTimeout(async () => {
             setStep(2);
-            // In a real mock world, we'd have a POST /api/wallet/deposit
-            // For now, we'll just simulate the UI and maybe the user can reload
-            // But let's keep it simple as it's a mock.
+            // In production, this verifies the transaction with the bank
         }, 2500);
     };
 

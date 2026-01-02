@@ -72,7 +72,6 @@ export default function ClientLogin() {
 
             if (res.ok) {
                 const data = await res.json();
-                console.log("Login Success:", data);
                 localStorage.setItem('vanguard_token', data.token);
                 localStorage.setItem('vanguard_role', data.role);
                 localStorage.setItem('vanguard_user', data.name);
@@ -100,8 +99,6 @@ export default function ClientLogin() {
         }
 
         try {
-            console.log("🚀 Starting Face ID Login for:", email);
-            console.log("📍 Current Browser Domain:", window.location.hostname);
 
             const resStart = await fetch(`${API_BASE_URL}/api/auth/webauthn/login/start`, {
                 method: 'POST',
@@ -114,18 +111,15 @@ export default function ClientLogin() {
                 throw new Error(errorText || "No Face ID found for this account.");
             }
             const options = await resStart.json();
-            console.log("📦 Login Options Received:", JSON.stringify(options, null, 2));
 
             // CRITICAL CHECK: Are there any allowed credentials?
             if (!options.publicKey.allowCredentials || options.publicKey.allowCredentials.length === 0) {
                 console.error("❌ SERVER ERROR: Server sent NO allowed credentials! It does not know your Face ID.");
                 throw new Error("Credential expired: Please login with your password and re enable face-id login");
             }
-            console.log("📦 WebAuthn Challenge received:", options);
 
             // Standardize the options for the browser
             const authOptions = options.publicKey || options;
-            console.log("🛡️ Passing to WebAuthn Library:", authOptions);
 
             // CRITICAL: Remove extra fields that are NOT part of the WebAuthn spec
             // to avoid confusing the browser/library

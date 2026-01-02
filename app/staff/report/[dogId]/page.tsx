@@ -13,6 +13,7 @@ import {
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ImageUpload } from "@/components/ui/ImageUpload";
+import { authenticatedFetch } from "@/lib/api";
 
 export default function CreateReportCard({ params }: { params: { dogId: string } }) {
     const router = useRouter();
@@ -33,13 +34,8 @@ export default function CreateReportCard({ params }: { params: { dogId: string }
     const handleSubmit = async () => {
         setLoading(true);
         try {
-            const token = localStorage.getItem("vanguard_token");
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/reports`, {
+            const res = await authenticatedFetch(`/api/reports`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
                 body: JSON.stringify({
                     booking_id: params.dogId, // Using dogId as proxy for booking_id for demo simplicity, or we'd look up the active booking
                     mood,

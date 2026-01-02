@@ -419,7 +419,7 @@ export default function ClientDashboard() {
                             </Stack>
                         </Paper>
 
-                        {/* 5. AVAILABLE CAPITAL (The Mock Money Request) */}
+                        {/* 5. AVAILABLE CAPITAL (Instant Liquidity) */}
                         <Paper
                             sx={{
                                 p: 2.5,

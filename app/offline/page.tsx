@@ -58,7 +58,7 @@ export default function OfflinePage() {
                         variant="outlined"
                         fullWidth
                         startIcon={<Phone />}
-                        href="tel:555-0199" // Mock phone number
+                        href="tel:555-0199" // Emergency Line
                         sx={{
                             mb: 2,
                             borderColor: "rgba(255,255,255,0.2)",

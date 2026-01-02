@@ -73,7 +73,6 @@ export default function ProfileView() {
         if (storedName) setUserName(storedName);
 
         if (email) {
-            console.log("🔍 Checking Face ID status for:", email);
 
             // Note: Auth Check/WebAuthn endpoints might be public OR auth'd depending on design
             // Assuming auth check might need token if extracting user from it, but often it's public.
@@ -130,7 +129,6 @@ export default function ProfileView() {
                 return;
             }
 
-            console.log("🚀 Starting Face ID Registration for:", email);
 
             // 1. Get challenge
             const resStart = await authenticatedFetch(`/api/auth/webauthn/register/start`, {
@@ -144,10 +142,8 @@ export default function ProfileView() {
             }
 
             const options = await resStart.json();
-            console.log("📦 Challenge received:", options);
 
             // 2. Browser prompt
-            console.log("🔔 Opening Biometric Prompt...");
             let attResp;
             try {
                 // Standardize the options for the browser
@@ -163,7 +159,6 @@ export default function ProfileView() {
                 throw new Error(`Biometric prompt failed: ${promptErr.message || "Unknown error"}`);
             }
 
-            console.log("✅ Biometric Response received:", attResp);
 
             // 3. Verify
             const resFinish = await authenticatedFetch(`/api/auth/webauthn/register/finish`, {
