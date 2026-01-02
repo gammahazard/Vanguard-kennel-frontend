@@ -29,6 +29,10 @@ type Transaction = {
     isPositive: boolean;
 };
 
+const COIN_ICONS: any = {
+    'USDC': <Diamond sx={{ color: '#2775ca' }} />,
+};
+
 export default function WalletView() {
     const router = useRouter();
     const [balance, setBalance] = useState(0);
@@ -185,11 +189,6 @@ export default function WalletView() {
         { name: "USDC", full: "USD Coin", price: "$1.00", balance: "0.00", address: "0x742d...44e" },
     ];
 
-    const getCoinIcon = (name: string) => {
-        if (name === 'USDC') return <Diamond sx={{ color: '#2775ca' }} />;
-        return <CurrencyBitcoin sx={{ color: '#f7931a' }} />;
-    };
-
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
@@ -333,7 +332,7 @@ export default function WalletView() {
                                                 {/* Asset Info */}
                                                 <Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1 }}>
                                                     <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                                                        {getCoinIcon(coin.name)}
+                                                        {COIN_ICONS[coin.name] || <CurrencyBitcoin />}
                                                     </Avatar>
                                                     <Box>
                                                         <Typography variant="body2" fontWeight="900">{coin.name}</Typography>
@@ -485,7 +484,7 @@ export default function WalletView() {
                 >
                     <Box sx={{ p: 4, textAlign: 'center' }}>
                         <Avatar sx={{ width: 60, height: 60, mx: 'auto', mb: 2, bgcolor: 'rgba(212,175,55,0.1)' }}>
-                            {selectedCoin?.icon}
+                            {selectedCoin && (COIN_ICONS[selectedCoin.name] || <CurrencyBitcoin />)}
                         </Avatar>
                         <Typography variant="h6" fontWeight="bold">Deposit {selectedCoin?.name}</Typography>
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
@@ -686,52 +685,51 @@ export default function WalletView() {
                 </Stack>
             </Dialog>
 
-        </Box>
+            {/* Transaction Detail Modal */}
+            <Dialog
+                open={!!selectedTx}
+                onClose={() => setSelectedTx(null)}
+                PaperProps={{ sx: { bgcolor: '#1A1B1F', borderRadius: 4, minWidth: 320 } }}
+            >
+                <Box sx={{ p: 3, textAlign: 'center' }}>
+                    <Avatar sx={{ width: 60, height: 60, mx: 'auto', mb: 2, bgcolor: selectedTx?.isPositive ? 'rgba(74, 222, 128, 0.1)' : 'rgba(239, 68, 68, 0.1)' }}>
+                        {selectedTx?.isPositive ? <Add sx={{ color: '#4ade80' }} /> : <AccountBalanceWallet sx={{ color: '#ef4444' }} />}
+                    </Avatar>
+                    <Typography variant="h6" fontWeight="bold">{selectedTx?.title}</Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ mb: 3, display: 'block' }}>{selectedTx?.date}</Typography>
 
-        {/* Transaction Detail Modal */ }
-    <Dialog
-        open={!!selectedTx}
-        onClose={() => setSelectedTx(null)}
-        PaperProps={{ sx: { bgcolor: '#1A1B1F', borderRadius: 4, minWidth: 320 } }}
-    >
-        <Box sx={{ p: 3, textAlign: 'center' }}>
-            <Avatar sx={{ width: 60, height: 60, mx: 'auto', mb: 2, bgcolor: selectedTx?.isPositive ? 'rgba(74, 222, 128, 0.1)' : 'rgba(239, 68, 68, 0.1)' }}>
-                {selectedTx?.isPositive ? <Add sx={{ color: '#4ade80' }} /> : <AccountBalanceWallet sx={{ color: '#ef4444' }} />}
-            </Avatar>
-            <Typography variant="h6" fontWeight="bold">{selectedTx?.title}</Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ mb: 3, display: 'block' }}>{selectedTx?.date}</Typography>
-
-            <Typography variant="h4" fontWeight="900" sx={{ mb: 1, color: selectedTx?.isPositive ? '#4ade80' : 'white' }}>
-                {selectedTx?.amount}
-            </Typography>
-            {selectedTx?.details && (
-                <Chip label={selectedTx.details} sx={{ mb: 3, bgcolor: 'rgba(255,255,255,0.05)' }} />
-            )}
-
-            {selectedTx?.booking && (
-                <Paper variant="outlined" sx={{ p: 2, textAlign: 'left', bgcolor: 'rgba(0,0,0,0.2)', mb: 3 }}>
-                    <Typography variant="caption" color="text.secondary" fontWeight="bold">BOOKING DETAILS</Typography>
-                    <Stack direction="row" justifyContent="space-between" sx={{ mt: 1 }}>
-                        <Typography variant="body2">Service:</Typography>
-                        <Typography variant="body2" fontWeight="bold">{selectedTx.booking.service_type}</Typography>
-                    </Stack>
-                    <Stack direction="row" justifyContent="space-between" sx={{ mt: 1 }}>
-                        <Typography variant="body2">Status:</Typography>
-                        <Chip label={selectedTx.booking.status} size="small" color={selectedTx.booking.status.toLowerCase() === 'cancelled' ? 'error' : 'default'} sx={{ height: 20, fontSize: '0.7rem' }} />
-                    </Stack>
-                    {!selectedTx.booking.is_paid && (
-                        <Alert severity="warning" icon={false} sx={{ mt: 2, py: 0 }}>
-                            <Typography variant="caption" color="warning.main" fontWeight="bold">Payment Pending</Typography>
-                        </Alert>
+                    <Typography variant="h4" fontWeight="900" sx={{ mb: 1, color: selectedTx?.isPositive ? '#4ade80' : 'white' }}>
+                        {selectedTx?.amount}
+                    </Typography>
+                    {selectedTx?.details && (
+                        <Chip label={selectedTx.details} sx={{ mb: 3, bgcolor: 'rgba(255,255,255,0.05)' }} />
                     )}
-                </Paper>
-            )}
 
-            <Button fullWidth variant="contained" onClick={() => setSelectedTx(null)} sx={{ bgcolor: 'white', color: 'black' }}>
-                Close Receipt
-            </Button>
+                    {selectedTx?.booking && (
+                        <Paper variant="outlined" sx={{ p: 2, textAlign: 'left', bgcolor: 'rgba(0,0,0,0.2)', mb: 3 }}>
+                            <Typography variant="caption" color="text.secondary" fontWeight="bold">BOOKING DETAILS</Typography>
+                            <Stack direction="row" justifyContent="space-between" sx={{ mt: 1 }}>
+                                <Typography variant="body2">Service:</Typography>
+                                <Typography variant="body2" fontWeight="bold">{selectedTx.booking.service_type}</Typography>
+                            </Stack>
+                            <Stack direction="row" justifyContent="space-between" sx={{ mt: 1 }}>
+                                <Typography variant="body2">Status:</Typography>
+                                <Chip label={selectedTx.booking.status} size="small" color={selectedTx.booking.status.toLowerCase() === 'cancelled' ? 'error' : 'default'} sx={{ height: 20, fontSize: '0.7rem' }} />
+                            </Stack>
+                            {!selectedTx.booking.is_paid && (
+                                <Alert severity="warning" icon={false} sx={{ mt: 2, py: 0 }}>
+                                    <Typography variant="caption" color="warning.main" fontWeight="bold">Payment Pending</Typography>
+                                </Alert>
+                            )}
+                        </Paper>
+                    )}
+
+                    <Button fullWidth variant="contained" onClick={() => setSelectedTx(null)} sx={{ bgcolor: 'white', color: 'black' }}>
+                        Close Receipt
+                    </Button>
+                </Box>
+            </Dialog>
         </Box>
-    </Dialog >
         </ThemeProvider >
     );
 }
