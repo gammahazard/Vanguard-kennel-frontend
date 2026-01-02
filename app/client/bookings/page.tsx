@@ -161,17 +161,26 @@ export default function BookingsView() {
             // Support Batch Cancellation for Grouped Bookings
             const idsToCancel = bookingToCancel.ids || [bookingToCancel.id];
 
-            await Promise.all(idsToCancel.map((id: string) =>
+            const results = await Promise.all(idsToCancel.map((id: string) =>
                 authenticatedFetch(`${API_BASE_URL}/api/bookings/${id}`, {
                     method: 'PUT',
                     body: JSON.stringify({ status: "cancelled" })
                 })
             ));
 
-            setSuccessMsg("Reservation retracted.");
-            setShowCancelConfirm(false);
-            setBookingToCancel(null);
-            fetchData();
+            const failed = results.find(r => !r.ok);
+            if (failed) {
+                if (failed.status === 400) {
+                    setError("Cancellation Policy: Cannot retract within 72 hours of start. Please contact support.");
+                } else {
+                    setError("Failed to cancel reservation.");
+                }
+            } else {
+                setSuccessMsg("Reservation retracted.");
+                setShowCancelConfirm(false);
+                setBookingToCancel(null);
+                fetchData();
+            }
         } catch (err) {
             setError("Failed to cancel reservation.");
         } finally {

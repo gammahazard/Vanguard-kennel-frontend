@@ -478,8 +478,8 @@ export default function StaffDashboard() {
         }
     };
 
-    const handleBookingAction = async (id: string, action: 'confirmed' | 'cancelled' | 'declined') => {
-        const verb = action === 'confirmed' ? 'Accept' : (action === 'declined' ? 'Decline' : 'Cancel');
+    const handleBookingAction = async (id: string, action: 'confirmed' | 'cancelled' | 'declined' | 'No Show') => {
+        const verb = action === 'confirmed' ? 'Accept' : (action === 'declined' ? 'Decline' : (action === 'cancelled' ? 'Cancel' : 'Mark No Show'));
         const note = prompt(`Optional: Enter a reason/note for this ${verb} action:`);
 
         try {
@@ -489,9 +489,10 @@ export default function StaffDashboard() {
             });
 
             if (res.ok) {
-                setMessage({ text: `Booking ${action} successfully!`, severity: "success", open: true });
+                setMessage({ text: `Booking updated to ${action}!`, severity: "success", open: true });
                 fetchDashboardData();
-                fetchGuests();
+            } else if (res.status === 400) {
+                setMessage({ text: "Late Cancellation: Cannot cancel within 72 hours of start.", severity: "warning", open: true });
             } else {
                 setMessage({ text: `Update failed`, severity: "error", open: true });
             }
@@ -587,6 +588,8 @@ export default function StaffDashboard() {
                 setShowCheckInModal(false);
                 fetchGuests();
                 fetchDashboardData();
+            } else if (res.status === 402) {
+                setMessage({ text: "Payment Required: Please settle balance before check-in.", severity: "warning", open: true });
             } else {
                 setMessage({ text: "Check-in failed", severity: "error", open: true });
             }

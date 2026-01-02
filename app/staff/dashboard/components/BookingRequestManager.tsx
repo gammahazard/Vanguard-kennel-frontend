@@ -7,7 +7,7 @@ interface BookingRequestManagerProps {
     pendingBookings: GroupedBookingRequest[];
     recentBookings: GroupedBookingRequest[];
     loading: boolean;
-    onAction: (bookings: EnrichedBooking[], action: 'confirmed' | 'declined' | 'cancelled') => void;
+    onAction: (bookings: EnrichedBooking[], action: 'confirmed' | 'declined' | 'cancelled' | 'No Show') => void;
     onChat: (email: string) => void;
 }
 
@@ -142,8 +142,26 @@ export default function BookingRequestManager({
                                     <Stack direction="row" spacing={1}>
                                         {group.bookings.some((b: any) => b.status === "Checked In") ? (
                                             <Chip label="Checked In" size="small" color="info" variant="filled" />
+                                        ) : group.bookings.some((b: any) => b.status === "No Show") ? (
+                                            <Chip label="No Show" size="small" color="warning" variant="filled" />
                                         ) : (
                                             <>
+                                                <Button
+                                                    size="small"
+                                                    variant="outlined"
+                                                    color="warning"
+                                                    onClick={() => onAction(group.bookings, 'No Show')}
+                                                    sx={{
+                                                        minWidth: 'auto',
+                                                        px: 1,
+                                                        textTransform: 'none',
+                                                        borderColor: 'rgba(245, 158, 11, 0.3)',
+                                                        color: '#f59e0b',
+                                                        mr: 1
+                                                    }}
+                                                >
+                                                    No Show
+                                                </Button>
                                                 <Button
                                                     size="small"
                                                     variant="outlined"
@@ -153,7 +171,7 @@ export default function BookingRequestManager({
                                                 >
                                                     Cancel
                                                 </Button>
-                                                <Chip label="Confirmed" size="small" color="success" variant="outlined" />
+                                                <Chip label="Confirmed" size="small" color="success" variant="outlined" sx={{ ml: 1 }} />
                                             </>
                                         )}
                                     </Stack>
