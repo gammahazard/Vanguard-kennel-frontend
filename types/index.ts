@@ -45,6 +45,7 @@ export interface Booking {
     created_at: string;
     is_paid: boolean;
     dog_name?: string;
+    dog_photo_url?: string;
 }
 
 export interface EnrichedBooking extends Booking {

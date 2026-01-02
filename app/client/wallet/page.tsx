@@ -436,7 +436,8 @@ export default function WalletView() {
                                                     const isPenalty = ['cancelled', 'no-show', 'no show'].includes(status);
 
                                                     if (isPenalty) {
-                                                        title = status.includes('no') ? "No-Show Fee" : "Cancellation Fee";
+                                                        const baseTitle = status.includes('no') ? "No-Show Fee" : "Cancellation Fee";
+                                                        title = `${baseTitle} (PER DOG)`;
                                                         // Penalties are flat fees, tax included/exempt (0 displayed)
                                                     } else {
                                                         // Standard service: Add 13% tax for display to match valid payment

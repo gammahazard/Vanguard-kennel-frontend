@@ -795,8 +795,14 @@ export default function ClientDashboard() {
                 <DialogTitle sx={{ fontWeight: 'bold', pb: 1 }}>Confirm Payment</DialogTitle>
                 <DialogContent>
                     {confirmPayment?.booking && (
-                        <Stack spacing={2} sx={{ pt: 1 }}>
-                            <Typography variant="body1">
+                        <Stack spacing={2} sx={{ pt: 1, alignItems: 'center' }}>
+                            <Avatar
+                                src={confirmPayment.booking.dog_photo_url || ''}
+                                sx={{ width: 80, height: 80, mb: 1, border: '2px solid rgba(212, 175, 55, 0.5)' }}
+                            >
+                                <Pets sx={{ fontSize: 40 }} />
+                            </Avatar>
+                            <Typography variant="body1" textAlign="center">
                                 You are settling a balance for <strong>{confirmPayment.booking.dog_name || 'Pet'}</strong>.
                             </Typography>
 
@@ -804,7 +810,10 @@ export default function ClientDashboard() {
                                 <Stack spacing={1}>
                                     <Stack direction="row" justifyContent="space-between">
                                         <Typography color="text.secondary" variant="body2">Service</Typography>
-                                        <Typography variant="body2" fontWeight="medium">{confirmPayment.booking.service_type}</Typography>
+                                        <Typography variant="body2" fontWeight="medium">
+                                            {confirmPayment.booking.service_type}
+                                            {['cancelled', 'no-show', 'no show'].includes((confirmPayment.booking.status || '').toLowerCase()) ? ' (PER DOG)' : ''}
+                                        </Typography>
                                     </Stack>
                                     <Divider sx={{ borderStyle: 'dashed' }} />
                                     <Stack direction="row" justifyContent="space-between">
