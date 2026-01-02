@@ -1605,7 +1605,7 @@ export default function StaffDashboard() {
                                 </Button>
                             </label>
                             <Typography variant="caption" display="block" sx={{ mt: 1, opacity: 0.6 }}>
-                                Moments appear in the client's Living Feed
+                                Moments appear in the client&apos;s Living Feed
                             </Typography>
                             {reportData.image_url && (
                                 <Box sx={{ mt: 2, position: 'relative', width: '100%', height: 200 }}>
