@@ -16,6 +16,7 @@ import {
     CurrencyBitcoin, Diamond, ShieldMoon, InfoOutlined,
     ContentCopy, QrCode2, Hub, PriorityHigh
 } from "@mui/icons-material";
+import Pets from "@mui/icons-material/Pets";
 import { motion, AnimatePresence } from "framer-motion";
 import { theme } from "@/lib/theme";
 import { useRouter } from "next/navigation";

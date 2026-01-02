@@ -50,16 +50,20 @@ export default function BusinessDashboard({ bookings }: BusinessDashboardProps) 
                 .filter(b => b.start_date.startsWith(monthStr) && b.is_paid)
                 .reduce((sum, b) => sum + (b.total_price || 0), 0);
 
-            const relevantForStats = bookings.filter(b =>
+            // "Relevant" means either a real stay OR a paid penalty
+            const relevantForCount = bookings.filter(b =>
                 b.start_date.startsWith(monthStr) &&
-                !['cancelled', 'declined', 'no show', 'no-show'].includes(b.status?.toLowerCase() || '')
+                (!['cancelled', 'declined', 'no show', 'no-show'].includes(b.status?.toLowerCase() || '') || (b.is_paid && b.total_price > 0))
             );
 
-            const clients = new Set(relevantForStats.map(b => b.user_email)).size;
-            const daycare = relevantForStats.filter(b => b.service_type.toLowerCase() === 'daycare').length;
-            const boarding = relevantForStats.filter(b => b.service_type.toLowerCase() === 'boarding').length;
+            // "Services" are actual stays (excluding penalties)
+            const stays = relevantForCount.filter(b => !['cancelled', 'declined', 'no show', 'no-show'].includes(b.status?.toLowerCase() || ''));
 
-            return { relevant: relevantForStats, revenue, count: relevantForStats.length, clients, daycare, boarding };
+            const clients = new Set(relevantForCount.map(b => b.user_email)).size;
+            const daycare = stays.filter(b => b.service_type.toLowerCase() === 'daycare').length;
+            const boarding = stays.filter(b => b.service_type.toLowerCase() === 'boarding').length;
+
+            return { relevant: relevantForCount, revenue, count: relevantForCount.length, clients, daycare, boarding };
         };
 
         const current = getStats(selectedMonth);
