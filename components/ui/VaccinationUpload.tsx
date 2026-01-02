@@ -80,7 +80,8 @@ export function VaccinationUpload({ initialUrl, onUploadSuccess, label = "Vaccin
             onUploadSuccess(data.url);
         } catch (err: any) {
             if (err.name === 'AbortError') return;
-            setError(err.message || "Upload failed");
+            console.error("Upload Error Details:", err);
+            setError(err.message || "Upload failed. Please check file type and size.");
         } finally {
             if (abortControllerRef.current === controller) {
                 setUploading(false);

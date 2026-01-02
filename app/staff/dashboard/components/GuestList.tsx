@@ -16,7 +16,16 @@ interface GuestListProps {
 
 export default function GuestList({ guests, loading, onToggleAction, onLogIncident, onPostReport, onViewHistory, onCheckOut, onGuestClick }: GuestListProps) {
     return (
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' }, gap: 3 }}>
+        <Box sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(auto-fill, minmax(300px, 1fr))', // Auto-fill with min width prevents cramping
+                md: 'repeat(3, 1fr)',
+                lg: 'repeat(4, 1fr)'
+            },
+            gap: 3
+        }}>
             {loading ? (
                 [1, 2, 3, 4].map(i => (
                     <Paper key={i} sx={{ height: 280, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.02)', animation: 'pulse 1.5s ease-in-out infinite' }} />
