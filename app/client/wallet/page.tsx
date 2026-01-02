@@ -69,7 +69,7 @@ export default function WalletView() {
                 // We include Cancelled/No Shows if they were paid (fees)
                 // We include Cancelled/No Shows if they were paid (fees) OR if they are unpaid debts
                 const paid = bookings
-                    .filter(b => b.is_paid || (b.total_price > 0 && b.status !== 'Pending'))
+                    .filter(b => b.is_paid || (b.total_price > 0 && (b.status as string).toLowerCase() !== 'pending'))
                     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
                 setPaidBookings(paid);
             }
