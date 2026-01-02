@@ -329,89 +329,91 @@ export default function PetsView() {
                         <Typography variant="h5" fontWeight="bold">{openAdd ? "Register VIP" : "Edit Profile"}</Typography>
                     </DialogTitle>
                     <DialogContent sx={{ px: 3 }}>
-                        <Stack spacing={2.5} sx={{ mt: 1 }}>
-                            <ImageUpload
-                                initialUrl={formData.image_url}
-                                onUploadSuccess={(url) => setFormData(prev => ({ ...prev, image_url: url }))}
-                            />
-                            <VaccinationUpload
-                                initialUrl={formData.vaccination_records}
-                                onUploadSuccess={(url) => setFormData(prev => ({ ...prev, vaccination_records: url }))}
-                            />
-                            <TextField label="VIP Name" fullWidth value={formData.name} onChange={e => setFormData({ ...formData, name: sanitizeInput(e.target.value, 32) })} variant="filled" />
-                            <TextField label="Breed" fullWidth value={formData.breed} onChange={e => setFormData({ ...formData, breed: sanitizeInput(e.target.value, 40) })} variant="filled" />
-                            <Stack direction="row" spacing={2}>
-                                <TextField label="Age" type="number" fullWidth value={formData.age} onChange={e => setFormData({ ...formData, age: e.target.value })} variant="filled" />
-                                <TextField label="Weight (kg)" type="number" fullWidth value={formData.weight} onChange={e => setFormData({ ...formData, weight: e.target.value })} variant="filled" />
+                        <Box component="form" noValidate autoComplete="off">
+                            <Stack spacing={2.5} sx={{ mt: 1 }}>
+                                <ImageUpload
+                                    initialUrl={formData.image_url}
+                                    onUploadSuccess={(url) => setFormData(prev => ({ ...prev, image_url: url }))}
+                                />
+                                <VaccinationUpload
+                                    initialUrl={formData.vaccination_records}
+                                    onUploadSuccess={(url) => setFormData(prev => ({ ...prev, vaccination_records: url }))}
+                                />
+                                <TextField label="VIP Name" fullWidth value={formData.name} onChange={e => setFormData({ ...formData, name: sanitizeInput(e.target.value, 32) })} variant="filled" />
+                                <TextField label="Breed" fullWidth value={formData.breed} onChange={e => setFormData({ ...formData, breed: sanitizeInput(e.target.value, 40) })} variant="filled" />
+                                <Stack direction="row" spacing={2}>
+                                    <TextField label="Age" type="number" fullWidth value={formData.age} onChange={e => setFormData({ ...formData, age: e.target.value })} variant="filled" />
+                                    <TextField label="Weight (kg)" type="number" fullWidth value={formData.weight} onChange={e => setFormData({ ...formData, weight: e.target.value })} variant="filled" />
+                                </Stack>
+                                <TextField select label="Temperament" fullWidth value={formData.temperament} onChange={e => {
+                                    const val = e.target.value;
+                                    setFormData({ ...formData, temperament: val });
+                                    if (val !== 'Other') setCustomTemp(""); // Clear custom if not 'Other'
+                                }} variant="filled">
+                                    <MenuItem value="Friendly">Friendly</MenuItem>
+                                    <MenuItem value="Relaxed">Relaxed</MenuItem>
+                                    <MenuItem value="Energetic">Energetic</MenuItem>
+                                    <MenuItem value="Protective">Protective</MenuItem>
+                                    <MenuItem value="Anxious">Anxious</MenuItem>
+                                    <MenuItem value="Other">Other...</MenuItem>
+                                </TextField>
+
+                                {formData.temperament === 'Other' && (
+                                    <TextField
+                                        label="Custom Temperament"
+                                        fullWidth
+                                        autoFocus
+                                        value={customTemp}
+                                        onChange={e => {
+                                            const val = sanitizeInput(e.target.value, 30);
+                                            setCustomTemp(val);
+                                        }}
+                                        variant="filled"
+                                        placeholder="e.g. Very Cuddly"
+                                    />
+                                )}
+                                <TextField label="Allergies" fullWidth value={formData.allergies} onChange={e => setFormData({ ...formData, allergies: sanitizeInput(e.target.value, 60) })} variant="filled" placeholder="N/A" />
+
+                                <Divider sx={{ my: 1, opacity: 0.1 }} />
+                                <Typography variant="caption" color="primary" fontWeight="bold">CARE COMPLIANCE & DIAGNOSTICS</Typography>
+                                <Box sx={{
+                                    display: 'grid',
+                                    gridTemplateColumns: '1fr 1fr',
+                                    gap: 1,
+                                    mt: 1
+                                }}>
+                                    <FormControlLabel
+                                        control={<Switch size="small" checked={formData.is_microchipped} onChange={e => setFormData({ ...formData, is_microchipped: e.target.checked })} />}
+                                        label={<Typography variant="caption">Microchipped</Typography>}
+                                    />
+                                    <FormControlLabel
+                                        control={<Switch size="small" checked={formData.spayed_neutered} onChange={e => setFormData({ ...formData, spayed_neutered: e.target.checked })} />}
+                                        label={<Typography variant="caption">Spayed/Neutered</Typography>}
+                                    />
+                                    <FormControlLabel
+                                        control={<Switch size="small" checked={formData.flea_tick_prevention} onChange={e => setFormData({ ...formData, flea_tick_prevention: e.target.checked })} />}
+                                        label={<Typography variant="caption">Flea/Tick Prevent.</Typography>}
+                                    />
+                                    <FormControlLabel
+                                        control={<Switch size="small" checked={formData.heartworm_prevention} onChange={e => setFormData({ ...formData, heartworm_prevention: e.target.checked })} />}
+                                        label={<Typography variant="caption">Heartworm Prev.</Typography>}
+                                    />
+                                </Box>
+
+                                <Divider sx={{ my: 1, opacity: 0.1 }} />
+                                <Typography variant="caption" color="primary" fontWeight="bold">FEEDING & NUTRITION</Typography>
+                                <Stack direction="row" spacing={2}>
+                                    <TextField label="Feeding Amount" fullWidth value={formData.feeding_amount} onChange={e => setFormData({ ...formData, feeding_amount: sanitizeInput(e.target.value, 40) })} variant="filled" placeholder="e.g. 2 cups" />
+                                    <TextField label="Frequency" fullWidth value={formData.feeding_frequency} onChange={e => setFormData({ ...formData, feeding_frequency: sanitizeInput(e.target.value, 40) })} variant="filled" placeholder="e.g. 2x daily" />
+                                </Stack>
+
+                                <TextField label="Medical Notes" fullWidth multiline rows={2} value={formData.notes} onChange={e => setFormData({ ...formData, notes: sanitizeInput(e.target.value, 500) })} variant="filled" placeholder="Medications, behavioral notes..." />
+                                <Divider sx={{ my: 1, opacity: 0.1 }} />
+                                <Typography variant="caption" color="primary" fontWeight="bold">EMERGENCY VETERINARY INFO</Typography>
+                                <TextField label="Vet Name" fullWidth value={formData.vet_name} onChange={e => setFormData({ ...formData, vet_name: sanitizeInput(e.target.value, 50) })} variant="filled" />
+                                <TextField label="Vet Phone" fullWidth value={formData.vet_phone} onChange={e => setFormData({ ...formData, vet_phone: sanitizePhone(e.target.value) })} variant="filled" />
                             </Stack>
-                            <TextField select label="Temperament" fullWidth value={formData.temperament} onChange={e => {
-                                const val = e.target.value;
-                                setFormData({ ...formData, temperament: val });
-                                if (val !== 'Other') setCustomTemp(""); // Clear custom if not 'Other'
-                            }} variant="filled">
-                                <MenuItem value="Friendly">Friendly</MenuItem>
-                                <MenuItem value="Relaxed">Relaxed</MenuItem>
-                                <MenuItem value="Energetic">Energetic</MenuItem>
-                                <MenuItem value="Protective">Protective</MenuItem>
-                                <MenuItem value="Anxious">Anxious</MenuItem>
-                                <MenuItem value="Other">Other...</MenuItem>
-                            </TextField>
-
-                            {formData.temperament === 'Other' && (
-                                <TextField
-                                    label="Custom Temperament"
-                                    fullWidth
-                                    autoFocus
-                                    value={customTemp}
-                                    onChange={e => {
-                                        const val = sanitizeInput(e.target.value, 30);
-                                        setCustomTemp(val);
-                                    }}
-                                    variant="filled"
-                                    placeholder="e.g. Very Cuddly"
-                                />
-                            )}
-                            <TextField label="Allergies" fullWidth value={formData.allergies} onChange={e => setFormData({ ...formData, allergies: sanitizeInput(e.target.value, 60) })} variant="filled" placeholder="N/A" />
-
-                            <Divider sx={{ my: 1, opacity: 0.1 }} />
-                            <Typography variant="caption" color="primary" fontWeight="bold">CARE COMPLIANCE & DIAGNOSTICS</Typography>
-                            <Box sx={{
-                                display: 'grid',
-                                gridTemplateColumns: '1fr 1fr',
-                                gap: 1,
-                                mt: 1
-                            }}>
-                                <FormControlLabel
-                                    control={<Switch size="small" checked={formData.is_microchipped} onChange={e => setFormData({ ...formData, is_microchipped: e.target.checked })} />}
-                                    label={<Typography variant="caption">Microchipped</Typography>}
-                                />
-                                <FormControlLabel
-                                    control={<Switch size="small" checked={formData.spayed_neutered} onChange={e => setFormData({ ...formData, spayed_neutered: e.target.checked })} />}
-                                    label={<Typography variant="caption">Spayed/Neutered</Typography>}
-                                />
-                                <FormControlLabel
-                                    control={<Switch size="small" checked={formData.flea_tick_prevention} onChange={e => setFormData({ ...formData, flea_tick_prevention: e.target.checked })} />}
-                                    label={<Typography variant="caption">Flea/Tick Prevent.</Typography>}
-                                />
-                                <FormControlLabel
-                                    control={<Switch size="small" checked={formData.heartworm_prevention} onChange={e => setFormData({ ...formData, heartworm_prevention: e.target.checked })} />}
-                                    label={<Typography variant="caption">Heartworm Prev.</Typography>}
-                                />
-                            </Box>
-
-                            <Divider sx={{ my: 1, opacity: 0.1 }} />
-                            <Typography variant="caption" color="primary" fontWeight="bold">FEEDING & NUTRITION</Typography>
-                            <Stack direction="row" spacing={2}>
-                                <TextField label="Feeding Amount" fullWidth value={formData.feeding_amount} onChange={e => setFormData({ ...formData, feeding_amount: sanitizeInput(e.target.value, 40) })} variant="filled" placeholder="e.g. 2 cups" />
-                                <TextField label="Frequency" fullWidth value={formData.feeding_frequency} onChange={e => setFormData({ ...formData, feeding_frequency: sanitizeInput(e.target.value, 40) })} variant="filled" placeholder="e.g. 2x daily" />
-                            </Stack>
-
-                            <TextField label="Medical Notes" fullWidth multiline rows={2} value={formData.notes} onChange={e => setFormData({ ...formData, notes: sanitizeInput(e.target.value, 500) })} variant="filled" placeholder="Medications, behavioral notes..." />
-                            <Divider sx={{ my: 1, opacity: 0.1 }} />
-                            <Typography variant="caption" color="primary" fontWeight="bold">EMERGENCY VETERINARY INFO</Typography>
-                            <TextField label="Vet Name" fullWidth value={formData.vet_name} onChange={e => setFormData({ ...formData, vet_name: sanitizeInput(e.target.value, 50) })} variant="filled" />
-                            <TextField label="Vet Phone" fullWidth value={formData.vet_phone} onChange={e => setFormData({ ...formData, vet_phone: sanitizePhone(e.target.value) })} variant="filled" />
-                        </Stack>
+                        </Box>
                     </DialogContent>
                     <DialogActions sx={{ p: 3 }}>
                         <Button onClick={() => openAdd ? setOpenAdd(false) : setOpenEdit(false)}>Cancel</Button>

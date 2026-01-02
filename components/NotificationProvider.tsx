@@ -30,6 +30,27 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
 
     const handleClose = () => setOpen(false);
 
+    const clearNotifications = async () => {
+        try {
+            const email = typeof window !== 'undefined' ? localStorage.getItem('vanguard_email') : null;
+            if (!email) return;
+
+            const token = localStorage.getItem('vanguard_token');
+            const res = await fetch(`${API_BASE_URL}/api/notifications`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (res.ok) {
+                showNotification("All notifications cleared", "success");
+            }
+        } catch (err) {
+            console.error("Failed to clear notifications", err);
+        }
+    };
+
     // Global Polling for new notifications
     useEffect(() => {
         const email = typeof window !== 'undefined' ? localStorage.getItem('vanguard_email') : null;
@@ -61,7 +82,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     }, [lastNotifId]);
 
     return (
-        <NotificationContext.Provider value={{ showNotification }}>
+        <NotificationContext.Provider value={{ showNotification, clearNotifications } as any}>
             {children}
             <Snackbar
                 open={open}

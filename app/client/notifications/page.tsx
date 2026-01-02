@@ -68,6 +68,22 @@ export default function NotificationsView() {
                             <ArrowBack />
                         </IconButton>
                         <Typography variant="h6" fontWeight="bold" sx={{ flex: 1 }}>Inbox</Typography>
+                        {notifications.length > 0 && (
+                            <Button
+                                size="small"
+                                onClick={async () => {
+                                    const token = localStorage.getItem('vanguard_token');
+                                    await fetch(`${API_BASE_URL}/api/notifications`, {
+                                        method: 'DELETE',
+                                        headers: { 'Authorization': `Bearer ${token}` }
+                                    });
+                                    setNotifications([]);
+                                }}
+                                sx={{ color: 'text.secondary', fontSize: '0.7rem' }}
+                            >
+                                Clear All
+                            </Button>
+                        )}
                         <Badge badgeContent={notifications.filter(n => !n.is_read).length} color="error">
                             <Notifications sx={{ color: 'text.secondary' }} />
                         </Badge>
