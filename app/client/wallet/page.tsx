@@ -655,8 +655,7 @@ export default function WalletView() {
                     </Button>
                 </Box>
             </Dialog>
-        </Box >
-        </ThemeProvider >
+        </ThemeProvider>
     );
 }
 
