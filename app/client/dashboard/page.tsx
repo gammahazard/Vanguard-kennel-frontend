@@ -130,8 +130,8 @@ export default function ClientDashboard() {
         updateWeather();
         fetchDashboardData();
 
-        // Update weather every hour
-        const interval = setInterval(updateWeather, 3600000);
+        // Update weather every 15 minutes
+        const interval = setInterval(updateWeather, 900000);
         return () => clearInterval(interval);
     }, []);
 
@@ -274,14 +274,17 @@ export default function ClientDashboard() {
     };
 
     const executePayment = async () => {
-        if (!confirmPayment) return;
+        if (!confirmPayment || paying) return;
 
         setPaying(true);
         try {
             // Support both single booking (legacy) and group
             const ids = confirmPayment.bookings ? confirmPayment.bookings.map(b => b.id) : (confirmPayment.booking ? [confirmPayment.booking.id] : []);
 
-            if (ids.length === 0) return;
+            if (ids.length === 0) {
+                setPaying(false);
+                return;
+            }
 
             const res = await authenticatedFetch(`/api/wallet/pay`, {
                 method: 'POST',
@@ -292,6 +295,7 @@ export default function ClientDashboard() {
                 const data = await res.json();
                 setPaymentFeedback({ open: true, text: data.message || "Payment Successful!", severity: "success" });
                 setConfirmPayment(null);
+                setShowPaymentDialog(false); // Close parent dialog too for better UX
                 fetchDashboardData();
             } else {
                 const err = await res.json();
@@ -773,6 +777,31 @@ export default function ClientDashboard() {
                         </Box>
 
                         <Divider sx={{ opacity: 0.1 }} />
+
+                        {groupedUnpaidBookings.length > 1 && (
+                            <Button
+                                fullWidth
+                                variant="contained"
+                                color="primary"
+                                onClick={() => handlePayGroup(unpaidBookings)}
+                                startIcon={<CheckIcon />}
+                                sx={{
+                                    borderRadius: 3,
+                                    py: 1.5,
+                                    fontWeight: 'bold',
+                                    bgcolor: 'primary.main',
+                                    color: 'background.default',
+                                    boxShadow: '0 4px 14px 0 rgba(212, 175, 55, 0.39)',
+                                    '&:hover': {
+                                        bgcolor: '#b5932b',
+                                        transform: 'translateY(-1px)'
+                                    },
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                Pay All Outstanding Stays (${balance.toFixed(2)})
+                            </Button>
+                        )}
 
                         <Stack spacing={2}>
                             {groupedUnpaidBookings.length > 0 ? (
