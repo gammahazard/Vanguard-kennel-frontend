@@ -37,7 +37,9 @@ The platform uses a **Decoupled Monolith** strategy to balance performance with 
 ### Frontend (`/frontend`)
 *   `app/`: The App Router.
     *   `client/`: **Client Portal**. Login, Dashboard, Booking Wizard, My Pets.
-    *   `staff/`: **Operations Portal**. Booking Manager, Guest List, Audit Logs.
+    *   `staff/`: **Operations Portal**.
+        *   `dashboard/hooks/`: **Logic Layer**. (e.g., `useStaffDashboard.ts`).
+        *   `dashboard/components/`: **Modular UI**. (e.g., `CheckInModal.tsx`).
     *   `page.tsx`: The **Gateway** (Splash Screen). Determines if user is PWA or Web.
 *   `components/`: Reusable UI.
     *   `ui/Navbar.tsx`: The "Smart" Navbar (adapts to scroll & auth state).
@@ -144,7 +146,7 @@ ssh root@YOUR_SERVER_IP "systemctl stop vanguard && rm /root/backend/kennel.db &
 | :--- | :--- | :--- |
 | **"Network Error"** | Backend is down or CORS block. | Check Linode logs (`journalctl -u vanguard -f`). |
 | **Face ID Fails** | Domain mismatch or DB Wipe. | If DB was wiped, keys are gone. Login with Password & Re-register. |
-| **Login Loops** | Token expired. | `api.ts` handles this, but try clearing LocalStorage. |
+| **Login Loops** | Token expired. | Use the **"Wipe Cache"** option in the Profile Area (easiest on mobile), or clear LocalStorage manually. |
 | **"Foreign Key Constraints"** | Case Mismatch. | Use `user@email.com` (lowercase) everywhere. Backend now enforces this. |
 | **Vercel Build Failed** | MUI Grid Version Conflict. | **DO NOT USE `Grid`.** Use `Stack` and `Box` (Flexbox) instead. See Section 8. |
 
@@ -174,6 +176,11 @@ To avoid recurring build errors and ensure performance, follow these strict rule
 *   **Why?**: Next.js optimizes size/format automatically. Vercel builds will warn/fail on standard img tags.
 *   **External URLs**: If user uploads an image (e.g., `placedog.net` or Linode), ensure the domain is added to `next.config.mjs` under `images.remotePatterns`.
 
+### 3. Modularity: The "Vanguard Rule"
+**Rule**: UI components must remain "dumb".
+*   **Logic**: Complex state management (API calls, sorting, form handling) **MUST** be extracted into custom hooks (e.g., `useStaffDashboard`).
+*   **Separation**: Keep `page.tsx` clean. It should only orchestrate the layout and pass props to modular components.
+
 ---
 
 ## 9. 🚀 Production Readiness Checklist
@@ -189,6 +196,16 @@ Before transitioning from MVP to full Production, the following security and cle
 *   [ ] Implement a secure, one-time "Initial Setup" wizard for the first owner account.
 *   [ ] Rotate `JWT_SECRET` and WebAuthn parameters.
 *   [ ] Enable full HTTPS/WSS on the backend Nginx proxy.
+
+---
+
+## 10. 🛡️ Integrity & Workflow Protocol
+
+To maintain system integrity, strict adherence to the git workflow is required.
+
+### Refactoring Policy
+*   **Branching**: All architectural changes or significant refactors **MUST** be developed on a separate branch (e.g., `feature/refactor-dashboard`).
+*   **Merging**: Direct commits to `main` are **prohibited** for refactors. All changes must be audited for logic preservation (see `refactor_audit.md`) before merging.
 
 ---
 
