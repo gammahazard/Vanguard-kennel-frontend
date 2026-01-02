@@ -93,6 +93,23 @@ Security is enforced in Rust, not JS.
 
 ---
 
+## 4a. 💳 The Wallet System (Internal Ledger)
+
+The system operates on a "Pre-Paid" or "Account Balance" model rather than per-transaction credit card charges.
+
+### Data Model
+*   **`users.balance`**: The float value representing client funds.
+*   **Atomic Transactions**: Payment handler (`pay_with_wallet_handler`) verifies balance >= cost, then decrements user balance and marks booking valid in a single DB transaction.
+
+### Flow
+1.  **Top Up**: Client adds funds (Mocked Stripe/Apple Pay).
+2.  **Booking**: User creates a request. `is_paid = 0`.
+3.  **Settlement**: User clicks "Pay Now". Frontend calls `/api/wallet/pay`.
+4.  **Verification**: Backend checks funds.
+    *   **Success**: `balance` decreases, `is_paid` becomes `1`.
+    *   **Fail**: Returns 400 "Insufficient Funds".
+
+
 ## 5. 📱 Progressive Web App (PWA) features
 This is not just a website; it is an installable App.
 *   **Manifest**: `public/manifest.json` defines the "App" look (No browser bar, fullscreen).

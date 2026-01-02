@@ -15,3 +15,4 @@
 **Approach:** "Meeting the future halfway."
 *   **Path A (Standard):** We talk to **Stripe**. It's the industry standard. Fast, reliable, credits the bank account immediately.
 *   **Path B (Future Strategy):** Blockchain listener. A "Listener" robot that watches for wallet transactions. Currently a roadmap item for V2.
+*   **The Ledger**: All funds (Stripe or Crypto) end up in `users.balance` (SQLite). This internal ledger is the **Single Source of Truth** for the app. We do not query Stripe for every booking check; we query our own secure ledger.
