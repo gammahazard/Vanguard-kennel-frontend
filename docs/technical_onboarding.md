@@ -118,24 +118,36 @@ cargo run
 # Listens at http://localhost:8000
 ```
 
-### Deployment (The "Vanguard" Protocol)
+### Deployment Protocol (STRICT)
+
+**Architecture**: 
+*   **Frontend**: Hosted on GitHub. Auto-deploys to Vercel via Git Push.
+*   **Backend**: Hosted on Linode. Deployed via manual SCP.
+*   **Repo Structure**: Separate repos. NOT a monorepo.
 
 **1. Deploy Backend (Linode)**:
+*   The AI Assistant will edit files locally.
+*   **YOU (The User)** must push them to the server manually using SCP.
 ```bash
-# Upload Source
-scp -r .\backend\src .\backend\Cargo.toml .\backend\Cargo.lock root@YOUR_SERVER_IP:/root/backend/
+# Upload Source (Run from project root)
+scp -r ./backend/src ./backend/Cargo.toml ./backend/Cargo.lock root@YOUR_SERVER_IP:~/backend/
 
-# Build & Restart
+# Build & Restart (SSH into server)
 ssh root@YOUR_SERVER_IP "cd backend && cargo build --release && systemctl restart vanguard"
 ```
 
 **2. Deploy Frontend (Vercel)**:
-*   Git Push to `main` triggers automatic build & deploy.
+*   The AI Assistant commits changes locally.
+*   **YOU (The User)** must push to GitHub.
+```bash
+cd frontend
+git push origin main
+```
 
 **3. The "Nuclear" Option (Database Reset)**:
 *   Use this to wipe all data and restore clean Demo Data (Users/Bookings).
 ```bash
-ssh root@YOUR_SERVER_IP "systemctl stop vanguard && rm /root/backend/kennel.db && systemctl start vanguard"
+ssh root@YOUR_SERVER_IP "systemctl stop vanguard && rm ~/backend/kennel.db && systemctl start vanguard"
 ```
 
 ---
