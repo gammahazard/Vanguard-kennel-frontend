@@ -684,7 +684,7 @@ function BookingCard({ booking, pets, onCancel }: any) {
 
     return (
         <Paper sx={{ p: 2, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', position: 'relative' }}>
-            {(booking.status === 'Pending' || booking.status === 'Confirmed') && (
+            {['pending', 'confirmed'].includes(booking.status.toLowerCase()) && (
                 <IconButton size="small" onClick={onCancel} sx={{ position: 'absolute', top: 8, right: 8, color: 'text.secondary', '&:hover': { color: 'error.main' } }}><Close fontSize="small" /></IconButton>
             )}
             <Stack direction="row" spacing={2} alignItems="center">
