@@ -234,7 +234,6 @@ export default function StaffDashboard() {
                         <GuestList
                             guests={guests}
                             loading={loadingGuests}
-                            onCheckIn={handleCheckIn}
                             onCheckOut={handleCheckOut}
                             onToggleAction={handleToggleAction}
                             onLogIncident={(guest) => {
