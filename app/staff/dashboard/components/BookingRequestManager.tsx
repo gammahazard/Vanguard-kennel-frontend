@@ -9,6 +9,7 @@ interface BookingRequestManagerProps {
     loading: boolean;
     onAction: (bookings: EnrichedBooking[], action: 'confirmed' | 'declined' | 'cancelled' | 'No Show') => void;
     onChat: (email: string) => void;
+    onViewDetails?: (group: GroupedBookingRequest) => void;
 }
 
 export default function BookingRequestManager({
@@ -16,7 +17,8 @@ export default function BookingRequestManager({
     recentBookings,
     loading,
     onAction,
-    onChat
+    onChat,
+    onViewDetails
 }: BookingRequestManagerProps) {
     if (loading) {
         return (
@@ -131,7 +133,19 @@ export default function BookingRequestManager({
                     <Typography variant="h6" fontWeight="bold" sx={{ mb: 3, color: 'text.secondary' }}>Recently Confirmed</Typography>
                     <Stack spacing={2} sx={{ opacity: 0.8 }}>
                         {recentBookings.map((group) => (
-                            <Paper key={group.id} sx={{ p: 2, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.03)' }}>
+                            <Paper
+                                key={group.id}
+                                onClick={() => onViewDetails && onViewDetails(group)}
+                                sx={{
+                                    p: 2,
+                                    borderRadius: 2,
+                                    bgcolor: 'rgba(255,255,255,0.02)',
+                                    border: '1px solid rgba(255,255,255,0.03)',
+                                    cursor: onViewDetails ? 'pointer' : 'default',
+                                    transition: 'all 0.2s',
+                                    '&:hover': onViewDetails ? { bgcolor: 'rgba(255,255,255,0.05)', transform: 'translateY(-2px)' } : {}
+                                }}
+                            >
                                 <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between" spacing={2}>
                                     <Box>
                                         <Typography variant="subtitle2" fontWeight="bold">{group.owner_name}</Typography>

@@ -365,7 +365,7 @@ export function useStaffDashboard() {
     };
 
     const handleCheckOut = async (guest: GuestPet) => {
-        const booking = allBookings.find((b: any) => b.dog_id === guest.id && b.status === 'Checked In');
+        const booking = allBookings.find((b: any) => b.dog_id === guest.id && (b.status || '').toLowerCase() === 'checked in');
         if (!booking) return;
 
         if (!confirm(`Check out ${guest.name}?`)) return;

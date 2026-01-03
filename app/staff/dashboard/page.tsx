@@ -59,10 +59,10 @@ import {
     Visibility,
     VisibilityOff,
     PersonAdd,
+    PersonAdd,
     Chat as ChatIcon
 } from "@mui/icons-material";
-import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
 import BusinessDashboard from './components/BusinessDashboard';
 import BookingRequestManager from './components/BookingRequestManager';
 import OperationsStats from './components/OperationsStats';
@@ -71,7 +71,7 @@ import GuestList from './components/GuestList';
 import ClientDirectory from './components/ClientDirectory';
 import { useStaffDashboard } from "./hooks/useStaffDashboard";
 import { API_BASE_URL, authenticatedFetch } from '@/lib/api';
-import { GuestPet } from "@/types";
+import { GuestPet, GroupedBookingRequest } from "@/types";
 import { useRef, useEffect } from "react";
 
 // New Modular Components
@@ -79,9 +79,13 @@ import CheckInModal from "./components/CheckInModal";
 import IncidentModal from "./components/IncidentModal";
 import StaffManagementDialog from "./components/StaffManagementDialog";
 import DailyReportModal from "./components/DailyReportModal";
+import BookingDetailsModal from "./components/BookingDetailsModal";
 
 export default function StaffDashboard() {
     const scrollRef = useRef<HTMLDivElement>(null);
+    const [selectedBookingGroup, setSelectedBookingGroup] = useState<GroupedBookingRequest | null>(null);
+    const [showBookingDetailsModal, setShowBookingDetailsModal] = useState(false);
+
     const {
         guests, loadingGuests, viewMode, setViewMode, isOwner, message, setMessage,
         pendingBookings, recentBookings, todaysArrivals, allBookings, clients,
@@ -378,8 +382,13 @@ export default function StaffDashboard() {
                                 const client = clients.find(c => c.email === email);
                                 if (client) {
                                     setActiveChat(client);
+                                    fetchMessages(client.email);
                                     setViewMode('comms');
                                 }
+                            }}
+                            onViewDetails={(group) => {
+                                setSelectedBookingGroup(group);
+                                setShowBookingDetailsModal(true);
                             }}
                         />
                     </motion.div>
@@ -816,6 +825,12 @@ export default function StaffDashboard() {
                     </Alert>
                 </Snackbar>
             </Container>
+            {/* Booking Details Modal */}
+            <BookingDetailsModal
+                open={showBookingDetailsModal}
+                onClose={() => setShowBookingDetailsModal(false)}
+                group={selectedBookingGroup}
+            />
         </Box>
     );
 }

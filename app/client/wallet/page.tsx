@@ -56,37 +56,39 @@ export default function WalletView() {
             type: 'deposit',
             timestamp: parseInt(tx.id) || Date.now() // Fallback if id isn't timestamp
         })),
-        ...paidBookings.map(b => {
-            const status = (b.status || '').toLowerCase();
-            const isPenalty = ['cancelled', 'no-show', 'no show'].includes(status);
-            const subtotal = b.total_price;
-            const tax = isPenalty ? 0 : subtotal * 0.13;
-            const total = subtotal + tax;
+        ...paidBookings
+            .filter(b => b.is_paid) // STRICTLY SHOW ONLY PAID TRANSACTIONS IN HISTORY
+            .map(b => {
+                const status = (b.status || '').toLowerCase();
+                const isPenalty = ['cancelled', 'no-show', 'no show'].includes(status);
+                const subtotal = b.total_price;
+                const tax = isPenalty ? 0 : subtotal * 0.13;
+                const total = subtotal + tax;
 
-            let title = `${b.service_type} (${b.dog_name || 'Pet'})`;
-            let details = isPenalty ? "Penalty Fee" : "Service Payment";
-            if (isPenalty) {
-                const isNoShow = status.includes('no');
-                const baseTitle = isNoShow ? "No-Show Penalty" : "Cancellation Penalty";
-                title = `${baseTitle} (PER DOG)`;
-                details = isNoShow ? "No-Show Fee" : "Cancellation After Spots Reserved";
-            }
+                let title = `${b.service_type} (${b.dog_name || 'Pet'})`;
+                let details = isPenalty ? "Penalty Fee" : "Service Payment";
+                if (isPenalty) {
+                    const isNoShow = status.includes('no');
+                    const baseTitle = isNoShow ? "No-Show Penalty" : "Cancellation Penalty";
+                    title = `${baseTitle} (PER DOG)`;
+                    details = isNoShow ? "No-Show Fee" : "Cancellation After Spots Reserved";
+                }
 
-            return {
-                id: b.id,
-                title: title,
-                date: formatDateTimeEST(b.end_date).split(',')[0], // Display Date
-                timestamp: new Date(b.created_at).getTime(), // Sort Date
-                amount: `- $${total.toFixed(2)}`,
-                isPositive: false,
-                isPenalty: isPenalty,
-                type: 'payment',
-                booking: b,
-                subtotal: subtotal,
-                tax: tax,
-                details: details
-            };
-        })
+                return {
+                    id: b.id,
+                    title: title,
+                    date: formatDateTimeEST(b.end_date).split(',')[0], // Display Date
+                    timestamp: new Date(b.created_at).getTime(), // Sort Date
+                    amount: `- $${total.toFixed(2)}`,
+                    isPositive: false,
+                    isPenalty: isPenalty,
+                    type: 'payment',
+                    booking: b,
+                    subtotal: subtotal,
+                    tax: tax,
+                    details: details
+                };
+            })
     ].sort((a: any, b: any) => b.timestamp - a.timestamp); // Newest First
 
     const filteredTransactions = allTransactions.filter((tx: any) => {
@@ -115,14 +117,12 @@ export default function WalletView() {
             }
             if (bookingsRes.ok) {
                 const bookings: Booking[] = await bookingsRes.json();
-                // Filter for "Paid" bookings (is_paid = true)
-                // We exclude "Pending" even if is_paid is true (unlikely) to avoid clutter
-                // We include Cancelled/No Shows if they were paid (fees)
-                // We include Cancelled/No Shows if they were paid (fees) OR if they are unpaid debts
-                const paid = bookings
+                // Filter for bookngs that are either Paid OR have an outstanding balance (for the alert)
+                // We keep them all in state, but will filter for History display
+                const relevantBookings = bookings
                     .filter(b => b.is_paid || (b.total_price > 0 && (b.status as string).toLowerCase() !== 'pending'))
                     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-                setPaidBookings(paid);
+                setPaidBookings(relevantBookings);
             }
         } catch (e) {
             console.error("Failed to fetch wallet data", e);
@@ -297,8 +297,10 @@ export default function WalletView() {
                                         <Stack direction="row" spacing={2} alignItems="center">
                                             <Avatar sx={{ bgcolor: '#ef4444', width: 40, height: 40 }}><PriorityHigh /></Avatar>
                                             <Box>
-                                                <Typography variant="body2" fontWeight="bold" color="#ef4444">Outstanding Balance</Typography>
-                                                <Typography variant="caption" color="rgba(239, 68, 68, 0.8)">Due to cancellation of reserved booking or no show</Typography>
+                                                <Typography variant="body2" fontWeight="bold" color="#ef4444">Action Required: Unpaid Fees</Typography>
+                                                <Typography variant="caption" color="rgba(239, 68, 68, 0.8)">
+                                                    {paidBookings.filter(b => !b.is_paid && ['cancelled', 'no-show', 'no show'].includes((b.status || '').toLowerCase())).length} booking(s) with cancellation or no-show penalties.
+                                                </Typography>
                                             </Box>
                                         </Stack>
                                         <Stack direction="row" spacing={2} alignItems="center">
