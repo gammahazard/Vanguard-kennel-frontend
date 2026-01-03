@@ -103,6 +103,7 @@ export interface GuestPet {
     meds: boolean | null;
     img: string;
     owner_email: string;
+    booking_id?: string;
 }
 
 export interface Notification {

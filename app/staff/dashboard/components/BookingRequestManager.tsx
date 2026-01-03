@@ -146,6 +146,15 @@ export default function BookingRequestManager({
                                     '&:hover': onViewDetails ? { bgcolor: 'rgba(255,255,255,0.05)', transform: 'translateY(-2px)' } : {}
                                 }}
                             >
+                                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: -3 }}>
+                                    <Button
+                                        size="small"
+                                        onClick={(e) => { e.stopPropagation(); onViewDetails && onViewDetails(group); }}
+                                        sx={{ color: 'text.secondary', fontSize: '0.7rem', textTransform: 'none' }}
+                                    >
+                                        View Details
+                                    </Button>
+                                </Box>
                                 <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between" spacing={2}>
                                     <Box>
                                         <Typography variant="subtitle2" fontWeight="bold">{group.owner_name}</Typography>

@@ -212,13 +212,13 @@ export default function BookingsView() {
     };
 
     const upcomingBookings = groupBookings(bookings.filter((b: any) => {
-        const s = b.status?.toLowerCase();
-        return s !== 'completed' && s !== 'cancelled' && s !== 'declined';
+        const s = (b.status || '').toLowerCase();
+        return !['completed', 'cancelled', 'declined', 'no show', 'no-show', 'checked out'].includes(s);
     }));
 
     const pastBookings = groupBookings(bookings.filter((b: any) => {
-        const s = b.status?.toLowerCase();
-        return s === 'completed' || s === 'cancelled' || s === 'declined';
+        const s = (b.status || '').toLowerCase();
+        return ['completed', 'cancelled', 'declined', 'no show', 'no-show', 'checked out'].includes(s);
     }));
 
     // Check if a date is full

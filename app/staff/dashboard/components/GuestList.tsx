@@ -1,5 +1,5 @@
 import { Box, Paper, Typography, Chip, Stack, IconButton, Divider, Tooltip } from "@mui/material";
-import { Warning, Restaurant, SportsTennis, Medication, CrisisAlert, Assignment as AssignmentIcon, History, ExitToApp } from "@mui/icons-material";
+import { Warning, Restaurant, SportsTennis, Medication, CrisisAlert, Assignment as AssignmentIcon, History, ExitToApp, Description } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { GuestPet } from "@/types";
 
@@ -12,9 +12,10 @@ interface GuestListProps {
     onViewHistory: (pet: GuestPet) => void;
     onCheckOut: (pet: GuestPet) => void;
     onGuestClick: (pet: GuestPet) => void;
+    onViewBooking?: (pet: GuestPet) => void;
 }
 
-export default function GuestList({ guests, loading, onToggleAction, onLogIncident, onPostReport, onViewHistory, onCheckOut, onGuestClick }: GuestListProps) {
+export default function GuestList({ guests, loading, onToggleAction, onLogIncident, onPostReport, onViewHistory, onCheckOut, onGuestClick, onViewBooking }: GuestListProps) {
     return (
         <Box sx={{
             display: 'grid',
@@ -72,6 +73,7 @@ export default function GuestList({ guests, loading, onToggleAction, onLogIncide
                                     <Tooltip title="Medication"><IconButton size="small" onClick={(e) => { e.stopPropagation(); guest.meds !== null && onToggleAction(guest.id, 'meds'); }} disabled={guest.meds === null} sx={{ color: guest.meds ? '#a855f7' : (guest.meds === null ? 'rgba(255,255,255,0.05)' : 'text.disabled'), bgcolor: guest.meds ? 'rgba(168, 85, 247, 0.1)' : 'transparent' }}><Medication fontSize="small" /></IconButton></Tooltip>
                                     <Tooltip title="Log Care Alert"><IconButton size="small" onClick={(e) => { e.stopPropagation(); onLogIncident(guest); }} sx={{ color: '#ef4444', '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.1)' } }}><CrisisAlert fontSize="small" /></IconButton></Tooltip>
                                     <Tooltip title="View History"><IconButton size="small" onClick={(e) => { e.stopPropagation(); onViewHistory(guest); }} sx={{ color: 'text.secondary', '&:hover': { color: 'white', bgcolor: 'rgba(255,255,255,0.1)' } }}><History fontSize="small" /></IconButton></Tooltip>
+                                    <Tooltip title="Booking Details"><IconButton size="small" onClick={(e) => { e.stopPropagation(); onViewBooking && onViewBooking(guest); }} sx={{ color: '#3b82f6', '&:hover': { bgcolor: 'rgba(59, 130, 246, 0.1)' } }}><Description fontSize="small" /></IconButton></Tooltip>
                                     <Tooltip title="Daily Update"><IconButton size="small" onClick={(e) => { e.stopPropagation(); onPostReport(guest); }} sx={{ color: '#D4AF37', '&:hover': { bgcolor: 'rgba(212, 175, 55, 0.1)' } }}><AssignmentIcon fontSize="small" /></IconButton></Tooltip>
                                     <Tooltip title="Check Out"><IconButton size="small" onClick={(e) => { e.stopPropagation(); onCheckOut(guest); }} sx={{ color: 'text.secondary', '&:hover': { color: '#ef4444', bgcolor: 'rgba(239, 68, 68, 0.1)' } }}><ExitToApp fontSize="small" /></IconButton></Tooltip>
                                 </Stack>
