@@ -169,6 +169,134 @@ Cancelled  No Show
 
 ---
 
+## 📁 Complete File Reference
+
+### Frontend Files (`/app`)
+
+| File/Folder | Purpose |
+|-------------|---------|
+| `page.tsx` | **PWA Splash Screen** - Detects iOS/Android, shows install instructions, handles deep links |
+| `layout.tsx` | Root layout with MUI theme provider, font loading, and global styles |
+| `globals.css` | Minimal CSS reset and scrollbar styling |
+
+#### Client Portal (`/app/client`)
+
+| Route | File | Purpose |
+|-------|------|---------|
+| `/client/dashboard` | `page.tsx` | Main client home - weather widget, recent moments, booking status cards |
+| `/client/bookings` | `page.tsx` | Booking wizard with date picker, pet selector, pricing calculator, policy checkboxes |
+| `/client/pets` | `page.tsx` | Pet management - add/edit/delete dogs, photo upload, vaccination tracking |
+| `/client/wallet` | `page.tsx` | Balance display, transaction history, top-up modal, outstanding penalties |
+| `/client/messenger` | `page.tsx` | Real-time chat with staff, message history, quick action buttons |
+| `/client/notifications` | `page.tsx` | System notifications (booking updates, reports), mark as read |
+| `/client/profile` | `page.tsx` | User info, FaceID toggle, fee policies display, logout |
+| `/client/login` | `page.tsx` | Email/password login with FaceID option |
+| `/client/signup` | `page.tsx` | New client registration |
+
+#### Staff Portal (`/app/staff`)
+
+| Route | File | Purpose |
+|-------|------|---------|
+| `/staff/dashboard` | `page.tsx` | Main staff console - orchestrates all modular components |
+| `/staff/login` | `page.tsx` | Staff-only login with WebAuthn support |
+| `/staff/report` | `page.tsx` | Create daily care reports with mood/activity/photos |
+| `/staff/audit` | `page.tsx` | Security audit log viewer (owner-only) |
+| `/staff/comms` | `page.tsx` | Multi-client messaging interface |
+
+#### Staff Dashboard Components (`/app/staff/dashboard/components`)
+
+| Component | Purpose |
+|-----------|---------|
+| `BookingRequestManager.tsx` | Pending booking queue with approve/decline actions |
+| `BusinessDashboard.tsx` | Revenue chart, occupancy metrics, booking counts |
+| `CheckInModal.tsx` | Dog check-in workflow with status confirmation |
+| `ClientDirectory.tsx` | Searchable client list with pet info |
+| `DailyReportModal.tsx` | Create/view daily care updates |
+| `GuestList.tsx` | Active checked-in dogs with action buttons |
+| `IncidentModal.tsx` | Incident reporting with severity levels |
+| `OperationsStats.tsx` | Quick stats cards (guests, bookings, capacity) |
+| `PetDetailModal.tsx` | Full pet info view with vet/allergy data |
+| `ServiceManager.tsx` | Dynamic pricing management (owner-only) |
+| `StaffManagementDialog.tsx` | Add/remove staff accounts (owner-only) |
+| `BookingDetailsModal.tsx` | Detailed booking info with status history |
+
+#### Staff Dashboard Hook (`/app/staff/dashboard/hooks`)
+
+| File | Purpose |
+|------|---------|
+| `useStaffDashboard.ts` | **Central logic layer** - all API calls, state management, business rules (~700 lines) |
+
+---
+
+### Reusable Components (`/components`)
+
+| File | Purpose |
+|------|---------|
+| `NotificationProvider.tsx` | Global toast notifications with MUI Snackbar |
+
+#### UI Components (`/components/ui`)
+
+| Component | Purpose |
+|-----------|---------|
+| `ImageSlideshow.tsx` | Ken Burns effect hero background for splash page |
+| `ImageUpload.tsx` | Drag-and-drop pet photo uploader with preview |
+| `VaccinationUpload.tsx` | Secure vaccination record uploader |
+| `InstallModal.tsx` | PWA install instructions for iOS/Android |
+| `Navbar.tsx` | Adaptive navigation bar with scroll effects |
+| `PremiumButton.tsx` | Styled gold/black gradient button |
+| `IPLocation.tsx` | IP-based location display for security |
+
+---
+
+### Core Libraries (`/lib`)
+
+| File | Purpose |
+|------|---------|
+| `api.ts` | Authenticated fetch wrapper with JWT headers, 401 handling |
+| `config.ts` | Environment variable exports (API_BASE_URL) |
+| `theme.ts` | MUI theme configuration (gold/black palette, typography) |
+| `security.ts` | Input sanitization utilities |
+| `dateUtils.ts` | Date formatting helpers (EST timezone) |
+
+---
+
+### Type Definitions (`/types`)
+
+| File | Purpose |
+|------|---------|
+| `index.ts` | All TypeScript interfaces (User, Pet, Booking, Message, etc.) |
+
+---
+
+### Backend Files (`/backend/src`)
+
+| File | Lines | Purpose |
+|------|-------|---------|
+| `main.rs` | ~490 | **Entry point** - Axum router setup, database init, seeding, CORS |
+| `handlers.rs` | ~2,660 | **All 61 API handlers** - authentication, bookings, payments, messaging |
+| `models.rs` | ~400 | **Data structures** - Rust structs matching DB schema, request/response DTOs |
+| `state.rs` | ~20 | **AppState definition** - database pool, WebAuthn state, rate limiter |
+| `rate_limit.rs` | ~50 | **Middleware** - in-memory IP-based rate limiting |
+| `lib.rs` | ~5 | Module exports |
+
+### Backend Handler Categories
+
+| Category | Handlers | Purpose |
+|----------|----------|---------|
+| **Auth** | 9 | Login, register, WebAuthn/FaceID, JWT validation |
+| **Users** | 5 | Profile CRUD, staff management |
+| **Pets** | 4 | Pet CRUD with IDOR protection |
+| **Bookings** | 7 | Create, status updates, payments, availability |
+| **Messages** | 4 | Send, receive, mark read |
+| **Notifications** | 4 | System alerts, read status |
+| **Reports** | 4 | Daily care reports, incidents |
+| **Services** | 2 | Dynamic pricing management |
+| **Files** | 3 | Secure upload/download with auth |
+| **Audit** | 2 | Security logging |
+| **Stats** | 2 | Dashboard metrics |
+
+---
+
 ## Environment Variables
 
 ```env
@@ -193,3 +321,4 @@ cd frontend && npm run dev    # Port 3000
 # Backend
 cd backend && cargo run       # Port 3001
 ```
+
