@@ -701,7 +701,7 @@ function BookingCard({ booking, pets, onCancel }: any) {
                         {groupPets.map((p: any) => p.name).join(", ")}
                     </Typography>
                 </Box>
-                <Chip label={booking.status.toUpperCase()} size="small" variant="outlined" color={booking.status === 'Confirmed' ? 'success' : 'warning'} />
+                <Chip label={booking.status.toUpperCase()} size="small" variant="outlined" color={booking.status.toLowerCase() === 'confirmed' ? 'success' : 'warning'} />
             </Stack>
             <Divider sx={{ my: 1.5, opacity: 0.1 }} />
             <Stack direction="row" spacing={2} sx={{ color: 'text.secondary' }}>
