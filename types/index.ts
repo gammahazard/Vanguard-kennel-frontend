@@ -22,6 +22,10 @@ export interface Pet {
     vaccination_records?: string;
     feeding_amount?: string;
     feeding_frequency?: string;
+    is_microchipped?: boolean;
+    flea_tick_prevention?: boolean;
+    heartworm_prevention?: boolean;
+    spayed_neutered?: boolean;
 }
 
 export interface UserWithPets extends User {
@@ -124,7 +128,7 @@ export interface Service {
 }
 
 export interface DailyReport {
-    id: number;
+    id: string;
     booking_id: string;
     dog_id: string;
     image_url?: string;

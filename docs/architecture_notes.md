@@ -12,7 +12,7 @@ A full-stack dog boarding kennel management platform with separate client and st
 
 | Layer | Technology |
 |-------|------------|
-| **Frontend** | Next.js 15, React 19, TypeScript, Material-UI |
+| **Frontend** | Next.js 14, React 18, TypeScript, Material-UI |
 | **Backend** | Rust (Axum), SQLite (sqlx), WebAuthn |
 | **Auth** | JWT + FaceID/Passkeys (WebAuthn) |
 | **Styling** | MUI + Custom theme (`lib/theme.ts`) |
@@ -155,11 +155,12 @@ Cancelled  No Show
 ```
 
 ### Financial Rules
-- **No-Refund Policy**: Paid bookings retain revenue on cancellation
+- **No-Refund Policy**: Paid bookings retain revenue on cancellation (minus 80% refund to wallet)
 - **Penalty Fees**: 
-  - Cancellation: $45/dog (unpaid bookings only)
-  - No-Show: $20/dog (unpaid bookings only)
-- **Wallet System**: Prepaid balance for bookings
+  - Cancellation (unpaid): $45/dog
+  - Cancellation (paid): 20% kept as fee (min $15), 80% refunded to wallet
+  - No-Show: $25/dog (always applied)
+- **Wallet System**: Prepaid balance for bookings, refunds credited here
 
 ### Authorization
 - JWT-based with role verification (`client`, `staff`, `owner`)
