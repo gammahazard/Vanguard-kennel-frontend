@@ -237,13 +237,10 @@ export default function StaffDashboard() {
                             onCheckOut={handleCheckOut}
                             onToggleAction={toggleAction}
                             onLogIncident={(guest) => {
-                                setSelectedGuestForIncident(guest);
+                                setSelectedPet(guest);
                                 setShowIncidentModal(true);
                             }}
-                            onPostReport={(guest) => {
-                                setSelectedGuestForReport(guest);
-                                setShowReportModal(true);
-                            }}
+                            onPostReport={handleOpenReport}
                             onViewHistory={handleViewHistory}
                             onGuestClick={(guest) => {
                                 setSelectedPet(guest);
