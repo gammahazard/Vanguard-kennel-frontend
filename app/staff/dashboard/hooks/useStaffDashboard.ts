@@ -267,7 +267,7 @@ export function useStaffDashboard() {
                 method: 'POST',
                 body: JSON.stringify({
                     id: Math.random().toString(36).substr(2, 9),
-                    booking_id: "ops_log",
+                    booking_id: null,
                     pet_id: selectedPet?.id || incidentTargetId,
                     content: incidentText,
                     severity: incidentSeverity
